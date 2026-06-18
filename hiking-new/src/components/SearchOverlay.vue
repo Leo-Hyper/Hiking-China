@@ -20,7 +20,7 @@
           <!-- 搜索结果 -->
           <div class="overflow-y-auto flex-1 p-6">
             <!-- 无结果 -->
-            <div v-if="isSearching && !results.length" class="text-center py-12 text-slate-400">
+            <div v-if="hasQueried && !results.length" class="text-center py-12 text-slate-400">
               <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
               </svg>
@@ -32,9 +32,13 @@
               <div v-for="(items, group) in groupedResults" :key="group" class="mb-6">
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{{ group }} ({{ items.length }})</h3>
                 <div class="space-y-2">
-                  <RouterLink v-for="item in items" :key="item.id" :to="item.route"
-                              class="block p-4 rounded-2xl border border-slate-100 hover:border-forest-200 hover:bg-forest-50/30 transition-all group"
-                              @click="close">
+                  <RouterLink
+                    v-for="item in items"
+                    :key="item.id"
+                    :to="item.route"
+                    class="block p-4 rounded-2xl border border-slate-100 hover:border-forest-200 hover:bg-forest-50/30 transition-all group cursor-pointer"
+                    @click="close"
+                  >
                     <div class="flex items-start justify-between gap-3">
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
@@ -60,7 +64,7 @@
               </div>
             </div>
 
-            <!-- 空状态 -->
+            <!-- 空状态（未输入） -->
             <div v-else class="text-center py-12 text-slate-300">
               <p class="text-sm">输入关键词开始搜索</p>
             </div>
@@ -87,19 +91,17 @@ const emit = defineEmits(["close"])
 
 const router = useRouter()
 const inputRef = ref(null)
-const { query, isSearching, results, groupedResults, highlightText } = useSearch()
+const { query, isSearching, results, groupedResults, highlightText, clearSearch, hasQueried } = useSearch()
 
 watch(() => props.isOpen, (val) => {
   if (val) {
     setTimeout(() => inputRef.value?.focus(), 100)
-  } else {
-    emit("close")
   }
 })
 
 function close() {
   emit("close")
-  query.value = ""
+  clearSearch()
 }
 
 function navigateFirst() {
