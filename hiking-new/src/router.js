@@ -8,6 +8,9 @@ const routes = [
   { path: '/gear', name: 'Gear', component: () => import('./views/Gear.vue') },
   { path: '/events', name: 'Events', component: () => import('./views/Events.vue') },
   { path: '/post/:id', name: 'PostDetail', component: () => import('./views/PostDetail.vue') },
+  { path: '/login', name: 'Login', component: () => import('./views/auth/AuthPage.vue') },
+  { path: '/register', name: 'Register', component: () => import('./views/auth/AuthPage.vue') },
+  { path: '/profile', name: 'Profile', component: () => import('./views/auth/ProfilePage.vue') },
 ]
 
 const router = createRouter({

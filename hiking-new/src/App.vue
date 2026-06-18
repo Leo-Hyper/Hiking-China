@@ -36,9 +36,24 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </button>
-            <RouterLink to="/forum" class="hidden sm:inline-flex items-center px-5 py-2.5 bg-charcoal text-white text-sm font-medium rounded-xl hover:bg-graphite transition-all duration-300 shadow-lg shadow-charcoal/10">
-              进入论坛
-            </RouterLink>
+            <!-- 未登录：显示登录/注册 -->
+            <template v-if="!isLoggedIn">
+              <RouterLink to="/login" class="hidden sm:inline-flex items-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-charcoal transition-colors">
+                登录
+              </RouterLink>
+              <RouterLink to="/register" class="hidden sm:inline-flex items-center px-5 py-2.5 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all shadow-lg shadow-forest-500/20">
+                注册
+              </RouterLink>
+            </template>
+            <!-- 已登录：显示用户头像 -->
+            <template v-else>
+              <RouterLink to="/profile" class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all">
+                <div class="w-8 h-8 rounded-full bg-forest-100 flex items-center justify-center text-forest-700 font-bold text-sm">
+                  {{ user?.username?.charAt(0)?.toUpperCase() || '?' }}
+                </div>
+                <span class="hidden sm:inline text-sm font-medium text-charcoal">{{ user?.username }}</span>
+              </RouterLink>
+            </template>
             <!-- Mobile menu -->
             <button class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors"
                     @click="mobileMenu = !mobileMenu">
@@ -62,6 +77,24 @@
               @click="mobileMenu = false">
               {{ item.label }}
             </RouterLink>
+            <div class="border-t border-slate-100 my-2 pt-2">
+              <template v-if="!isLoggedIn">
+                <RouterLink to="/login" class="block px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-charcoal hover:bg-slate-50">
+                  登录
+                </RouterLink>
+                <RouterLink to="/register" class="block px-4 py-3 rounded-xl text-sm font-medium text-forest-600 hover:bg-forest-50">
+                  注册
+                </RouterLink>
+              </template>
+              <template v-else>
+                <RouterLink to="/profile" class="block px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-charcoal hover:bg-slate-50">
+                  个人中心
+                </RouterLink>
+                <button @click="handleLogout" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50">
+                  退出登录
+                </button>
+              </template>
+            </div>
           </div>
         </div>
       </Transition>
@@ -82,15 +115,22 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import Footer from './components/Footer.vue'
 import SearchOverlay from './components/SearchOverlay.vue'
 
 const route = useRoute()
+const router = useRouter()
 const routePath = computed(() => route.path)
 const mobileMenu = ref(false)
 const scrolled = ref(false)
 const searchOpen = ref(false)
+
+const isLoggedIn = computed(() => !!localStorage.getItem("token"))
+const user = computed(() => {
+  const u = localStorage.getItem("user")
+  return u ? JSON.parse(u) : null
+})
 
 const navItems = [
   { path: '/', label: '首页' },
@@ -102,9 +142,14 @@ const navItems = [
 
 const handleScroll = () => { scrolled.value = window.scrollY > 50 }
 
+const handleLogout = () => {
+  localStorage.removeItem("token")
+  localStorage.removeItem("user")
+  router.push("/")
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
-  // 键盘快捷键 Ctrl/Cmd + K 打开搜索
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault()
@@ -114,7 +159,6 @@ onMounted(() => {
 })
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
-  window.removeEventListener('keydown', (e) => {})
 })
 </script>
 
