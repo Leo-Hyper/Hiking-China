@@ -58,7 +58,32 @@
 - 搜索词高亮
 - 数据层抽象，便于后续替换为 API
 
+---
+
+## 2026-06-18 — 全栈架构搭建
+
+### 后端（Render）
+- server/ — Express API 服务
+- models/user.js — 用户模型（bcrypt 密码加密）
+- models/db.js — SQLite 数据库初始化
+- models/seed.js — 搜索数据种子
+- middleware/auth.js — JWT 认证中间件
+- routes/auth.js — 认证路由（注册/登录/登出/获取用户）
+- routes/search.js — 搜索 API 路由
+- server/package.json — 后端依赖
+
+### 前端
+- src/views/auth/AuthPage.vue — 登录/注册页面
+- src/views/auth/ProfilePage.vue — 个人中心
+- src/stores/auth.js — Auth composable
+- src/composables/useSearch.js — 升级为 API + 本地双模式
+
+### 部署
+- 前端: Netlify（genuine-meringue-dfd78e.netlify.app）
+- 后端: Render（hiking-china-api.onrender.com）
+- CORS: FRONTEND_URL 环境变量配置
+
 ### 构建
-- 39 → 43 模块
-- CSS +38KB → +40KB
-- JS +113KB → +129KB
+- 43 → 45 模块
+- CSS +40KB → +41KB
+- JS +129KB → +132KB

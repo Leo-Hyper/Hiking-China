@@ -23,8 +23,11 @@
 - [x] Netlify 生产部署上线
 - [x] 图片压缩优化：13MB → 1.8MB（-86%）
 - [x] 搜索功能：模糊匹配 + 加权排序 + Ctrl+K 快捷键
+- [x] 后端 API（Express + SQLite + JWT 认证）
+- [x] 前端登录/注册/个人中心
+- [x] 搜索 API 集成（替代本地索引）
+- [x] Render 后端部署 + CORS 配置
 
 ## Todo
-- [ ] 登录/注册功能
 - [ ] PWA 支持
 - [ ] PostDetail.vue 大体积懒加载优化

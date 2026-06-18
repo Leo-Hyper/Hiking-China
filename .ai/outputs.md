@@ -9,6 +9,8 @@
 | 2026-06-18 | 页面 | src/views/Gear.vue | 装备指南网格 |
 | 2026-06-18 | 页面 | src/views/Events.vue | 活动召集列表 |
 | 2026-06-18 | 页面 | src/views/PostDetail.vue | 帖子详情（15篇） |
+| 2026-06-18 | 页面 | src/views/auth/AuthPage.vue | 登录/注册 |
+| 2026-06-18 | 页面 | src/views/auth/ProfilePage.vue | 个人中心 |
 | 2026-06-18 | 组件 | src/components/Footer.vue | 深色页脚 |
 | 2026-06-18 | 组件 | src/components/Hero.vue | 全屏沉浸首屏 |
 | 2026-06-18 | 组件 | src/components/PostCard.vue | 帖子卡片 |
@@ -19,7 +21,11 @@
 | 2026-06-18 | 数据 | src/data/postContent.js | 15篇帖子内容 |
 | 2026-06-18 | 数据 | src/data/postIndex.js | 可搜索索引（43条） |
 | 2026-06-18 | 逻辑 | src/composables/useSearch.js | 搜索逻辑 composable |
+| 2026-06-18 | 逻辑 | src/stores/auth.js | Auth composable |
 | 2026-06-18 | 图标 | public/favicon.svg | 山形 Logo |
-| 2026-06-18 | 配置 | netlify.toml | 部署配置 |
+| 2026-06-18 | 配置 | netlify.toml | 前端部署配置 |
+| 2026-06-18 | 后端 | server/ | Express API 服务 |
+| 2026-06-18 | 后端 | server/package.json | 后端依赖 |
 | 2026-06-18 | 仓库 | GitHub | Leo-Hyper/Hiking-China |
-| 2026-06-18 | 部署 | Netlify | genuine-meringue-dfd78e.netlify.app |
+| 2026-06-18 | 前端部署 | Netlify | genuine-meringue-dfd78e.netlify.app |
+| 2026-06-18 | 后端部署 | Render | hiking-china-api.onrender.com |
