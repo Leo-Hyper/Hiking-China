@@ -14,6 +14,7 @@
 - Git + GitHub 版本控制
 - Netlify 生产部署上线（持续部署已启用）
 - 图片压缩优化：13MB → 1.8MB（-86%）
+- 搜索功能：模糊匹配 + 加权排序 + Ctrl+K 快捷键
 
 **站点地址:** https://genuine-meringue-dfd78e.netlify.app/
 **GitHub 仓库:** https://github.com/Leo-Hyper/Hiking-China
@@ -22,11 +23,11 @@
 ## Constraints
 - 使用 Tailwind CSS v4 新语法（@import "tailwindcss" 代替 @tailwind）
 - PostCSS 配置使用 .cjs 后缀
+- 搜索数据层抽象为 postIndex.js，便于后续替换为 API
 
 ## Risks
 - PostDetail.vue 体积 142KB（gzip 29KB），后续可懒加载优化
 
 ## Next Actions
-1. 搜索功能实现
-2. 登录/注册功能
-3. PWA 支持
+1. 登录/注册功能
+2. PWA 支持

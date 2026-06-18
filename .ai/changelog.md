@@ -41,3 +41,24 @@
 ### 结果
 - 20 张图片：13.06MB → 1.81MB（-86.1%）
 - JPEG 压缩 quality 80，PNG quality 80，最大宽度 1920px
+
+---
+
+## 2026-06-18 — 搜索功能
+
+### 新增
+- src/data/postIndex.js — 可搜索索引（43 条数据）
+- src/composables/useSearch.js — 搜索逻辑 composable
+- src/components/SearchOverlay.vue — 全屏搜索 UI
+- App.vue 集成搜索入口 + Ctrl+K 快捷键
+
+### 特性
+- 模糊匹配 + 加权排序（标题 > 分类/标签 > 摘要）
+- 按类型分组展示
+- 搜索词高亮
+- 数据层抽象，便于后续替换为 API
+
+### 构建
+- 39 → 43 模块
+- CSS +38KB → +40KB
+- JS +113KB → +129KB

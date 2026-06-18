@@ -22,9 +22,9 @@
 - [x] GitHub 仓库创建：Leo-Hyper/Hiking-China
 - [x] Netlify 生产部署上线
 - [x] 图片压缩优化：13MB → 1.8MB（-86%）
+- [x] 搜索功能：模糊匹配 + 加权排序 + Ctrl+K 快捷键
 
 ## Todo
-- [ ] 搜索功能实现
 - [ ] 登录/注册功能
 - [ ] PWA 支持
 - [ ] PostDetail.vue 大体积懒加载优化
