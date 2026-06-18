@@ -82,7 +82,7 @@ async function handleLogin() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/auth/login`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: form.value.email, password: form.value.password }),
@@ -103,7 +103,7 @@ async function handleRegister() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/auth/register`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form.value),
