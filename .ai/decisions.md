@@ -29,3 +29,17 @@
 **Decision:** postcss.config.js 重命名为 postcss.config.cjs
 
 **Rationale:** 避免 ESM 兼容性问题
+
+## 2026-06-18 — 死代码清理策略
+**Context:** 代码审查发现 Header.vue（App.vue 内联导航）、BackToTop.vue、posts.json 均为冗余
+
+**Decision:** 直接删除，不保留占位
+
+**Rationale:** 组件均无其他引用，保留会增加维护负担和构建体积
+
+## 2026-06-18 — postContent.js 全量数据整合
+**Context:** 15 个帖子详情页中只有 1 条有实际内容，其余显示 "内容加载中..."
+
+**Decision:** 从原始 15 个 HTML 文件提取完整内容，一次性写入 postContent.js
+
+**Rationale:** 原始 HTML 文件不可作为运行时数据源，需在 Vue SPA 中内联全部内容

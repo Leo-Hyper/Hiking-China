@@ -19,3 +19,20 @@
 - 导航：静态顶栏 → 毛玻璃固定导航
 - 首屏：轮播图 → Ken Burns 全屏大图
 - 动效：基础 hover → 多层级过渡动画
+
+---
+
+## 2026-06-18 — 代码审查修复
+
+### 修复
+- PostCard.vue、RouteCard.vue 路由硬编码 → 动态路由 /post/${id}
+- postContent.js 仅 1 条帖子 → 补全至 15 条（从原始 HTML 提取）
+- index.html 的 /favicon.svg 不存在 → 创建山形 SVG 图标
+
+### 删除
+- Header.vue（死代码，App.vue 内联导航栏）
+- BackToTop.vue（死代码，未被引用）
+- posts.json（死数据，与 postContent.js 重复）
+
+### Git 初始化
+- git init + 首次提交 b40f3e8（109 文件，14,241 行）

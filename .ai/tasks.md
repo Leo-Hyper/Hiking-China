@@ -9,9 +9,15 @@
 - [x] 创建 6 个页面组件（Home/Routes/Forum/Gear/Events/PostDetail）
 - [x] 创建 5 个公共组件（Header/Footer/Hero/PostCard/RouteCard）
 - [x] 替换 Unsplash 占位图为本地 img/ 素材
-- [x] 迁移 15 个帖子详情页内容
+- [x] 迁移 15 个帖子详情页内容（postContent.js 仅 1 条数据）
 - [x] 修复构建错误（模板语法、换行字面量、引号嵌套）
 - [x] 构建验证通过
+- [x] 全栈代码审查（第 1 轮）：发现 6 个问题
+- [x] 修复 PostCard.vue、RouteCard.vue 路由硬编码
+- [x] 补全 postContent.js 全部 15 条帖子数据
+- [x] 创建 favicon.svg（山形 SVG 图标）
+- [x] 删除死代码：Header.vue、BackToTop.vue、posts.json
+- [x] 全栈代码审查（第 2 轮）：全部通过，构建 39 模块 0 错误
 
 ## In Progress
 - [ ] 启动开发服务器测试浏览器访问
@@ -22,3 +28,5 @@
 - [ ] 搜索功能实现
 - [ ] 登录/注册功能
 - [ ] PWA 支持
+- [ ] PostDetail.vue 大体积(142KB)懒加载优化
+- [ ] 初始化 Git 仓库并首次提交
