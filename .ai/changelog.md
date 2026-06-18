@@ -35,4 +35,16 @@
 - posts.json（死数据，与 postContent.js 重复）
 
 ### Git 初始化
-- git init + 首次提交 b40f3e8（109 文件，14,241 行）
+- git init + 首次提交
+- GitHub 仓库：Leo-Hyper/Hiking-China
+
+---
+
+## 2026-06-18 — 生产部署
+
+### 新增配置
+- hiking-new/netlify.toml（SPA 路由重定向部署配置）
+
+### 部署
+- Netlify 生产环境部署完成
+- 持续部署已启用（Git push 自动触发构建）

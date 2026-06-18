@@ -18,15 +18,13 @@
 - [x] 创建 favicon.svg（山形 SVG 图标）
 - [x] 删除死代码：Header.vue、BackToTop.vue、posts.json
 - [x] 全栈代码审查（第 2 轮）：全部通过，构建 39 模块 0 错误
-
-## In Progress
-- [ ] 启动开发服务器测试浏览器访问
+- [x] 初始化 Git 仓库并首次提交
+- [x] GitHub 仓库创建：Leo-Hyper/Hiking-China
+- [x] Netlify 生产部署
 
 ## Todo
-- [ ] 生产部署（Netlify/Vercel）
 - [ ] 图片压缩优化
 - [ ] 搜索功能实现
 - [ ] 登录/注册功能
 - [ ] PWA 支持
 - [ ] PostDetail.vue 大体积(142KB)懒加载优化
-- [ ] 初始化 Git 仓库并首次提交

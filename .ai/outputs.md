@@ -18,4 +18,6 @@
 | 2026-06-18 | 数据 | src/data/postContent.js | 15篇帖子内容数据 |
 | 2026-06-18 | 图标 | public/favicon.svg | 山形 Logo 图标 |
 | 2026-06-18 | 构建产物 | dist/ | 生产就绪构建输出 |
-| 2026-06-18 | Git | .git/ | 版本控制（首次提交 b40f3e8） |
+| 2026-06-18 | 配置 | netlify.toml | SPA 路由重定向 |
+| 2026-06-18 | Git | GitHub | Leo-Hyper/Hiking-China |
+| 2026-06-18 | 部署 | Netlify | 生产环境上线 |
