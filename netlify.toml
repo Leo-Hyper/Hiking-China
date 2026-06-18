@@ -1,4 +1,4 @@
-﻿[build]
+[build]
   command = "cd hiking-new && npm run build"
   publish = "hiking-new/dist"
 
