@@ -24,6 +24,7 @@
 | 2026-06-18 | 逻辑 | src/stores/auth.js | Auth composable |
 | 2026-06-18 | 图标 | public/favicon.svg | 山形 Logo |
 | 2026-06-18 | 配置 | netlify.toml | 前端部署配置 |
+| 2026-06-18 | 配置 | _redirects | SPA 路由重定向 |
 | 2026-06-18 | 后端 | server/ | Express API 服务 |
 | 2026-06-18 | 后端 | server/package.json | 后端依赖 |
 | 2026-06-18 | 仓库 | GitHub | Leo-Hyper/Hiking-China |

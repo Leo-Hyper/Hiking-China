@@ -87,3 +87,18 @@
 - 43 → 45 模块
 - CSS +40KB → +41KB
 - JS +129KB → +132KB
+
+---
+
+## 2026-06-19 — 部署修复
+
+### 修复
+- netlify.toml BOM 问题 → 重写无 BOM UTF-8
+- SPA 路由 404 → netlify.toml [[redirects]] 配置
+- Render 后端 503 → 移除 production static serving
+- Render CORS → 更新 FRONTEND_URL 环境变量
+- Fetch 间歇性失败 → fetchWithRetry 重试机制（2 次重试，2s/4s 间隔）
+
+### 已知问题
+- Render 免费版空闲休眠 → 建议 UptimeRobot 每 5 分钟 ping
+- 长期建议迁移到 Railway/Vercel

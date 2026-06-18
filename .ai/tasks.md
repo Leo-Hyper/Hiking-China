@@ -27,7 +27,12 @@
 - [x] 前端登录/注册/个人中心
 - [x] 搜索 API 集成（替代本地索引）
 - [x] Render 后端部署 + CORS 配置
+- [x] 修复 netlify.toml BOM 问题
+- [x] 修复 SPA 路由 404（netlify.toml redirects）
+- [x] 修复 Render 冷启动问题（fetch 重试机制）
 
 ## Todo
 - [ ] PWA 支持
 - [ ] PostDetail.vue 大体积懒加载优化
+- [ ] 设置 UptimeRobot 定时 ping Render 后端
+- [ ] 评估迁移到 Railway/Vercel（替代 Render 免费版休眠问题）
