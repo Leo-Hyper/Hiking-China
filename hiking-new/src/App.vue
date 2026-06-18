@@ -30,7 +30,8 @@
 
           <!-- Right Actions -->
           <div class="flex items-center gap-3">
-            <button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-charcoal hover:bg-slate-100 transition-all duration-300">
+            <button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-charcoal hover:bg-slate-100 transition-all duration-300"
+                    @click="searchOpen = true">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
@@ -73,6 +74,9 @@
 
     <!-- 页脚 -->
     <Footer />
+
+    <!-- 搜索覆盖层 -->
+    <SearchOverlay :is-open="searchOpen" @close="searchOpen = false" />
   </div>
 </template>
 
@@ -80,11 +84,13 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import Footer from './components/Footer.vue'
+import SearchOverlay from './components/SearchOverlay.vue'
 
 const route = useRoute()
 const routePath = computed(() => route.path)
 const mobileMenu = ref(false)
 const scrolled = ref(false)
+const searchOpen = ref(false)
 
 const navItems = [
   { path: '/', label: '首页' },
@@ -96,8 +102,20 @@ const navItems = [
 
 const handleScroll = () => { scrolled.value = window.scrollY > 50 }
 
-onMounted(() => window.addEventListener('scroll', handleScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  // 键盘快捷键 Ctrl/Cmd + K 打开搜索
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault()
+      searchOpen.value = true
+    }
+  })
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('keydown', (e) => {})
+})
 </script>
 
 <style scoped>
