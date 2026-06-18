@@ -1,0 +1,6 @@
+﻿const fs = require('fs')
+let c = fs.readFileSync('D:/AI-Workspace/Projects/徒步论坛网站/hiking-new/src/views/PostDetail.vue','utf8')
+c = c.replace(/\\\\s\\\\S/g, '\\s\\S')
+c = c.replace(/\\/script/g, '/script')
+fs.writeFileSync('D:/AI-Workspace/Projects/徒步论坛网站/hiking-new/src/views/PostDetail.vue',c)
+console.log('Fixed regex')

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>徒步活动 - 徒步中国</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 全局重置和基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* CSS变量定义 */
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #ff9800;
+            --light: #f5f5f5;
+            --dark: #333;
+            --gray: #757575;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        /* 基础样式 */
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+            overflow-x: hidden;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none !important;
+            transition: var(--transition);
+        }
+
+        a:hover {
+            color: var(--secondary);
+            text-decoration: none !important;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* 容器样式 */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 头部样式 */
+        header {
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-top {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .header-top .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-contact {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-contact i {
+            margin-right: 5px;
+            color: white;
+        }
+
+        .header-main {
+            padding: 15px 0;
+        }
+
+        .header-main .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo img {
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-left: 25px;
+            position: relative;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 8px 0;
+            position: relative;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+
+        nav ul li a.active {
+            color: var(--primary);
+        }
+
+        nav ul li a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 4px;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* 用户操作区域 - 与主页保持一致 */
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-actions a {
+            margin-left: 15px;
+            color: var(--dark);
+            text-decoration: none;
+        }
+        
+        .user-actions .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .user-actions .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* 搜索按钮样式 - 与主页保持一致 */
+        #search-btn {
+            background-color: transparent;
+            border: none;
+            color: var(--dark);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        #search-btn:hover {
+            color: var(--primary);
+        }
+        
+        /* 登录按钮样式 - 与主页保持一致 */
+        #login-btn {
+            width: auto;
+            height: auto;
+            background-color: transparent;
+            color: var(--dark);
+            border: none;
+            padding: 0;
+            transition: color 0.3s;
+        }
+        
+        #login-btn:hover {
+            color: var(--primary);
+        }
+        
+        /* 注册按钮样式 - 与主页保持一致 */
+        #register-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            border: none;
+        }
+        
+        #register-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* 页面英雄区域 */
+        .page-hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(img/首页.jpeg);
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 20px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .page-hero h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        /* 筛选区域 */
+        .filter-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 25px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray);
+            color: white;
+        }
+        
+        /* 活动列表 */
+        .events-list {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title a {
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .events-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        .event-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+            border: 1px solid #eee;
+        }
+        
+        .post-link {
+            display: block;
+            color: inherit;
+            text-decoration: none !important;
+            transition: transform 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .event-card-image {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .event-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .event-card:hover .event-card-image img {
+            transform: scale(1.05);
+        }
+        
+        .event-card-content {
+            padding: 20px;
+        }
+        
+        .event-card-content h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .event-card-content p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .event-card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .sidebar-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+        
+        .upcoming-events {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .event {
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .event:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .event h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .event p {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        
+        .event-date {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        
+        .event-date i {
+            margin-right: 5px;
+        }
+        
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+        
+        .pagination a {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .pagination a:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .pagination a.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--secondary);
+        }
+
+        .footer-column p {
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.7;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--light-color);
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-link,
+        .route-link {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .footer-link:hover,
+        .route-link:hover {
+            color: white;
+        }
+
+
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-main .container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 0 10px 5px;
+            }
+            
+            .page-hero h1 {
+                font-size: 28px;
+            }
+            
+            .event-card-image {
+                height: 150px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .page-hero {
+                padding: 60px 20px;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header>
+        <div class="header-top">
+            <div class="container">
+                <div class="header-contact">
+                    <i class="fas fa-phone"></i> 400-123-4567 | <i class="fas fa-envelope"></i> contact@hikingchina.com
+                </div>
+                <div class="header-social">
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="#"><i class="fab fa-weibo"></i></a>
+                    <a href="#"><i class="fab fa-qq"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container">
+                <div class="logo" id="home-logo">
+                    <img src="img/logo.png" alt="徒步中国">
+                    <h1>徒步<span>中国</span></h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html" class="nav-link">首页</a></li>
+                        <li><a href="routes.html" class="nav-link">徒步路线</a></li>
+                        <li><a href="gear.html" class="nav-link">装备指南</a></li>
+                        <li><a href="events.html" class="nav-link active">活动召集</a></li>
+                        <li><a href="forum.html" class="nav-link">徒步论坛</a></li>
+                    </ul>
+                </nav>
+                <div class="user-actions">
+                    <a href="#" id="search-btn"><i class="fas fa-search"></i></a>
+                    <a href="#" id="login-btn"><i class="fas fa-user"></i> <span id="login-text">登录</span></a>
+                    <a href="#" class="btn" id="register-btn">注册</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 页面英雄区域 -->
+    <section class="page-hero">
+        <div class="container">
+            <h1>徒步活动</h1>
+            <p>发现并参与全国各地的精彩徒步活动，结交志同道合的徒步爱好者</p>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <div class="container">
+        <!-- 筛选区域 -->
+        <section class="filter-section">
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="location">活动地点</label>
+                    <select id="location">
+                        <option value="all">全部地区</option>
+                        <option value="beijing">北京</option>
+                        <option value="shanghai">上海</option>
+                        <option value="guangzhou">广州</option>
+                        <option value="shenzhen">深圳</option>
+                        <option value="chengdu">成都</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date">活动日期</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="filter-group">
+                    <label for="difficulty">难度级别</label>
+                    <select id="difficulty">
+                        <option value="all">全部难度</option>
+                        <option value="easy">初级</option>
+                        <option value="medium">中级</option>
+                        <option value="hard">高级</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="type">活动类型</label>
+                    <select id="type">
+                        <option value="all">全部类型</option>
+                        <option value="day">单日徒步</option>
+                        <option value="weekend">周末徒步</option>
+                        <option value="weeklong">多日徒步</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="price">价格范围</label>
+                    <select id="price">
+                        <option value="all">全部价格</option>
+                        <option value="free">免费</option>
+                        <option value="0-100">100元以下</option>
+                        <option value="100-300">100-300元</option>
+                        <option value="300+">300元以上</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-primary" id="filter-btn">筛选</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <!-- 活动列表 -->
+            <div class="events-list">
+                <h2 class="section-title">最新活动</h2>
+                <div class="events-grid">
+                    <!-- 活动卡片 1 -->
+                    <a href="帖子详情页/北京香山徒步.html" class="post-link" target="_blank">
+                        <div class="event-card">
+                            <div class="event-card-image">
+                                <img src="img/香山.jpeg" alt="香山徒步">
+                            </div>
+                            <div class="event-card-content">
+                                <h3>北京香山一日徒步</h3>
+                                <p>适合初学者的经典徒步路线，沿途欣赏美丽的自然风光，感受秋季香山红叶的魅力。全程约8公里，爬升400米。</p>
+                                <div class="event-card-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> 北京·香山</span>
+                                    <span><i class="fas fa-calendar-alt"></i> 2023-10-15</span>
+                                    <span><i class="fas fa-yen-sign"></i> 88元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 活动卡片 2 -->
+                    <a href="帖子详情页/云蒙山徒步.html" class="post-link" target="_blank">
+                        <div class="event-card">
+                            <div class="event-card-image">
+                                <img src="img/云蒙山.jpg" alt="云蒙山徒步">
+                            </div>
+                            <div class="event-card-content">
+                                <h3>云蒙山登山徒步</h3>
+                                <p>挑战北京周边著名的云蒙山，全程约12公里，爬升800米，适合有一定经验的徒步爱好者。</p>
+                                <div class="event-card-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> 北京·云蒙山</span>
+                                    <span><i class="fas fa-calendar-alt"></i> 2023-10-18</span>
+                                    <span><i class="fas fa-yen-sign"></i> 128元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 活动卡片 3 -->
+                    <a href="帖子详情页/张家界徒步.html" class="post-link" target="_blank">
+                        <div class="event-card">
+                            <div class="event-card-image">
+                                <img src="img/张家界.png" alt="张家界徒步">
+                            </div>
+                            <div class="event-card-content">
+                                <h3>张家界三日徒步探险</h3>
+                                <p>探索中国最美的自然景观之一，感受张家界独特的石英砂岩峰林地貌，体验阿凡达电影取景地的震撼美景。</p>
+                                <div class="event-card-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> 湖南·张家界</span>
+                                    <span><i class="fas fa-calendar-alt"></i> 2023-10-20</span>
+                                    <span><i class="fas fa-yen-sign"></i> 1280元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <a href="#">上一页</a>
+                    <a href="#" class="active">1</a>
+                    <a href="#">2</a>
+                    <a href="#">3</a>
+                    <span>...</span>
+                    <a href="#">10</a>
+                    <a href="#">下一页</a>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <!-- 即将开始的活动 -->
+                <div class="sidebar-section">
+                    <h3 class="section-title">即将开始</h3>
+                    <div class="upcoming-events">
+                        <div class="event">
+                            <h4>香山红叶观赏徒步</h4>
+                            <p>距离开始还有2天</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023-10-15
+                            </div>
+                        </div>
+                        <div class="event">
+                            <h4>云蒙山登山徒步</h4>
+                            <p>距离开始还有5天</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023-10-18
+                            </div>
+                        </div>
+                        <div class="event">
+                            <h4>张家界三日徒步</h4>
+                            <p>距离开始还有7天</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023-10-20
+                            </div>
+                        </div>
+                        <div class="event">
+                            <h4>长城徒步摄影</h4>
+                            <p>距离开始还有10天</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023-10-23
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 活动小贴士 -->
+                <div class="sidebar-section">
+                    <h3 class="section-title">活动小贴士</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">如何选择适合自己的徒步活动？</a></li>
+                        <li><a href="#">活动前需要做哪些准备？</a></li>
+                        <li><a href="#">徒步活动安全须知</a></li>
+                        <li><a href="#">如何成为活动领队？</a></li>
+                        <li><a href="#">活动报名退款说明</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>关于我们</h3>
+                    <p>徒步中国是中国最大的户外徒步社区，致力于推广健康、环保的徒步文化，为徒步爱好者提供交流平台和专业的徒步信息服务。</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" data-platform="wechat"><i class="fab fa-weixin"></i></a>
+                        <a href="#" class="social-link" data-platform="weibo"><i class="fab fa-weibo"></i></a>
+                        <a href="#" class="social-link" data-platform="qq"><i class="fab fa-qq"></i></a>
+                        <a href="#" class="social-link" data-platform="tiktok"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>快速链接</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html" class="footer-link" data-page="home">首页</a></li>
+                        <li><a href="routes.html" class="footer-link" data-page="routes">徒步路线</a></li>
+                        <li><a href="gear.html" class="footer-link" data-page="gear">装备指南</a></li>
+                        <li><a href="events.html" class="footer-link" data-page="events">活动召集</a></li>
+                        <li><a href="forum.html" class="footer-link" data-page="forum">徒步论坛</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>热门路线</h3>
+                    <ul class="footer-links">
+                        <li><a href="帖子详情页/四姑娘山.html" class="route-link" data-route-id="1">四姑娘山徒步</a></li>
+                        <li><a href="帖子详情页/虎跳峡.html" class="route-link" data-route-id="2">虎跳峡高路徒步</a></li>
+                        <li><a href="帖子详情页/稻城亚丁徒步.html" class="route-link" data-route-id="3">稻城亚丁徒步</a></li>
+                        <li><a href="帖子详情页/雨崩村徒步.html" class="route-link" data-route-id="4">雨崩村徒步</a></li>
+                        <li><a href="帖子详情页/墨脱徒步.html" class="route-link" data-route-id="5">墨脱徒步</a></li>
+                        <li><a href="帖子详情页/贡嘎转山.html" class="route-link" data-route-id="6">贡嘎转山</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>联系我们</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> 北京市朝阳区户外大道123号</li>
+                        <li><i class="fas fa-phone"></i> 400-123-4567</li>
+                        <li><i class="fas fa-envelope"></i> contact@hikingchina.com</li>
+                        <li><i class="fas fa-clock"></i> 周一至周五 9:00-18:00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 徒步中国 版权所有 | 京ICP备12345678号</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <div class="back-to-top" id="back-to-top" style="display: none;">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        // 返回顶部按钮功能
+        const backToTopButton = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

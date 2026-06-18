@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>徒步中国 - 户外徒步论坛</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #ff9800;
+            --light: #f5f5f5;
+            --dark: #333;
+            --gray: #757575;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+       
+        /* 头部样式 */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-top {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .header-top .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .header-main {
+            padding: 15px 0;
+        }
+        
+        .header-main .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .logo img {
+            height: 50px;
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        nav ul li a.active {
+            color: var(--primary);
+        }
+        
+        nav ul li a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-actions a {
+            margin-left: 15px;
+            color: var(--dark);
+            text-decoration: none;
+        }
+        
+        .user-actions .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .user-actions .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* 英雄区域样式 */
+        .hero {
+            position: relative;
+            height: 500px;
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+            margin-bottom: 50px;
+            overflow: hidden;
+        }
+        
+        .hero-slides {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: -1;
+        }
+        
+        .hero h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .hero-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-outline {
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn-outline:hover {
+            background-color: white;
+            color: var(--dark);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 主要内容区域样式 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title a {
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        /* 论坛帖子样式 */
+        .forum-posts {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+        
+        .post {
+            display: flex;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .post:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .post:last-child {
+            border-bottom: none;
+        }
+        
+        .post-image {
+            width: 120px;
+            height: 80px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .post-content {
+            flex: 1;
+        }
+        
+        .post-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .post-title a {
+            color: var(--dark);
+            text-decoration: none;
+        }
+        
+        .post-title a:hover {
+            color: var(--primary);
+        }
+        
+        .post-meta {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        
+        .post-excerpt {
+            font-size: 15px;
+            color: #555;
+        }
+        
+        .post-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 10px;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .sidebar-widget {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+        
+        .popular-routes {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .route {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .route:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .route:last-child {
+            border-bottom: none;
+        }
+
+        .route-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .route-link:hover .route {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .post-link:hover .post {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-title {
+            color: #333;
+            transition: color 0.3s ease;
+        }
+
+        .post-link:hover .post-title {
+            color: #4CAF50;
+        }
+
+        .route-card-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .route-card-link:hover .route-card {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .route-card h3 {
+            color: #333;
+            transition: color 0.3s ease;
+        }
+
+        .route-card-link:hover .route-card h3 {
+            color: #4CAF50;
+        }
+        
+        .route-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+        
+        .route-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .route-info h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .route-info p {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .event {
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .event:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .event h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .event p {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        
+        .event-date {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        
+        .event-date i {
+            margin-right: 5px;
+        }
+        
+        /* 热门路线区域样式 */
+        .popular-section {
+            margin-bottom: 50px;
+        }
+        
+        .routes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        
+        .route-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .route-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .route-card-image {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .route-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .route-card:hover .route-card-image img {
+            transform: scale(1.05);
+        }
+        
+        .route-card-content {
+            padding: 20px;
+        }
+        
+        .route-card-content h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .route-card-content p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .route-card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--secondary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+        }
+        
+        .social-links {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .social-link {
+            color: white;
+            font-size: 18px;
+            margin-right: 15px;
+            transition: color 0.3s;
+        }
+        
+        .social-link:hover {
+            color: var(--secondary);
+        }
+        
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .routes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-main .container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 0 10px 5px;
+            }
+            
+            .hero h2 {
+                font-size: 32px;
+            }
+            
+            .hero-btns {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+                text-align: center;
+            }
+            
+            .routes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .fixed-back-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header>
+        <div class="header-top">
+            <div class="container">
+                <div class="header-contact">
+                    <i class="fas fa-phone"></i> 400-123-4567 | <i class="fas fa-envelope"></i> contact@hikingchina.com
+                </div>
+                <div class="header-social">
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="#"><i class="fab fa-weibo"></i></a>
+                    <a href="#"><i class="fab fa-qq"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container">
+                <div class="logo" id="home-logo">
+                    <img src="img/logo.png" alt="徒步中国">
+                    <h1>徒步<span>中国</span></h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html" class="nav-link active">首页</a></li>
+                        <li><a href="routes.html" class="nav-link">徒步路线</a></li>
+                        <li><a href="gear.html" class="nav-link">装备指南</a></li>
+                        <li><a href="events.html" class="nav-link">活动召集</a></li>
+                        <li><a href="forum.html" class="nav-link">徒步论坛</a></li>
+                    </ul>
+                </nav>
+                <div class="user-actions">
+                    <a href="#" id="search-btn"><i class="fas fa-search"></i></a>
+                    <a href="#" id="login-btn"><i class="fas fa-user"></i> <span id="login-text">登录</span></a>
+                    <a href="#" class="btn" id="register-btn">注册</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+
+    <!-- 首页内容 -->
+    <div class="container">
+        <!-- 英雄区域 -->
+        <section class="hero">
+            <!-- 幻灯片容器 -->
+            <div class="hero-slides">
+                <div class="hero-slide active" style="background-image: url('img/首页.jpeg');"></div>
+                <div class="hero-slide" style="background-image: url('img/喀纳斯.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('img/四姑娘山.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('img/虎跳峡.jpg');"></div>
+                <div class="hero-slide" style="background-image: url('img/张家界.png');"></div>
+            </div>
+            <!-- 遮罩层 -->
+            <div class="hero-overlay"></div>
+            
+            <div class="container">
+                <h2>探索中国最美的徒步路线</h2>
+                <p>加入我们的社区，与数万徒步爱好者一起分享经验、组织活动、探索自然之美</p>
+                <div class="hero-btns">
+                    <a href="#" class="btn btn-primary" id="join-btn">立即加入</a>
+                    <a href="#" class="btn btn-outline" id="learn-more-btn">了解更多</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 论坛帖子 -->
+            <div class="forum-posts">
+                <div class="section-title">
+                    <h2>最新帖子</h2>
+                    <div>
+                        <a href="forum.html" id="view-all-posts">查看全部 <i class="fas fa-arrow-right"></i></a>
+                        <button class="btn btn-primary" id="create-post-btn" style="margin-left: 15px; padding: 8px 15px; font-size: 14px;">发帖</button>
+                    </div>
+                </div>
+                
+                <a href="帖子详情页/四姑娘山.html" class="post-link" target="_blank">
+                    <div class="post" data-post-id="1">
+                        <div class="post-image">
+                            <img src="img/四姑娘山.jpg" alt="四姑娘山大峰徒步">
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">四姑娘山大峰攀登全记录 - 挑战人生第一座雪山</h3>
+                            <div class="post-meta">作者：山野行者 | 2023年10月15日 | 分类：登山经验</div>
+                            <p class="post-excerpt">四姑娘山大峰海拔5025米，是入门级雪山的绝佳选择。本文详细记录了从成都出发到成功登顶的全过程，包括装备准备、高原适应、攀登技巧和注意事项...</p>
+                            <div class="post-stats">
+                                <span><i class="far fa-eye"></i> 1256</span>
+                                <span><i class="far fa-comment"></i> 42</span>
+                                <span><i class="far fa-heart"></i> 89</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="帖子详情页/虎跳峡.html" class="post-link" target="_blank">
+                    <div class="post" data-post-id="2">
+                        <div class="post-image">
+                            <img src="img/虎跳峡.jpg" alt="虎跳峡徒步">
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">虎跳峡高路徒步 - 世界十大经典徒步路线体验</h3>
+                            <div class="post-meta">作者：江河漫步 | 2023年10月12日 | 分类：徒步路线</div>
+                            <p class="post-excerpt">云南虎跳峡高路徒步被誉为世界十大经典徒步路线之一，沿途可欣赏玉龙雪山和哈巴雪山的壮丽景色，感受金沙江的磅礴气势。这篇攻略详细介绍了2天1夜的行程安排...</p>
+                            <div class="post-stats">
+                                <span><i class="far fa-eye"></i> 987</span>
+                                <span><i class="far fa-comment"></i> 36</span>
+                                <span><i class="far fa-heart"></i> 72</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="帖子详情页/秋季徒步装备指南.html" class="post-link" target="_blank">
+                    <div class="post" data-post-id="3">
+                        <div class="post-image">
+                            <img src="img/徒步装备.avif" alt="徒步装备">
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">秋季徒步装备指南 - 从入门到专业的完整清单</h3>
+                            <div class="post-meta">作者：装备控 | 2023年10月8日 | 分类：装备评测</div>
+                            <p class="post-excerpt">秋季是徒步的黄金季节，但天气变化多端，合适的装备至关重要。本文根据多年徒步经验，整理了从一日徒步到多日重装的各种装备推荐，包括服装、鞋履、背包和露营装备...</p>
+                            <div class="post-stats">
+                                <span><i class="far fa-eye"></i> 1542</span>
+                                <span><i class="far fa-comment"></i> 58</span>
+                                <span><i class="far fa-heart"></i> 103</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <!-- 热门路线 -->
+                <div class="sidebar-widget">
+                    <h3>热门路线</h3>
+                    <div class="popular-routes">
+                        <a href="帖子详情页/稻城亚丁徒步.html" class="route-link" target="_blank">
+                            <div class="route" data-route-id="1">
+                                <div class="route-image">
+                                    <img src="img/稻城亚丁.jpg" alt="稻城亚丁">
+                                </div>
+                                <div class="route-info">
+                                    <h4>稻城亚丁</h4>
+                                    <p>四川 | 难度：中等</p>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="帖子详情页/雨崩村徒步.html" class="route-link" target="_blank">
+                            <div class="route" data-route-id="2">
+                                <div class="route-image">
+                                    <img src="img/雨崩村.webp" alt="雨崩村">
+                                </div>
+                                <div class="route-info">
+                                    <h4>雨崩村</h4>
+                                    <p>云南 | 难度：中等</p>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="帖子详情页/墨脱徒步.html" class="route-link" target="_blank">
+                            <div class="route" data-route-id="3">
+                                <div class="route-image">
+                                    <img src="img/墨脱.jpg" alt="墨脱徒步">
+                                </div>
+                                <div class="route-info">
+                                    <h4>墨脱徒步</h4>
+                                    <p>西藏 | 难度：高</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 近期活动 -->
+                <div class="sidebar-widget">
+                    <h3>近期活动</h3>
+                    <div class="events-list">
+                        <div class="event" data-event-id="1">
+                            <h4>北京香山红叶徒步</h4>
+                            <p>秋季赏红叶最佳时节，适合新手的城市徒步路线</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023年10月28日
+                            </div>
+                        </div>
+                        <div class="event" data-event-id="2">
+                            <h4>四川贡嘎雪山转山</h4>
+                            <p>7天高海拔徒步，挑战蜀山之王</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023年11月5日
+                            </div>
+                        </div>
+                        <div class="event" data-event-id="3">
+                            <h4>冬季东北雪乡徒步</h4>
+                            <p>体验北国风光，冰雪世界徒步</p>
+                            <div class="event-date">
+                                <i class="far fa-calendar-alt"></i> 2023年12月15日
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 热门路线区域 -->
+        <div class="popular-section">
+            <div class="section-title">
+                <h2>热门徒步路线</h2>
+                <a href="routes.html" id="view-all-routes">查看全部 <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="routes-grid">
+                <a href="帖子详情页/稻城亚丁徒步.html" class="route-card-link" target="_blank">
+                    <div class="route-card" data-route-id="1">
+                        <div class="route-card-image">
+                            <img src="img/稻城亚丁.jpg" alt="稻城亚丁">
+                        </div>
+                        <div class="route-card-content">
+                            <h3>稻城亚丁徒步</h3>
+                            <p>被称为"最后的香格里拉"，拥有雪山、湖泊、草原和森林等多种自然景观，是摄影和徒步爱好者的天堂。</p>
+                            <div class="route-card-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> 四川甘孜</span>
+                                <span><i class="fas fa-mountain"></i> 难度：中等</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="帖子详情页/雨崩村徒步.html" class="route-card-link" target="_blank">
+                    <div class="route-card" data-route-id="2">
+                        <div class="route-card-image">
+                            <img src="img/雨崩村.webp" alt="雨崩村">
+                        </div>
+                        <div class="route-card-content">
+                            <h3>雨崩村徒步</h3>
+                            <p>位于梅里雪山脚下的世外桃源，徒步路线可近距离观赏神山卡瓦格博，体验藏传佛教文化。</p>
+                            <div class="route-card-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> 云南迪庆</span>
+                                <span><i class="fas fa-mountain"></i> 难度：中等</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="帖子详情页/墨脱徒步.html" class="route-card-link" target="_blank">
+                    <div class="route-card" data-route-id="3">
+                        <div class="route-card-image">
+                            <img src="img/墨脱.jpg" alt="墨脱徒步">
+                        </div>
+                        <div class="route-card-content">
+                            <h3>墨脱徒步</h3>
+                            <p>中国最后一个通公路的县，穿越雅鲁藏布江大峡谷，体验从高原到热带雨林的垂直气候变化。</p>
+                            <div class="route-card-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> 西藏林芝</span>
+                                <span><i class="fas fa-mountain"></i> 难度：高</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>关于我们</h3>
+                    <p>徒步中国是中国最大的户外徒步社区，致力于推广健康、环保的徒步文化，为徒步爱好者提供交流平台和专业的徒步信息服务。</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" data-platform="wechat"><i class="fab fa-weixin"></i></a>
+                        <a href="#" class="social-link" data-platform="weibo"><i class="fab fa-weibo"></i></a>
+                        <a href="#" class="social-link" data-platform="qq"><i class="fab fa-qq"></i></a>
+                        <a href="#" class="social-link" data-platform="tiktok"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>快速链接</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html" class="footer-link" data-page="home">首页</a></li>
+                        <li><a href="routes.html" class="footer-link" data-page="routes">徒步路线</a></li>
+                        <li><a href="gear.html" class="footer-link" data-page="gear">装备指南</a></li>
+                        <li><a href="events.html" class="footer-link" data-page="events">活动召集</a></li>
+                        <li><a href="forum.html" class="footer-link" data-page="forum">徒步论坛</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>热门路线</h3>
+                    <ul class="footer-links">
+                        <li><a href="帖子详情页/四姑娘山.html" class="route-link" data-route-id="1">四姑娘山徒步</a></li>
+                        <li><a href="帖子详情页/虎跳峡.html" class="route-link" data-route-id="2">虎跳峡高路徒步</a></li>
+                        <li><a href="帖子详情页/稻城亚丁徒步.html" class="route-link" data-route-id="3">稻城亚丁徒步</a></li>
+                        <li><a href="帖子详情页/雨崩村徒步.html" class="route-link" data-route-id="4">雨崩村徒步</a></li>
+                        <li><a href="帖子详情页/墨脱徒步.html" class="route-link" data-route-id="5">墨脱徒步</a></li>   
+                        <li><a href="帖子详情页/贡嘎转山.html" class="route-link" data-route-id="6">贡嘎转山</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>联系我们</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> 北京市朝阳区户外大道123号</li>
+                        <li><i class="fas fa-phone"></i> 400-123-4567</li>
+                        <li><i class="fas fa-envelope"></i> contact@hikingchina.com</li>
+                        <li><i class="fas fa-clock"></i> 周一至周五 9:00-18:00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 徒步中国 版权所有 | 京ICP备12345678号</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <div class="back-to-top" id="back-to-top" style="display: none;">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        // 返回顶部按钮功能
+        const backToTopButton = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // 英雄区域幻灯片功能
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.hero-slide');
+            let currentSlide = 0;
+            const slideInterval = 3000; // 每张幻灯片显示3秒
+            
+            function showSlide(index) {
+                // 隐藏所有幻灯片
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                // 显示当前幻灯片
+                slides[index].classList.add('active');
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            // 自动轮播
+            setInterval(nextSlide, slideInterval);
+        });
+    </script>
+</body>
+</html>

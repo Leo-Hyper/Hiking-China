@@ -1,0 +1,6 @@
+﻿const fs = require('fs')
+let c = fs.readFileSync('D:/AI-Workspace/Projects/徒步论坛网站/hiking-new/src/views/PostDetail.vue','utf8')
+c = c.replace('class="max-w-4xl mx-auto""', "class='max-w-4xl mx-auto'\"")
+c = c.replace('class="container""', "\"\"")
+fs.writeFileSync('D:/AI-Workspace/Projects/徒步论坛网站/hiking-new/src/views/PostDetail.vue',c)
+console.log('Fixed')

@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>徒步路线 - 徒步中国</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #ff9800;
+            --light: #f5f5f5;
+            --dark: #333;
+            --gray: #757575;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* 通用样式 */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            padding: 60px 0;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-dark);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-dark);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* 头部样式 */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-top {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .header-top .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .header-main {
+            padding: 15px 0;
+        }
+        
+        .header-main .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .logo img {
+            height: 50px;
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: var(--primary);
+            margin: 0;
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        nav ul li a.active {
+            color: var(--primary);
+        }
+        
+        nav ul li a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-actions a {
+            margin-left: 15px;
+            color: var(--dark);
+            text-decoration: none;
+        }
+        
+        .user-actions .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .user-actions .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* 搜索框样式 */
+        .search-box {
+            display: flex;
+            align-items: center;
+            margin-left: 30px;
+        }
+
+        .search-input {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 200px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            width: 250px;
+        }
+
+        .search-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: -35px;
+            color: var(--text-secondary);
+        }
+
+        .search-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* 用户操作样式 */
+        .user-actions {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .user-actions a {
+            margin-left: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* 页面标题区域 */
+        .page-hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(img/首页.jpeg);
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 20px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .page-hero h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* 路线筛选区域 */
+        .filter-section {
+            background-color: var(--background-white);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 路线列表样式 */
+        .routes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .route-card {
+            background-color: var(--background-white);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .route-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .route-card-img {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .route-card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .route-card:hover .route-card-img img {
+            transform: scale(1.05);
+        }
+
+        .route-card-content {
+            padding: 20px;
+        }
+
+        .route-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .route-card-title {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .route-card-rating {
+            display: flex;
+            align-items: center;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .route-card-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .route-info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .route-card-desc {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .route-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .route-price {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .route-price span {
+            font-size: 0.9rem;
+            font-weight: normal;
+            color: var(--text-secondary);
+        }
+
+        /* 热门路线样式 */
+        .popular-routes {
+            background-color: var(--background-white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .popular-routes h2 {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .popular-route-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .popular-route-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .popular-route-item:hover {
+            background-color: var(--background-light);
+        }
+
+        .popular-route-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .popular-route-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .popular-route-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .popular-route-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .popular-route-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .popular-route-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popular-route-rating {
+            display: flex;
+            align-items: center;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .popular-route-price {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 40px;
+            gap: 5px;
+        }
+
+        .pagination a {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination a.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            background-color: var(--background-white);
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .category-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .category-item {
+            margin-bottom: 10px;
+        }
+
+        .category-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            transition: var(--transition);
+        }
+
+        .category-link:hover {
+            color: var(--primary-color);
+            padding-left: 8px;
+        }
+
+        .category-count {
+            background-color: var(--background-light);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* 页脚样式 */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--secondary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+        }
+        
+        .social-links {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .social-link {
+            color: white;
+            font-size: 18px;
+            margin-right: 15px;
+            transition: color 0.3s;
+        }
+        
+        .social-link:hover {
+            color: var(--secondary);
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 路线卡片链接样式 */
+        .route-card-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .route-card-link:hover .route-card {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .route-card-link:hover .route-card-title {
+            color: var(--primary);
+            transition: color 0.3s ease;
+        }
+
+        /* 热门路线卡片链接样式 */
+        .popular-route-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .popular-route-link:hover .popular-route-item {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .popular-route-link:hover .popular-route-title {
+            color: var(--primary);
+            transition: color 0.3s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .routes-container {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                padding: 10px 0;
+            }
+
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                margin: 15px 0;
+            }
+
+            nav li {
+                margin: 5px 10px;
+            }
+
+            .search-box {
+                margin-left: 0;
+                margin-bottom: 15px;
+            }
+
+            .user-actions {
+                margin-left: 0;
+            }
+
+            .page-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .filter-options {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .routes-container {
+                grid-template-columns: 1fr;
+            }
+
+            .popular-route-item {
+                flex-direction: column;
+            }
+
+            .popular-route-img {
+                width: 100%;
+                height: 180px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-hero {
+                padding: 60px 0;
+            }
+
+            .page-hero h1 {
+                font-size: 2rem;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+
+            .filter-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <div class="container">
+                <div class="header-contact">
+                    <i class="fas fa-phone"></i> 400-123-4567 | <i class="fas fa-envelope"></i> contact@hikingchina.com
+                </div>
+                <div class="header-social">
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="#"><i class="fab fa-weibo"></i></a>
+                    <a href="#"><i class="fab fa-qq"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container">
+                <div class="logo" id="home-logo">
+                    <img src="img/logo.png" alt="徒步中国">
+                    <h1>徒步<span>中国</span></h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html" class="nav-link">首页</a></li>
+                        <li><a href="routes.html" class="nav-link active">徒步路线</a></li>
+                        <li><a href="gear.html" class="nav-link">装备指南</a></li>
+                        <li><a href="events.html" class="nav-link">活动召集</a></li>
+                        <li><a href="forum.html" class="nav-link">徒步论坛</a></li>
+                    </ul>
+                </nav>
+                <div class="user-actions">
+                    <a href="#" id="search-btn"><i class="fas fa-search"></i></a>
+                    <a href="#" id="login-btn"><i class="fas fa-user"></i> <span id="login-text">登录</span></a>
+                    <a href="#" class="btn" id="register-btn">注册</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 页面标题区域 -->
+    <section class="page-hero">
+        <div class="container">
+            <h1>徒步路线</h1>
+            <p>探索中国最美的徒步路线，体验自然的壮丽与人文的魅力</p>
+        </div>
+    </section>
+
+    <!-- 主要内容区域 -->
+    
+                    </div>
+                    <div class="filter-group"><main class="section">
+        <div class="container">
+            <!-- 路线筛选区域 -->
+            <div class="filter-section">
+                <div class="filter-options">
+                    <div class="filter-group">
+                        <label for="region">地区</label>
+                        <select id="region">
+                        <option value="">全部地区</option>
+                        <option value="sichuan">四川</option>
+                        <option value="yunnan">云南</option>
+                        <option value="xinjiang">新疆</option>
+                        <option value="guizhou">贵州</option>
+                        <option value="hunan">湖南</option>
+                        <option value="anhui">安徽</option>
+                        <option value="tibet">西藏</option>
+                        <option value="other">其他地区</option>
+                    </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="difficulty">难度</label>
+                        <select id="difficulty">
+                            <option value="">全部难度</option>
+                            <option value="easy">初级</option>
+                            <option value="moderate">中级</option>
+                            <option value="difficult">高级</option>
+                            <option value="expert">专业级</option>
+                        </select>
+                        <label for="duration">时长</label>
+                        <select id="duration">
+                            <option value="">全部时长</option>
+                            <option value="day">单日徒步</option>
+                            <option value="weekend">周末</option>
+                            <option value="week">3-7天</option>
+                            <option value="month">7天以上</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="season">最佳季节</label>
+                        <select id="season">
+                            <option value="">全部季节</option>
+                            <option value="spring">春季</option>
+                            <option value="summer">夏季</option>
+                            <option value="autumn">秋季</option>
+                            <option value="winter">冬季</option>
+                            <option value="allyear">全年适宜</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary">筛选</button>
+                    <button class="btn btn-outline">重置</button>
+                </div>
+            </div>
+
+            <div class="row" style="display: grid; grid-template-columns: 3fr 1fr; gap: 30px;">
+                <!-- 路线列表区域 -->
+                <div>
+                    <h2>热门徒步路线</h2>
+                    <div class="routes-container">
+                        <!-- 路线卡片1 -->
+                        <a href="帖子详情页/稻城亚丁徒步.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="1" data-region="sichuan" data-difficulty="difficult" data-duration="week" data-season="autumn">
+                                <div class="route-card-img">
+                                    <img src="img/稻城亚丁.jpg" alt="稻城亚丁徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">稻城亚丁徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.9
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 四川
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 高级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 7-10天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 夏秋季
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">探索香格里拉最后的秘境，领略壮丽的雪山、草甸和湖泊景观。这条经典路线穿越多个海拔4000米以上的垭口。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥2,880 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片2 -->
+                        <a href="帖子详情页/雨崩村徒步.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="2" data-region="yunnan" data-difficulty="moderate" data-duration="week" data-season="allyear">
+                                <div class="route-card-img">
+                                    <img src="img/雨崩村.webp" alt="雨崩村徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">雨崩村徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.8
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 云南
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 中级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 5-7天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 全年适宜
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">位于梅里雪山脚下的秘境村庄，徒步可到达冰湖和神瀑，体验原始森林、雪山冰川和藏族文化的完美结合。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥1,980 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片3 -->
+                        <a href="帖子详情页/墨脱徒步.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="3" data-region="tibet" data-difficulty="expert" data-duration="month" data-season="autumn">
+                                <div class="route-card-img">
+                                    <img src="img/墨脱.jpg" alt="墨脱徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">墨脱徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.7
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 西藏
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 专业级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 10-15天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 5-10月
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">中国最后通公路的县，穿越雅鲁藏布江大峡谷，从高原到热带雨林的垂直气候体验，极具挑战性和独特性。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥3,680 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片4 -->
+                        <a href="帖子详情页/黄山徒步.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="4" data-region="anhui" data-difficulty="moderate" data-duration="weekend" data-season="spring">
+                                <div class="route-card-img">
+                                    <img src="img/黄山.jpg" alt="黄山徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">黄山徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.9
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 安徽
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 中级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 2-3天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 春秋季
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">中国十大名山之一，以奇松、怪石、云海、温泉四绝闻名于世，徒步登上莲花峰，俯瞰黄山全景。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥1,280 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片5 -->
+                        <a href="帖子详情页/虎跳峡.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="5" data-region="yunnan" data-difficulty="moderate" data-duration="weekend" data-season="autumn">
+                                <div class="route-card-img">
+                                    <img src="img/虎跳峡.jpg" alt="虎跳峡徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">虎跳峡徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.8
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 云南
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 中级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 2-3天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 9-11月
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">世界十大经典徒步路线之一，沿着金沙江峡谷，感受壮观的峡谷风光和玉龙雪山的壮美，途经纳西族村庄。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥980 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片6 -->
+                        <a href="帖子详情页/喀纳斯徒步.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="6" data-region="xinjiang" data-difficulty="moderate" data-duration="week" data-season="summer">
+                                <div class="route-card-img">
+                                    <img src="img/喀纳斯.jpg" alt="喀纳斯徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">喀纳斯徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.7
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 新疆
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 中级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 4-5天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 6-9月
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">穿越北疆最美的原始森林和高山草甸，欣赏喀纳斯湖的神秘色彩，体验图瓦人村落的异域风情。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥2,480 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片7 -->
+                        <a href="帖子详情页/四姑娘山.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="7" data-region="sichuan" data-difficulty="difficult" data-duration="week" data-season="autumn">
+                                <div class="route-card-img">
+                                    <img src="img/四姑娘山.jpg" alt="四姑娘山徒步">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">四姑娘山徒步</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.8
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 四川
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 高级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 5-7天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 秋季
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">四姑娘山由四座相连的山峰组成，被誉为"东方的阿尔卑斯"。徒步路线涵盖了高山草甸、冰川、湖泊等多样景观。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥2,280 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 路线卡片8 -->
+                        <a href="帖子详情页/贡嘎转山.html" class="route-card-link" target="_blank">
+                            <div class="route-card" data-route-id="8" data-region="sichuan" data-difficulty="expert" data-duration="week" data-season="autumn">
+                                <div class="route-card-img">
+                                    <img src="img/贡嘎转山.png" alt="贡嘎转山">
+                                </div>
+                                <div class="route-card-content">
+                                    <div class="route-card-header">
+                                        <h3 class="route-card-title">贡嘎转山</h3>
+                                        <div class="route-card-rating">
+                                            <i class="fas fa-star"></i> 4.9
+                                        </div>
+                                    </div>
+                                    <div class="route-card-info">
+                                        <div class="route-info-item">
+                                            <i class="fas fa-map-marker-alt"></i> 四川
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-signal"></i> 专业级
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-calendar-alt"></i> 7-10天
+                                        </div>
+                                        <div class="route-info-item">
+                                            <i class="fas fa-temperature-high"></i> 秋季
+                                        </div>
+                                    </div>
+                                    <p class="route-card-desc">贡嘎山是四川第一高峰，贡嘎转山是中国经典的高海拔徒步路线之一，沿途可欣赏到贡嘎主峰及众多雪山的壮丽景色。</p>
+                                    <div class="route-card-footer">
+                                        <div class="route-price">¥3,280 <span>起/人</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- 分页区域 -->
+                    <div class="pagination">
+                        <a href="#">&laquo;</a>
+                        <a href="#" class="active">1</a>
+                        <a href="#">2</a>
+                        <a href="#">3</a>
+                        <a href="#">4</a>
+                        <a href="#">5</a>
+                        <a href="#">...</a>
+                        <a href="#">12</a>
+                        <a href="#">&raquo;</a>
+                    </div>
+                </div>
+
+                <!-- 侧边栏区域 -->
+                <aside class="sidebar">
+                    <!-- 路线分类 -->
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">路线分类</h3>
+                        <ul class="category-list">
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    高原徒步 <span class="category-count">42</span>
+                                </a>
+                            </li>
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    森林徒步 <span class="category-count">38</span>
+                                </a>
+                            </li>
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    海岸徒步 <span class="category-count">24</span>
+                                </a>
+                            </li>
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    山地徒步 <span class="category-count">56</span>
+                                </a>
+                            </li>
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    沙漠徒步 <span class="category-count">18</span>
+                                </a>
+                            </li>
+                            <li class="category-item">
+                                <a href="#" class="category-link">
+                                    文化徒步 <span class="category-count">31</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 热门路线 -->
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">热门排行</h3>
+                        <div class="popular-route-list">
+                            <a href="帖子详情页/稻城亚丁徒步.html" class="popular-route-link" target="_blank">
+                                <div class="popular-route-item" data-route-id="1">
+                                    <div class="popular-route-img">
+                                        <img src="img/稻城亚丁.jpg" alt="稻城亚丁徒步">
+                                    </div>
+                                    <div class="popular-route-content">
+                                        <h4 class="popular-route-title">稻城亚丁徒步</h4>
+                                        <div class="popular-route-meta">
+                                            <span><i class="fas fa-map-marker-alt"></i> 四川</span>
+                                            <span><i class="fas fa-signal"></i> 高级</span>
+                                        </div>
+                                        <div class="popular-route-footer">
+                                            <div class="popular-route-rating">
+                                                <i class="fas fa-star"></i> 4.9
+                                            </div>
+                                            <div class="popular-route-price">¥2,880</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="帖子详情页/雨崩村徒步.html" class="popular-route-link" target="_blank">
+                                <div class="popular-route-item" data-route-id="2">
+                                    <div class="popular-route-img">
+                                        <img src="img/雨崩村.webp" alt="雨崩村徒步">
+                                    </div>
+                                    <div class="popular-route-content">
+                                        <h4 class="popular-route-title">雨崩村徒步</h4>
+                                        <div class="popular-route-meta">
+                                            <span><i class="fas fa-map-marker-alt"></i> 云南</span>
+                                            <span><i class="fas fa-signal"></i> 中级</span>
+                                        </div>
+                                        <div class="popular-route-footer">
+                                            <div class="popular-route-rating">
+                                                <i class="fas fa-star"></i> 4.8
+                                            </div>
+                                            <div class="popular-route-price">¥1,980</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="帖子详情页/黄山徒步.html" class="popular-route-link" target="_blank">
+                                <div class="popular-route-item" data-route-id="3">
+                                    <div class="popular-route-img">
+                                        <img src="img/黄山.jpg" alt="黄山徒步">
+                                    </div>
+                                    <div class="popular-route-content">
+                                        <h4 class="popular-route-title">黄山徒步</h4>
+                                        <div class="popular-route-meta">
+                                            <span><i class="fas fa-map-marker-alt"></i> 安徽</span>
+                                            <span><i class="fas fa-signal"></i> 中级</span>
+                                        </div>
+                                        <div class="popular-route-footer">
+                                            <div class="popular-route-rating">
+                                                <i class="fas fa-star"></i> 4.9
+                                            </div>
+                                            <div class="popular-route-price">¥1,280</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚区域 -->
+        <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>关于我们</h3>
+                    <p>徒步中国是中国最大的户外徒步社区，致力于推广健康、环保的徒步文化，为徒步爱好者提供交流平台和专业的徒步信息服务。</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" data-platform="wechat"><i class="fab fa-weixin"></i></a>
+                        <a href="#" class="social-link" data-platform="weibo"><i class="fab fa-weibo"></i></a>
+                        <a href="#" class="social-link" data-platform="qq"><i class="fab fa-qq"></i></a>
+                        <a href="#" class="social-link" data-platform="tiktok"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>快速链接</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html" class="footer-link" data-page="home">首页</a></li>
+                        <li><a href="routes.html" class="footer-link" data-page="routes">徒步路线</a></li>
+                        <li><a href="gear.html" class="footer-link" data-page="gear">装备指南</a></li>
+                        <li><a href="events.html" class="footer-link" data-page="events">活动召集</a></li>
+                        <li><a href="forum.html" class="footer-link" data-page="forum">徒步论坛</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>热门路线</h3>
+                    <ul class="footer-links">
+                        <li><a href="帖子详情页/四姑娘山.html" class="route-link" data-route-id="1">四姑娘山徒步</a></li>
+                        <li><a href="帖子详情页/虎跳峡.html" class="route-link" data-route-id="2">虎跳峡高路徒步</a></li>
+                        <li><a href="帖子详情页/稻城亚丁徒步.html" class="route-link" data-route-id="3">稻城亚丁徒步</a></li>
+                        <li><a href="帖子详情页/雨崩村徒步.html" class="route-link" data-route-id="4">雨崩村徒步</a></li>
+                        <li><a href="帖子详情页/墨脱徒步.html" class="route-link" data-route-id="5">墨脱徒步</a></li>
+                        <li><a href="帖子详情页/贡嘎转山.html" class="route-link" data-route-id="6">贡嘎转山</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>联系我们</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> 北京市朝阳区户外大道123号</li>
+                        <li><i class="fas fa-phone"></i> 400-123-4567</li>
+                        <li><i class="fas fa-envelope"></i> contact@hikingchina.com</li>
+                        <li><i class="fas fa-clock"></i> 周一至周五 9:00-18:00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 徒步中国 版权所有 | 京ICP备12345678号</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <div class="back-to-top" id="back-to-top" style="display: none;">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- 路线筛选功能（内联实现） -->
+    <script>
+        // 路线筛选功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 通过多个选择器查找按钮以确保兼容性
+            const filterBtn = document.querySelector('.btn.btn-primary') || 
+                             document.querySelector('button.btn-primary') ||
+                             document.querySelector('.filter-buttons .btn-primary');
+            const resetBtn = document.querySelector('.btn.btn-outline') || 
+                           document.querySelector('button.btn-outline') ||
+                           document.querySelector('.filter-buttons .btn-outline');
+            
+            console.log('DOM加载完成，开始查找元素');
+            console.log('Filter button found:', filterBtn);
+            console.log('Reset button found:', resetBtn);
+            
+            if (!filterBtn) {
+                console.error('筛选按钮未找到，尝试所有可能的按钮');
+                const allButtons = document.querySelectorAll('button');
+                console.log('所有按钮:', allButtons);
+                return;
+            }
+            
+            if (!resetBtn) {
+                console.error('重置按钮未找到');
+            }
+            
+            const routeCards = document.querySelectorAll('.route-card');
+            console.log('Number of route cards found:', routeCards.length);
+            
+            // 调试：输出所有卡片的信息
+            routeCards.forEach((card, index) => {
+                const title = card.querySelector('.route-card-title')?.textContent || 'Unknown';
+                const region = card.dataset.region || 'N/A';
+                const difficulty = card.dataset.difficulty || 'N/A';
+                const duration = card.dataset.duration || 'N/A';
+                const season = card.dataset.season || 'N/A';
+                console.log(`Card ${index + 1}: ${title}`, { region, difficulty, duration, season });
+            });
+            
+            // 筛选按钮点击事件
+            filterBtn.addEventListener('click', function() {
+                console.log('=== 筛选按钮被点击 ===');
+                
+                // 获取筛选条件
+                const region = document.getElementById('region')?.value || '';
+                const difficulty = document.getElementById('difficulty')?.value || '';
+                const duration = document.getElementById('duration')?.value || '';
+                const season = document.getElementById('season')?.value || '';
+                
+                console.log('筛选条件:', { region, difficulty, duration, season });
+                
+                // 遍历所有路线卡片
+                let visibleCount = 0;
+                const results = [];
+                
+                routeCards.forEach(card => {
+                    const cardRegion = card.dataset.region || '';
+                    const cardDifficulty = card.dataset.difficulty || '';
+                    const cardDuration = card.dataset.duration || '';
+                    const cardSeason = card.dataset.season || '';
+                    
+                    const cardTitle = card.querySelector('.route-card-title')?.textContent || 'Unknown';
+                    
+                    // 检查是否匹配筛选条件
+                    const matchRegion = !region || cardRegion === region;
+                    const matchDifficulty = !difficulty || cardDifficulty === difficulty;
+                    const matchDuration = !duration || cardDuration === duration;
+                    const matchSeason = !season || cardSeason === season;
+                    
+                    const isMatch = matchRegion && matchDifficulty && matchDuration && matchSeason;
+                    
+                    // 找到父级route-card-link元素
+                    const cardLink = card.closest('.route-card-link');
+                    
+                    console.log(`处理卡片: ${cardTitle}`);
+                    console.log(`  卡片数据: region=${cardRegion}, difficulty=${cardDifficulty}, duration=${cardDuration}, season=${cardSeason}`);
+                    console.log(`  匹配结果: 地区=${matchRegion}, 难度=${matchDifficulty}, 时长=${matchDuration}, 季节=${matchSeason}`);
+                    console.log(`  总体匹配: ${isMatch}`);
+                    
+                    // 如果所有条件都匹配，显示卡片
+                    if (isMatch) {
+                        if (cardLink) {
+                            cardLink.style.display = 'block';
+                            cardLink.style.visibility = 'visible';
+                        }
+                        visibleCount++;
+                        results.push(cardTitle);
+                    } else {
+                        if (cardLink) {
+                            cardLink.style.display = 'none';
+                            cardLink.style.visibility = 'hidden';
+                        }
+                    }
+                });
+                
+                console.log('=== 筛选结果 ===');
+                console.log(`可见卡片数量: ${visibleCount}`);
+                console.log(`匹配的路线:`, results);
+                
+                // 如果没有找到匹配结果，显示提示
+                if (visibleCount === 0) {
+                    alert('没有找到符合条件的徒步路线，请尝试调整筛选条件');
+                } else {
+                    console.log(`成功筛选出 ${visibleCount} 条路线`);
+                }
+            });
+            
+            // 重置按钮点击事件
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    console.log('=== 重置按钮被点击 ===');
+                    
+                    // 重置所有筛选条件
+                    const regionSelect = document.getElementById('region');
+                    const difficultySelect = document.getElementById('difficulty');
+                    const durationSelect = document.getElementById('duration');
+                    const seasonSelect = document.getElementById('season');
+                    
+                    if (regionSelect) regionSelect.value = '';
+                    if (difficultySelect) difficultySelect.value = '';
+                    if (durationSelect) durationSelect.value = '';
+                    if (seasonSelect) seasonSelect.value = '';
+                    
+                    console.log('所有筛选条件已重置');
+                    
+                    // 显示所有路线卡片
+                    let resetCount = 0;
+                    routeCards.forEach(card => {
+                        const cardLink = card.closest('.route-card-link');
+                        if (cardLink) {
+                            cardLink.style.display = 'block';
+                            cardLink.style.visibility = 'visible';
+                            resetCount++;
+                        }
+                    });
+                    
+                    console.log(`已重置 ${resetCount} 个卡片为可见状态`);
+                    
+                    // 重置分页到第一页
+                    showPage(1);
+                });
+            }
+            
+            // 分页功能
+            const itemsPerPage = 6;
+            let currentPage = 1;
+            
+            // 显示指定页码的帖子
+            function showPage(page) {
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                
+                // 显示当前页的帖子，隐藏其他帖子
+                routeCards.forEach((card, index) => {
+                    const cardLink = card.closest('.route-card-link');
+                    if (cardLink) {
+                        if (index >= startIndex && index < endIndex) {
+                            cardLink.style.display = 'block';
+                            cardLink.style.visibility = 'visible';
+                        } else {
+                            cardLink.style.display = 'none';
+                            cardLink.style.visibility = 'hidden';
+                        }
+                    }
+                });
+                
+                // 更新当前页码
+                currentPage = page;
+                
+                // 更新分页控件
+                updatePagination();
+            }
+            
+            // 更新分页控件
+            function updatePagination() {
+                const paginationLinks = document.querySelectorAll('.pagination a');
+                
+                // 移除所有active类
+                paginationLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // 添加active类到当前页码
+                const pageLink = Array.from(paginationLinks).find(link => link.textContent === currentPage.toString());
+                if (pageLink) {
+                    pageLink.classList.add('active');
+                }
+            }
+            
+            // 分页点击事件
+            const pagination = document.querySelector('.pagination');
+            if (pagination) {
+                pagination.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 处理页码点击
+                    if (e.target.tagName === 'A') {
+                        const pageText = e.target.textContent;
+                        
+                        // 处理数字页码
+                        if (!isNaN(parseInt(pageText))) {
+                            const page = parseInt(pageText);
+                            showPage(page);
+                        }
+                        // 处理上一页
+                        else if (pageText === '«') {
+                            if (currentPage > 1) {
+                                showPage(currentPage - 1);
+                            }
+                        }
+                        // 处理下一页
+                        else if (pageText === '»') {
+                            const totalPages = Math.ceil(routeCards.length / itemsPerPage);
+                            if (currentPage < totalPages) {
+                                showPage(currentPage + 1);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化显示第一页
+            showPage(1);
+        });
+    </script>
+
+    <!-- 返回顶部按钮 -->
+    <div class="back-to-top" id="back-to-top" style="display: none;">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        // 返回顶部按钮功能
+        const backToTopButton = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>

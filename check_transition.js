@@ -1,0 +1,6 @@
+﻿const fs = require('fs')
+const c = fs.readFileSync('D:/AI-Workspace/Projects/徒步论坛网站/hiking-new/src/App.vue','utf8')
+const hasTransition = c.includes('<Transition>')
+const hasTransitionImport = c.includes('Transition')
+console.log('Has <Transition>:', hasTransition)
+console.log('Has Transition import:', hasTransitionImport)
