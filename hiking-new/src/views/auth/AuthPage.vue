@@ -72,17 +72,40 @@
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 
+const API_URL = import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"
+
 const router = useRouter()
 const mode = ref("login")
 const loading = ref(false)
 const errorMsg = ref("")
 const form = ref({ username: "", email: "", password: "" })
 
+// 带重试的 fetch
+async function fetchWithRetry(url, options, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(url, options)
+      // 503 通常是冷启动，重试
+      if (res.status === 503 && i < retries) {
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)))
+        continue
+      }
+      return res
+    } catch (err) {
+      if (i < retries) {
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)))
+        continue
+      }
+      throw new Error("网络连接失败，请检查网络后重试")
+    }
+  }
+}
+
 async function handleLogin() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"}/api/auth/login`, {
+    const res = await fetchWithRetry(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: form.value.email, password: form.value.password }),
@@ -103,7 +126,7 @@ async function handleRegister() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"}/api/auth/register`, {
+    const res = await fetchWithRetry(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form.value),
