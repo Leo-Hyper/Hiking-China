@@ -30,3 +30,14 @@
 ### 站点
 - 地址: https://genuine-meringue-dfd78e.netlify.app/
 - 仓库: https://github.com/Leo-Hyper/Hiking-China
+
+---
+
+## 2026-06-18 — 图片压缩优化
+
+### 工具
+- sharp 批量压缩脚本
+
+### 结果
+- 20 张图片：13.06MB → 1.81MB（-86.1%）
+- JPEG 压缩 quality 80，PNG quality 80，最大宽度 1920px

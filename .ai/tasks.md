@@ -21,9 +21,9 @@
 - [x] 初始化 Git 仓库并首次提交
 - [x] GitHub 仓库创建：Leo-Hyper/Hiking-China
 - [x] Netlify 生产部署上线
+- [x] 图片压缩优化：13MB → 1.8MB（-86%）
 
 ## Todo
-- [ ] 图片压缩优化
 - [ ] 搜索功能实现
 - [ ] 登录/注册功能
 - [ ] PWA 支持

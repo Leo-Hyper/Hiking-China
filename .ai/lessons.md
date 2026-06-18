@@ -22,8 +22,15 @@
 **Tags:** vite, images, build-tool
 
 ## 2026-06-18 — postContent.js 数据完整性检查
-**Context:** postContent.js 只有 "雨崩村徒步" 一条数据，但 PostDetail.vue 的 postMap 有 15 个 key，14 个帖子显示 "内容加载中..."
+**Context:** postContent.js 只有 "雨崩村徒步" 一条数据，但 PostDetail.vue 的 postMap 有 15 个 key
 
-**Lesson:** 数据迁移后必须逐一验证 key 与内容的匹配完整性，不能仅验证文件存在
+**Lesson:** 数据迁移后必须逐一验证 key 与内容的匹配完整性
 
 **Tags:** data-integrity, content-migration, code-review
+
+## 2026-06-18 — 图片压缩优化
+**Context:** 20 张图片总计 13MB，大部分 >500KB
+
+**Lesson:** 使用 sharp 批量压缩到 1920px + quality 80，可节省 86% 体积（13MB → 1.8MB）
+
+**Tags:** image-optimization, sharp, performance

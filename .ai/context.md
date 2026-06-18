@@ -12,7 +12,8 @@
 - 15 条帖子数据迁移及补全
 - 两次代码审查 + 全部修复
 - Git + GitHub 版本控制
-- Netlify 生产部署（持续部署已启用）
+- Netlify 生产部署上线（持续部署已启用）
+- 图片压缩优化：13MB → 1.8MB（-86%）
 
 **站点地址:** https://genuine-meringue-dfd78e.netlify.app/
 **GitHub 仓库:** https://github.com/Leo-Hyper/Hiking-China
@@ -24,10 +25,8 @@
 
 ## Risks
 - PostDetail.vue 体积 142KB（gzip 29KB），后续可懒加载优化
-- 部分图片 >1MB，可压缩
 
 ## Next Actions
-1. 图片压缩优化
-2. 搜索功能实现
-3. 登录/注册功能
-4. PWA 支持
+1. 搜索功能实现
+2. 登录/注册功能
+3. PWA 支持
