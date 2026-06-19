@@ -93,7 +93,7 @@ import RouteCard from '@/components/RouteCard.vue'
 const posts = ref([])
 const loading = ref(true)
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://hiking-china-api.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 async function loadPosts() {
   try {
@@ -135,3 +135,4 @@ const routes = [
 
 onMounted(() => loadPosts())
 </script>
+

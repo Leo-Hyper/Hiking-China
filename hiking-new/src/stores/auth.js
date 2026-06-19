@@ -1,7 +1,8 @@
 ﻿import { ref, computed, watch } from "vue"
 import { useRouter } from "vue-router"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"
+// 开发环境用 localhost，生产环境用 Render
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 // 全局单例
 let authState = null
@@ -91,11 +92,11 @@ export function useAuth() {
   return authState
 }
 
-// 带重试的 fetch（供 AuthPage.vue 等非 store 场景使用）
+// 带重试的 fetch
 async function fetchWithRetry(url, options, retries = 2) {
   for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(url, { ...options, credentials: "include" })
+      const res = await fetch(url, options)
       if (res.status === 503 && i < retries) {
         await new Promise(r => setTimeout(r, 2000 * (i + 1)))
         continue

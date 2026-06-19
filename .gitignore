@@ -15,9 +15,12 @@ dist/
 Thumbs.db
 
 # Environment
-.env
 .env.local
 .env.*.local
+
+# Keep production env but ignore local ones
+!.env.production
+!.env.development
 
 # Logs
 *.log
@@ -25,3 +28,9 @@ npm-debug.log*
 
 # Misc
 *.bak
+*.backup-*
+*.err
+
+# Database
+hiking-new/data/*.db
+hiking-new/data/*.db-journal

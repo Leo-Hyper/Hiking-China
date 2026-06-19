@@ -80,7 +80,7 @@ const hasMore = ref(true)
 
 const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://hiking-china-api.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 async function fetchPosts(cat = '', off = 0) {
   try {
@@ -140,3 +140,4 @@ watch(activeCategory, () => loadPosts())
 
 onMounted(() => loadPosts())
 </script>
+

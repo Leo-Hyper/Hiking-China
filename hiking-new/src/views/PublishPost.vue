@@ -98,6 +98,7 @@ import { useAuth } from "../stores/auth"
 
 const router = useRouter()
 const auth = useAuth()
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 const loading = ref(false)
 const errorMsg = ref("")
@@ -127,7 +128,7 @@ async function handleSubmit() {
   successMsg.value = ""
 
   try {
-    const res = await fetchWithRetry(`${import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"}/api/posts`, {
+    const res = await fetchWithRetry(`${API_URL}/api/posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

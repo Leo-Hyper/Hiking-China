@@ -1,11 +1,14 @@
 ﻿const express = require("express");
 const router = express.Router();
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, authMiddleware } = require("../middleware/auth");
 const { createPost, getAllPosts, getPostsByCategory, getPostById, searchPosts, deletePost } = require("../models/post");
+
+console.log("[POSTS] Routes loaded");
 
 // GET /api/posts - 获取所有帖子
 router.get("/", async (req, res) => {
   try {
+    console.log("[DEBUG] GET /api/posts, query:", req.query);
     const { category, q, limit, offset } = req.query;
     const lim = parseInt(limit) || 50;
     const off = parseInt(offset) || 0;
@@ -19,8 +22,10 @@ router.get("/", async (req, res) => {
       posts = await getAllPosts(lim, off);
     }
 
+    console.log("[DEBUG] GET /api/posts returning", posts.length, "posts");
     res.json({ posts });
   } catch (err) {
+    console.error("[ERROR] GET /api/posts:", err);
     res.status(500).json({ error: "服务器错误" });
   }
 });
@@ -28,17 +33,21 @@ router.get("/", async (req, res) => {
 // GET /api/posts/:id - 获取单个帖子
 router.get("/:id", async (req, res) => {
   try {
+    console.log("[DEBUG] GET /api/posts/:id", req.params.id);
     const post = await getPostById(req.params.id);
     if (!post) return res.status(404).json({ error: "帖子不存在" });
     res.json({ post });
   } catch (err) {
+    console.error("[ERROR] GET /api/posts/:id:", err);
     res.status(500).json({ error: "服务器错误" });
   }
 });
 
 // POST /api/posts - 创建帖子（需登录）
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
+    console.log("[DEBUG] POST /api/posts, userId:", req.userId);
+    console.log("[DEBUG] Body:", JSON.stringify(req.body));
     const { title, content, category, tags, imageUrls } = req.body;
 
     if (!title || !content) {
@@ -59,21 +68,25 @@ router.post("/", verifyToken, async (req, res) => {
       imageUrls: imageUrls || [],
     });
 
+    console.log("[DEBUG] Post created, id:", result.id);
     res.status(201).json({
       message: "发布成功",
       postId: result.id,
     });
   } catch (err) {
-    res.status(500).json({ error: "发布失败" });
+    console.error("[ERROR] POST /api/posts:", err);
+    res.status(500).json({ error: "发布失败: " + err.message });
   }
 });
 
 // DELETE /api/posts/:id - 删除帖子（需登录，只能删自己的）
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", authMiddleware, async (req, res) => {
   try {
+    console.log("[DEBUG] DELETE /api/posts/:id", req.params.id, "userId:", req.userId);
     await deletePost(req.params.id, req.userId);
     res.json({ message: "删除成功" });
   } catch (err) {
+    console.error("[ERROR] DELETE /api/posts/:id:", err);
     res.status(403).json({ error: err.message || "删除失败" });
   }
 });

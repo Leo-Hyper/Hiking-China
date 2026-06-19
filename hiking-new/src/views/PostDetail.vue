@@ -69,7 +69,7 @@ const postId = parseInt(route.params.id)
 const apiPost = ref(null)
 const apiLoading = ref(true)
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://hiking-china-api.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 // 从 API 加载帖子
 async function loadApiPost() {
@@ -160,3 +160,4 @@ onMounted(async () => {
   }
 })
 </script>
+
