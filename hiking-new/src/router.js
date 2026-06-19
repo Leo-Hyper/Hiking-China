@@ -11,6 +11,7 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('./views/auth/AuthPage.vue') },
   { path: '/register', name: 'Register', component: () => import('./views/auth/AuthPage.vue') },
   { path: '/profile', name: 'Profile', component: () => import('./views/auth/ProfilePage.vue') },
+  { path: '/publish', name: 'Publish', component: () => import('./views/PublishPost.vue') },
 ]
 
 const router = createRouter({
@@ -18,6 +19,18 @@ const router = createRouter({
   routes,
   scrollBehavior() {
     return { top: 0 }
+  }
+})
+
+// 路由守卫：需要登录的页面
+const protectedRoutes = ['publish', 'profile']
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  if (protectedRoutes.includes(to.name) && !token) {
+    next('/login')
+  } else {
+    next()
   }
 })
 

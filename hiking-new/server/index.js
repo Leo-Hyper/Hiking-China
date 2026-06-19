@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 // 中间件
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "50mb" }));
 
 // 速率限制
 const limiter = rateLimit({
@@ -26,6 +26,7 @@ app.use("/api/", limiter);
 
 // API 路由
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/posts", require("./routes/posts"));
 app.use("/api/search", require("./routes/search"));
 
 // 健康检查

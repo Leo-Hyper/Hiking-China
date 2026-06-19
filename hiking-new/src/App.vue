@@ -45,13 +45,19 @@
                 注册
               </RouterLink>
             </template>
-            <!-- 已登录：显示用户头像 -->
+            <!-- 已登录：显示发帖 + 用户头像 -->
             <template v-else>
+              <RouterLink to="/publish" class="hidden sm:inline-flex items-center px-4 py-2.5 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all shadow-lg shadow-forest-500/20">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                发帖
+              </RouterLink>
               <RouterLink to="/profile" class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all">
                 <div class="w-8 h-8 rounded-full bg-forest-100 flex items-center justify-center text-forest-700 font-bold text-sm">
-                  {{ user?.username?.charAt(0)?.toUpperCase() || '?' }}
+                  {{ currentUser?.username?.charAt(0)?.toUpperCase() || '?' }}
                 </div>
-                <span class="hidden sm:inline text-sm font-medium text-charcoal">{{ user?.username }}</span>
+                <span class="hidden sm:inline text-sm font-medium text-charcoal">{{ currentUser?.username }}</span>
               </RouterLink>
             </template>
             <!-- Mobile menu -->
@@ -87,6 +93,9 @@
                 </RouterLink>
               </template>
               <template v-else>
+                <RouterLink to="/publish" class="block px-4 py-3 rounded-xl text-sm font-medium text-forest-600 hover:bg-forest-50">
+                  发帖
+                </RouterLink>
                 <RouterLink to="/profile" class="block px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-charcoal hover:bg-slate-50">
                   个人中心
                 </RouterLink>
@@ -116,6 +125,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuth } from './stores/auth'
 import Footer from './components/Footer.vue'
 import SearchOverlay from './components/SearchOverlay.vue'
 
@@ -126,11 +136,8 @@ const mobileMenu = ref(false)
 const scrolled = ref(false)
 const searchOpen = ref(false)
 
-const isLoggedIn = computed(() => !!localStorage.getItem("token"))
-const user = computed(() => {
-  const u = localStorage.getItem("user")
-  return u ? JSON.parse(u) : null
-})
+const { isLoggedIn, user: authUser, logout: authLogout, fetchUser } = useAuth()
+const currentUser = computed(() => authUser.value)
 
 const navItems = [
   { path: '/', label: '首页' },
@@ -143,12 +150,10 @@ const navItems = [
 const handleScroll = () => { scrolled.value = window.scrollY > 50 }
 
 const handleLogout = () => {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
-  router.push("/")
+  authLogout()
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -156,7 +161,12 @@ onMounted(() => {
       searchOpen.value = true
     }
   })
+  // 如果有 token，尝试获取用户信息
+  if (isLoggedIn.value) {
+    await fetchUser()
+  }
 })
+
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })

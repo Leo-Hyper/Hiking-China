@@ -12,18 +12,18 @@
       <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
         <div class="flex items-center gap-4 mb-6">
           <div class="w-14 h-14 rounded-full bg-forest-100 flex items-center justify-center text-forest-700 font-bold text-xl">
-            {{ user?.username?.charAt(0)?.toUpperCase() || '?' }}
+            {{ currentUser?.username?.charAt(0)?.toUpperCase() || '?' }}
           </div>
           <div>
-            <h3 class="font-bold text-charcoal">{{ user?.username }}</h3>
-            <p class="text-sm text-slate-400">{{ user?.email }}</p>
+            <h3 class="font-bold text-charcoal">{{ currentUser?.username }}</h3>
+            <p class="text-sm text-slate-400">{{ currentUser?.email }}</p>
           </div>
         </div>
 
         <div class="space-y-3 mb-6">
           <div class="flex justify-between text-sm py-2 border-b border-slate-50">
             <span class="text-slate-400">注册时间</span>
-            <span class="text-slate-600">{{ formatDate(user?.created_at) }}</span>
+            <span class="text-slate-600">{{ formatDate(currentUser?.created_at) }}</span>
           </div>
         </div>
 
@@ -38,14 +38,10 @@
 
 <script setup>
 import { computed } from "vue"
-import { useRouter } from "vue-router"
+import { useAuth } from "../../stores/auth"
 
-const router = useRouter()
-
-const user = computed(() => {
-  const u = localStorage.getItem("user")
-  return u ? JSON.parse(u) : null
-})
+const auth = useAuth()
+const currentUser = computed(() => auth.user.value)
 
 function formatDate(dateStr) {
   if (!dateStr) return "-"
@@ -53,8 +49,6 @@ function formatDate(dateStr) {
 }
 
 function handleLogout() {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
-  router.push("/")
+  auth.logout()
 }
 </script>

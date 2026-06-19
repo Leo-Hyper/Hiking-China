@@ -12,7 +12,7 @@ function register(username, email, password) {
       [username, email, hash],
       function (err) {
         if (err) {
-          if (err.message.includes("UNIQUE")) {
+          if (err.message.includes("UNIQUE") || err.message.includes("unique")) {
             reject(new Error("用户名或邮箱已存在"));
           }
           reject(err);
@@ -36,7 +36,6 @@ function login(email, password) {
       const valid = bcrypt.compareSync(password, user.password_hash);
       if (!valid) return reject(new Error("邮箱或密码错误"));
 
-      // 不返回密码哈希
       const { password_hash, ...safeUser } = user;
       resolve(safeUser);
     });

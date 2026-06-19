@@ -69,54 +69,25 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
+import { ref, reactive } from "vue"
 import { useRouter } from "vue-router"
-
-const API_URL = import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"
+import { useAuth } from "../../stores/auth"
 
 const router = useRouter()
+const auth = useAuth()
 const mode = ref("login")
 const loading = ref(false)
 const errorMsg = ref("")
-const form = ref({ username: "", email: "", password: "" })
-
-// 带重试的 fetch
-async function fetchWithRetry(url, options, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const res = await fetch(url, options)
-      // 503 通常是冷启动，重试
-      if (res.status === 503 && i < retries) {
-        await new Promise(r => setTimeout(r, 2000 * (i + 1)))
-        continue
-      }
-      return res
-    } catch (err) {
-      if (i < retries) {
-        await new Promise(r => setTimeout(r, 2000 * (i + 1)))
-        continue
-      }
-      throw new Error("网络连接失败，请检查网络后重试")
-    }
-  }
-}
+const form = reactive({ username: "", email: "", password: "" })
 
 async function handleLogin() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetchWithRetry(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: form.value.email, password: form.value.password }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error)
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("user", JSON.stringify(data.user))
+    await auth.login(form.email, form.password)
     router.push("/")
   } catch (err) {
-    errorMsg.value = err.message
+    errorMsg.value = err.message || "登录失败，请重试"
   } finally {
     loading.value = false
   }
@@ -126,18 +97,10 @@ async function handleRegister() {
   loading.value = true
   errorMsg.value = ""
   try {
-    const res = await fetchWithRetry(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form.value),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error)
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("user", JSON.stringify(data.user))
+    await auth.register(form.username, form.email, form.password)
     router.push("/")
   } catch (err) {
-    errorMsg.value = err.message
+    errorMsg.value = err.message || "注册失败，请重试"
   } finally {
     loading.value = false
   }

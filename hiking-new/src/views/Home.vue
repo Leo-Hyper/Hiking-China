@@ -16,12 +16,24 @@
           </svg>
         </RouterLink>
       </div>
-      <div class="space-y-6">
+
+      <!-- 加载中 -->
+      <div v-if="loading" class="text-center py-12">
+        <div class="inline-block w-8 h-8 border-4 border-forest-500/30 border-t-forest-500 rounded-full animate-spin"></div>
+      </div>
+
+      <!-- 帖子列表 -->
+      <div v-else class="space-y-6">
         <PostCard v-for="post in posts" :key="post.id" :post="post" />
+      </div>
+
+      <!-- 空状态 -->
+      <div v-if="!loading && posts.length === 0" class="text-center py-12 bg-white rounded-2xl border border-slate-100">
+        <p class="text-slate-500">暂无帖子</p>
       </div>
     </section>
 
-    <!-- 热门路线 — 大图网格 -->
+    <!-- 热门路线 -->
     <section class="bg-white py-20">
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="flex items-end justify-between mb-12">
@@ -72,17 +84,45 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import Hero from '@/components/Hero.vue'
 import PostCard from '@/components/PostCard.vue'
 import RouteCard from '@/components/RouteCard.vue'
-import { RouterLink } from 'vue-router'
 
-const posts = [
-  { id: 1, title: '四姑娘山大峰攀登全记录', author: '山野行者', date: '2024-01-15', category: '登山经验', excerpt: '四姑娘山大峰海拔5025米，是入门级雪山的绝佳选择。本文详细记录了从成都出发到成功登顶的全过程...', image: '/img/四姑娘山.jpg', views: 1256, comments: 42 },
-  { id: 2, title: '虎跳峡高路徒步', author: '江河漫步', date: '2024-01-12', category: '徒步路线', excerpt: '云南虎跳峡高路徒步被誉为世界十大经典徒步路线之一，沿途可欣赏玉龙雪山和哈巴雪山的壮丽景色...', image: '/img/虎跳峡.jpg', views: 987, comments: 36 },
-  { id: 3, title: '秋季徒步装备指南', author: '装备控', date: '2024-01-08', category: '装备评测', excerpt: '秋季是徒步的黄金季节，但天气变化多端，合适的装备至关重要。本文根据多年徒步经验...', image: '/img/徒步装备.avif', views: 1542, comments: 58 },
-  { id: 4, title: '贡嘎转山全记录', author: '高原狼', date: '2024-01-05', category: '登山经验', excerpt: '贡嘎环线被誉为川西最经典的徒步线路，蜀山之王的神圣之旅，全程85公里重装挑战...', image: '/img/贡嘎转山.png', views: 892, comments: 28 },
-]
+const posts = ref([])
+const loading = ref(true)
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://hiking-china-api.onrender.com'
+
+async function loadPosts() {
+  try {
+    const res = await fetch(`${API_URL}/api/posts?limit=5`)
+    const data = await res.json()
+    posts.value = (data.posts || []).map(p => {
+      const images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
+      const tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
+      const date = p.created_at ? p.created_at.split('T')[0] : ''
+      return {
+        id: p.id,
+        title: p.title,
+        excerpt: (p.content || '').substring(0, 150) + '...',
+        author: p.username || '匿名',
+        date,
+        category: p.category || '其他',
+        image: images[0] || '/img/徒步装备.avif',
+        images,
+        tags,
+        views: p.views || 0,
+        comments: 0,
+      }
+    })
+  } catch {
+    // API 失败，不显示帖子
+  } finally {
+    loading.value = false
+  }
+}
 
 const routes = [
   { id: 1, name: '四姑娘山大峰', region: '四川', difficulty: '中级', description: '入门级雪山攀登，体验征服5025米的成就感', distance: 28, duration: '2天', rating: 4.8, image: '/img/四姑娘山.jpg' },
@@ -92,4 +132,6 @@ const routes = [
   { id: 5, name: '雨崩村徒步', region: '云南', difficulty: '初级', description: '梅里雪山脚下的世外桃源，藏族村落体验', distance: 20, duration: '3天', rating: 4.7, image: '/img/雨崩村.webp' },
   { id: 6, name: '黄山徒步', region: '安徽', difficulty: '初级', description: '中国山水之美典范，奇松怪石云海温泉', distance: 15, duration: '2天', rating: 4.6, image: '/img/黄山.jpg' },
 ]
+
+onMounted(() => loadPosts())
 </script>
