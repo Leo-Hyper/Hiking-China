@@ -52,7 +52,7 @@
       <div class="prose prose-lg max-w-none text-slate-700 leading-loose mb-10" v-html="post.bodyHtml" />
 
       <!-- 标签 -->
-      <div v-if="post.tags && post.tags.length" class="flex flex-wrap gap-2 mb-10 pb-8 border-b border-slate-200">
+      <div v-if="post.tags && post.tags.length" class="flex flex-wrap gap-2 mb-10 pb-8 border-t border-slate-200">
         <RouterLink v-for="tag in post.tags" :key="tag" :to="`/forum?q=${encodeURIComponent(tag)}`"
           class="px-3 py-1.5 bg-forest-50 text-forest-700 text-xs rounded-full font-medium hover:bg-forest-100 transition-colors"># {{ tag }}</RouterLink>
       </div>
@@ -92,7 +92,12 @@
           </div>
           <div class="flex-1">
             <textarea v-model="newComment" rows="3" placeholder="写下你的想法..."
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 outline-none transition-all resize-none text-sm"></textarea>
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 outline-none transition-all resize-none text-sm"
+              @keydown.enter.ctrl.exact.prevent
+              @keydown.enter.shift.exact.stop
+              @keydown.enter.exact="submitComment"
+            ></textarea>
+            <p class="text-xs text-slate-400 mt-1">Enter 发送 · Shift+Enter 换行</p>
             <div class="flex justify-end mt-2">
               <button @click="submitComment" :disabled="!newComment.trim() || submitting"
                 class="px-5 py-2 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
@@ -130,12 +135,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import CommentItem from '../components/CommentItem.vue'
-import { postContents } from '@/data/postContent.js'
 
 const route = useRoute()
 const router = useRouter()
 const postId = computed(() => parseInt(route.params.id))
-const { isLoggedIn, user: authUser } = useAuth()
+const { isLoggedIn, user: authUser, token } = useAuth()
 const currentUser = computed(() => authUser.value)
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://hiking-china-api.onrender.com')
@@ -148,46 +152,21 @@ const submitting = ref(false)
 const isLiked = ref(false)
 const isFavorited = ref(false)
 
-// 静态帖子数据（fallback）
-const staticPostMap = {
-  1: { key: '四姑娘山', title: '四姑娘山大峰攀登全记录', category: '登山经验', date: '2024-01-15', author: '山野行者', views: 1256, tags: ['雪山','入门级'] },
-  2: { key: '虎跳峡', title: '虎跳峡高路徒步', category: '徒步路线', date: '2024-01-12', author: '江河漫步', views: 987, tags: ['云南','经典路线'] },
-  3: { key: '秋季徒步装备指南', title: '秋季徒步装备指南', category: '装备评测', date: '2024-01-08', author: '装备控', views: 1542, tags: ['秋季','装备'] },
-  4: { key: '贡嘎转山', title: '贡嘎转山', category: '登山经验', date: '2024-01-05', author: '高原狼', views: 892, tags: ['贡嘎','重装'] },
-  5: { key: '稻城亚丁徒步', title: '稻城亚丁徒步', category: '徒步路线', date: '2024-01-03', author: '香格里拉', views: 1103, tags: ['稻城亚丁'] },
-  6: { key: '雨崩村徒步', title: '雨崩村徒步', category: '徒步路线', date: '2024-01-01', author: '雪山飞狐', views: 756, tags: ['雨崩','梅里雪山'] },
-  7: { key: '喀纳斯徒步', title: '喀纳斯徒步', category: '徒步路线', date: '2023-12-28', author: '北疆行者', views: 1321, tags: ['喀纳斯','新疆'] },
-  8: { key: '墨脱徒步', title: '墨脱徒步', category: '徒步路线', date: '2023-12-25', author: '秘境探索者', views: 645, tags: ['墨脱','西藏'] },
-  9: { key: '黄山徒步', title: '黄山徒步', category: '徒步路线', date: '2023-12-20', author: '安徽行者', views: 890, tags: ['黄山','安徽'] },
-  10: { key: '露营装备', title: '徒步露营装备指南', category: '装备评测', date: '2023-12-18', author: '露营达人', views: 1050, tags: ['露营','帐篷'] },
-  11: { key: '徒步鞋履', title: '徒步鞋履指南', category: '装备评测', date: '2023-12-15', author: '鞋控', views: 780, tags: ['鞋履','选购'] },
-  12: { key: '服装系统', title: '徒步服装系统指南', category: '装备评测', date: '2023-12-12', author: '装备控', views: 920, tags: ['服装','分层'] },
-  13: { key: '导航与安全', title: '徒步导航与安全装备', category: '装备评测', date: '2023-12-10', author: '安全队长', views: 660, tags: ['导航','安全'] },
-  14: { key: '背包装备', title: '徒步背包装备指南', category: '装备评测', date: '2023-12-08', author: '背包客', views: 840, tags: ['背包','重装'] },
-  15: { key: '其他配件', title: '徒步其他配件指南', category: '装备评测', date: '2023-12-05', author: '装备控', views: 530, tags: ['配件','小物'] },
-}
-
-// 加载帖子
 // 加载帖子
 async function loadPost() {
   loading.value = true
+  post.value = null
   try {
     const res = await fetch(`${API_URL}/api/posts/${postId.value}`)
     if (res.ok) {
       const data = await res.json()
       if (data.post) {
         const p = data.post
-        // 安全解析 image_urls
         let images = []
-        try {
-          images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
-          if (!Array.isArray(images)) images = []
-        } catch { images = [] }
-        // 解析 tags
+        try { images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : []) } catch { images = [] }
+        if (!Array.isArray(images)) images = []
         let tags = []
-        try {
-          tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
-        } catch { tags = [] }
+        try { tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : []) } catch { tags = [] }
         const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : ''
         post.value = {
           id: p.id,
@@ -210,26 +189,8 @@ async function loadPost() {
   } catch (err) {
     console.error('[PostDetail] loadPost error:', err)
   }
-
-  // Fallback 到静态数据
-  const meta = staticPostMap[postId.value]
-  if (meta) {
-    const content = postContents[meta.key]
-    let bodyHtml = content ? content.html : '<p>内容加载中...</p>'
-    const bodyMatch = bodyHtml.match(/<body[^>]*>([\s\S]*)<\/body>/)
-    if (bodyMatch) bodyHtml = bodyMatch[1]
-    bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '')
-    post.value = {
-      id: postId.value,
-      ...meta,
-      image: content ? content.image : '/img/四姑娘山.jpg',
-      tags: meta.tags || [],
-      comments: 0,
-      likes: 0,
-      bodyHtml,
-    }
-  }
   loading.value = false
+  post.value = null
 }
 
 // 加载评论
@@ -267,14 +228,14 @@ async function submitComment() {
       alert(data.error || '评论失败')
     }
   } catch {
-    alert('网络错误，请重试')
+    alert('网络错误')
   } finally {
     submitting.value = false
   }
 }
 
 // 点赞
-async function toggleLike() {
+function toggleLike() {
   if (!isLoggedIn.value) { router.push('/login'); return }
   isLiked.value = !isLiked.value
   post.value.likes = (post.value.likes || 0) + (isLiked.value ? 1 : -1)
@@ -292,8 +253,7 @@ function sharePost() {
   if (navigator.share) {
     navigator.share({ title: post.value?.title, url })
   } else {
-    navigator.clipboard.writeText(url)
-    alert('链接已复制到剪贴板')
+    navigator.clipboard.writeText(url).then(() => alert('链接已复制到剪贴板')).catch(() => alert('分享链接：' + url))
   }
 }
 
@@ -304,6 +264,8 @@ watch(() => route.params.id, () => {
   loadPost()
   loadComments()
 })
+
+const postNotExists = computed(() => !loading.value && !post.value)
 
 onMounted(() => {
   loadPost()

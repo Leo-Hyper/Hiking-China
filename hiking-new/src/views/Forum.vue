@@ -96,7 +96,7 @@ async function fetchPosts(cat = '', off = 0) {
 
 function formatPost(p) {
   const tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
-  const images = typeof p.imageUrls === 'string' ? JSON.parse(p.imageUrls) : (Array.isArray(p.imageUrls) ? p.imageUrls : [])
+  const images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
   return {
     id: p.id,
     title: p.title,
