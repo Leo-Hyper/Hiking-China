@@ -1,6 +1,6 @@
 ﻿const express = require("express");
 const router = express.Router();
-const { verifyToken, authMiddleware } = require("../middleware/auth");
+const { authMiddleware } = require("../middleware/auth");
 const { createPost, getAllPosts, getPostsByCategory, getPostById, searchPosts, deletePost } = require("../models/post");
 
 console.log("[POSTS] Routes loaded");
@@ -92,3 +92,4 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+

@@ -132,7 +132,7 @@ async function handleSubmit() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${auth.token.value}`,
+        "Authorization": `Bearer ${(typeof localStorage!=="undefined"?localStorage.getItem("token"):"") || ""}`, 
       },
       body: JSON.stringify({
         title: form.title,

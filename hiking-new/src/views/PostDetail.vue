@@ -8,7 +8,7 @@
     </RouterLink>
 
     <!-- 加载中 -->
-    <div v-if="!post" class="text-center py-20">
+    <div v-if="loading" class="text-center py-20">
       <div class="inline-block w-8 h-8 border-4 border-forest-500/30 border-t-forest-500 rounded-full animate-spin"></div>
       <p class="text-slate-400 mt-4">帖子加载中...</p>
     </div>
@@ -23,16 +23,17 @@
 
     <!-- 帖子内容 -->
     <article v-else class="max-w-4xl mx-auto">
+      <!-- 头部信息 -->
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-4">
           <span class="text-xs font-medium text-forest-700 bg-forest-50 px-3 py-1.5 rounded-full">{{ post.category }}</span>
           <span class="text-xs text-slate-400">{{ post.date }}</span>
+          <span class="text-xs text-slate-400">· 作者 {{ post.author }}</span>
         </div>
         <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal leading-tight mb-6" style="font-family: 'Noto Serif SC', serif;">{{ post.title }}</h1>
         <div class="flex items-center gap-6 text-sm text-slate-500">
-          <span>{{ post.author }}</span>
           <span>{{ post.views }} 阅读</span>
-          <span>{{ post.comments }} 评论</span>
+          <span>{{ comments.length }} 评论</span>
         </div>
       </div>
 
@@ -48,116 +49,264 @@
       </div>
 
       <!-- 正文 -->
-      <div class="prose prose-lg max-w-none text-slate-700 leading-loose" v-html="post.bodyHtml" />
+      <div class="prose prose-lg max-w-none text-slate-700 leading-loose mb-10" v-html="post.bodyHtml" />
 
       <!-- 标签 -->
-      <div v-if="post.tags && post.tags.length" class="flex flex-wrap gap-2 mt-10 pt-8 border-t border-slate-200">
-        <span v-for="tag in post.tags" :key="tag" class="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium"># {{ tag }}</span>
+      <div v-if="post.tags && post.tags.length" class="flex flex-wrap gap-2 mb-10 pb-8 border-b border-slate-200">
+        <RouterLink v-for="tag in post.tags" :key="tag" :to="`/forum?q=${encodeURIComponent(tag)}`"
+          class="px-3 py-1.5 bg-forest-50 text-forest-700 text-xs rounded-full font-medium hover:bg-forest-100 transition-colors"># {{ tag }}</RouterLink>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="flex items-center gap-4 mb-12 pb-8 border-b border-slate-200">
+        <button @click="toggleLike" class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-50 transition-all"
+                :class="isLiked ? 'text-red-500 bg-red-50' : 'text-slate-500'">
+          <svg class="w-5 h-5" :fill="isLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          <span class="text-sm font-medium">{{ post.likes || 0 }}</span>
+        </button>
+        <button @click="toggleFavorite" class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-50 transition-all"
+                :class="isFavorited ? 'text-amber-500 bg-amber-50' : 'text-slate-500'">
+          <svg class="w-5 h-5" :fill="isFavorited ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+          <span class="text-sm font-medium">{{ isFavorited ? '已收藏' : '收藏' }}</span>
+        </button>
+        <button @click="sharePost" class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-50 transition-all text-slate-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+          <span class="text-sm font-medium">分享</span>
+        </button>
+      </div>
+
+      <!-- 评论区 -->
+      <div class="mt-12">
+        <h3 class="text-xl font-bold text-charcoal mb-6">评论 ({{ comments.length }})</h3>
+
+        <!-- 发表评论 -->
+        <div v-if="isLoggedIn" class="flex gap-3 mb-10">
+          <div class="w-10 h-10 rounded-full bg-forest-100 flex items-center justify-center text-forest-700 font-bold flex-shrink-0">
+            {{ currentUser?.username?.charAt(0) || '?' }}
+          </div>
+          <div class="flex-1">
+            <textarea v-model="newComment" rows="3" placeholder="写下你的想法..."
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20 outline-none transition-all resize-none text-sm"></textarea>
+            <div class="flex justify-end mt-2">
+              <button @click="submitComment" :disabled="!newComment.trim() || submitting"
+                class="px-5 py-2 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ submitting ? '发布中...' : '发表评论' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div v-else class="mb-10 p-6 bg-slate-50 rounded-2xl text-center">
+          <p class="text-slate-500 mb-3">登录后即可评论</p>
+          <RouterLink to="/login" class="inline-flex px-5 py-2.5 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all">
+            去登录
+          </RouterLink>
+        </div>
+
+        <!-- 评论列表 -->
+        <div class="space-y-6">
+          <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :post-id="postId" @updated="loadComments" />
+        </div>
+
+        <!-- 空状态 -->
+        <div v-if="!loading && comments.length === 0" class="text-center py-12 bg-white rounded-2xl border border-slate-100">
+          <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <p class="text-slate-500">暂无评论，来抢沙发吧！</p>
+        </div>
       </div>
     </article>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { useAuth } from '../stores/auth'
+import CommentItem from '../components/CommentItem.vue'
 import { postContents } from '@/data/postContent.js'
 
 const route = useRoute()
-const postId = parseInt(route.params.id)
+const router = useRouter()
+const postId = computed(() => parseInt(route.params.id))
+const { isLoggedIn, user: authUser } = useAuth()
+const currentUser = computed(() => authUser.value)
 
-const apiPost = ref(null)
-const apiLoading = ref(true)
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://hiking-china-api.onrender.com')
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
+const post = ref(null)
+const comments = ref([])
+const loading = ref(true)
+const newComment = ref('')
+const submitting = ref(false)
+const isLiked = ref(false)
+const isFavorited = ref(false)
 
-// 从 API 加载帖子
-async function loadApiPost() {
+// 静态帖子数据（fallback）
+const staticPostMap = {
+  1: { key: '四姑娘山', title: '四姑娘山大峰攀登全记录', category: '登山经验', date: '2024-01-15', author: '山野行者', views: 1256, tags: ['雪山','入门级'] },
+  2: { key: '虎跳峡', title: '虎跳峡高路徒步', category: '徒步路线', date: '2024-01-12', author: '江河漫步', views: 987, tags: ['云南','经典路线'] },
+  3: { key: '秋季徒步装备指南', title: '秋季徒步装备指南', category: '装备评测', date: '2024-01-08', author: '装备控', views: 1542, tags: ['秋季','装备'] },
+  4: { key: '贡嘎转山', title: '贡嘎转山', category: '登山经验', date: '2024-01-05', author: '高原狼', views: 892, tags: ['贡嘎','重装'] },
+  5: { key: '稻城亚丁徒步', title: '稻城亚丁徒步', category: '徒步路线', date: '2024-01-03', author: '香格里拉', views: 1103, tags: ['稻城亚丁'] },
+  6: { key: '雨崩村徒步', title: '雨崩村徒步', category: '徒步路线', date: '2024-01-01', author: '雪山飞狐', views: 756, tags: ['雨崩','梅里雪山'] },
+  7: { key: '喀纳斯徒步', title: '喀纳斯徒步', category: '徒步路线', date: '2023-12-28', author: '北疆行者', views: 1321, tags: ['喀纳斯','新疆'] },
+  8: { key: '墨脱徒步', title: '墨脱徒步', category: '徒步路线', date: '2023-12-25', author: '秘境探索者', views: 645, tags: ['墨脱','西藏'] },
+  9: { key: '黄山徒步', title: '黄山徒步', category: '徒步路线', date: '2023-12-20', author: '安徽行者', views: 890, tags: ['黄山','安徽'] },
+  10: { key: '露营装备', title: '徒步露营装备指南', category: '装备评测', date: '2023-12-18', author: '露营达人', views: 1050, tags: ['露营','帐篷'] },
+  11: { key: '徒步鞋履', title: '徒步鞋履指南', category: '装备评测', date: '2023-12-15', author: '鞋控', views: 780, tags: ['鞋履','选购'] },
+  12: { key: '服装系统', title: '徒步服装系统指南', category: '装备评测', date: '2023-12-12', author: '装备控', views: 920, tags: ['服装','分层'] },
+  13: { key: '导航与安全', title: '徒步导航与安全装备', category: '装备评测', date: '2023-12-10', author: '安全队长', views: 660, tags: ['导航','安全'] },
+  14: { key: '背包装备', title: '徒步背包装备指南', category: '装备评测', date: '2023-12-08', author: '背包客', views: 840, tags: ['背包','重装'] },
+  15: { key: '其他配件', title: '徒步其他配件指南', category: '装备评测', date: '2023-12-05', author: '装备控', views: 530, tags: ['配件','小物'] },
+}
+
+// 加载帖子
+// 加载帖子
+async function loadPost() {
+  loading.value = true
   try {
-    const res = await fetch(`${API_URL}/api/posts/${postId}`)
+    const res = await fetch(`${API_URL}/api/posts/${postId.value}`)
     if (res.ok) {
       const data = await res.json()
       if (data.post) {
-        apiPost.value = data.post
-        return true
+        const p = data.post
+        // 安全解析 image_urls
+        let images = []
+        try {
+          images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
+          if (!Array.isArray(images)) images = []
+        } catch { images = [] }
+        // 解析 tags
+        let tags = []
+        try {
+          tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
+        } catch { tags = [] }
+        const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : ''
+        post.value = {
+          id: p.id,
+          title: p.title,
+          category: p.category,
+          date,
+          author: p.username || '匿名用户',
+          views: p.views || 0,
+          comments: 0,
+          likes: 0,
+          image: images[0] || '',
+          images,
+          tags,
+          bodyHtml: p.content,
+        }
+        loading.value = false
+        return
       }
     }
-  } catch {
-    // API 失败，fallback 到静态数据
-  }
-  return false
-}
-
-// 静态帖子数据
-const postMap = {
-  1: { key: "四姑娘山", title: "四姑娘山大峰攀登全记录", category: "登山经验", date: "2024-01-15", author: "山野行者", views: 1256, tags: ["雪山","入门级"] },
-  2: { key: "虎跳峡", title: "虎跳峡高路徒步", category: "徒步路线", date: "2024-01-12", author: "江河漫步", views: 987, tags: ["云南","经典路线"] },
-  3: { key: "秋季徒步装备指南", title: "秋季徒步装备指南", category: "装备评测", date: "2024-01-08", author: "装备控", views: 1542, tags: ["秋季","装备"] },
-  4: { key: "贡嘎转山", title: "贡嘎转山", category: "登山经验", date: "2024-01-05", author: "高原狼", views: 892, tags: ["贡嘎","重装"] },
-  5: { key: "稻城亚丁徒步", title: "稻城亚丁徒步", category: "徒步路线", date: "2024-01-03", author: "香格里拉", views: 1103, tags: ["稻城亚丁"] },
-  6: { key: "雨崩村徒步", title: "雨崩村徒步", category: "徒步路线", date: "2024-01-01", author: "雪山飞狐", views: 756, tags: ["雨崩","梅里雪山"] },
-  7: { key: "喀纳斯徒步", title: "喀纳斯徒步", category: "徒步路线", date: "2023-12-28", author: "北疆行者", views: 1321, tags: ["喀纳斯","新疆"] },
-  8: { key: "墨脱徒步", title: "墨脱徒步", category: "徒步路线", date: "2023-12-25", author: "秘境探索者", views: 645, tags: ["墨脱","西藏"] },
-  9: { key: "黄山徒步", title: "黄山徒步", category: "徒步路线", date: "2023-12-20", author: "安徽行者", views: 890, tags: ["黄山","安徽"] },
-  10: { key: "露营装备", title: "徒步露营装备指南", category: "装备评测", date: "2023-12-18", author: "露营达人", views: 1050, tags: ["露营","帐篷"] },
-  11: { key: "徒步鞋履", title: "徒步鞋履指南", category: "装备评测", date: "2023-12-15", author: "鞋控", views: 780, tags: ["鞋履","选购"] },
-  12: { key: "服装系统", title: "徒步服装系统指南", category: "装备评测", date: "2023-12-12", author: "装备控", views: 920, tags: ["服装","分层"] },
-  13: { key: "导航与安全", title: "徒步导航与安全装备", category: "装备评测", date: "2023-12-10", author: "安全队长", views: 660, tags: ["导航","安全"] },
-  14: { key: "背包装备", title: "徒步背包装备指南", category: "装备评测", date: "2023-12-08", author: "背包客", views: 840, tags: ["背包","重装"] },
-  15: { key: "其他配件", title: "徒步其他配件指南", category: "装备评测", date: "2023-12-05", author: "装备控", views: 530, tags: ["配件","小物"] },
-}
-
-const post = computed(() => {
-  // 优先使用 API 数据
-  if (apiPost.value) {
-    const p = apiPost.value
-    const images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
-    const tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
-    const date = p.created_at ? p.created_at.split('T')[0] : ''
-    return {
-      title: p.title,
-      category: p.category,
-      date,
-      author: p.username || '匿名用户',
-      views: p.views || 0,
-      comments: 0,
-      image: images[0] || '',
-      images,
-      tags,
-      bodyHtml: p.content,
-    }
+  } catch (err) {
+    console.error('[PostDetail] loadPost error:', err)
   }
 
   // Fallback 到静态数据
-  const meta = postMap[postId]
-  if (!meta) return null
-
-  const content = postContents[meta.key]
-  let bodyHtml = content ? content.html : "<p>内容加载中...</p>"
-  const bodyMatch = bodyHtml.match(/<body[^>]*>([\s\S]*)<\/body>/)
-  if (bodyMatch) bodyHtml = bodyMatch[1]
-  bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '')
-  bodyHtml = bodyHtml.replace(/class="post-detail"/g, "class='max-w-4xl mx-auto'")
-  bodyHtml = bodyHtml.replace(/class="container"/g, '')
-
-  return {
-    ...meta,
-    image: content ? content.image : '/img/四姑娘山.jpg',
-    tags: meta.tags || [],
-    comments: meta.commentList ? meta.commentList.length : 0,
-    bodyHtml,
+  const meta = staticPostMap[postId.value]
+  if (meta) {
+    const content = postContents[meta.key]
+    let bodyHtml = content ? content.html : '<p>内容加载中...</p>'
+    const bodyMatch = bodyHtml.match(/<body[^>]*>([\s\S]*)<\/body>/)
+    if (bodyMatch) bodyHtml = bodyMatch[1]
+    bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, '')
+    post.value = {
+      id: postId.value,
+      ...meta,
+      image: content ? content.image : '/img/四姑娘山.jpg',
+      tags: meta.tags || [],
+      comments: 0,
+      likes: 0,
+      bodyHtml,
+    }
   }
+  loading.value = false
+}
+
+// 加载评论
+async function loadComments() {
+  try {
+    const res = await fetch(`${API_URL}/api/comments?post_id=${postId.value}`)
+    if (res.ok) {
+      const data = await res.json()
+      comments.value = data.comments || []
+    }
+  } catch {}
+}
+
+// 提交评论
+async function submitComment() {
+  if (!newComment.value.trim()) return
+  submitting.value = true
+  try {
+    const res = await fetch(`${API_URL}/api/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+        post_id: postId.value,
+        content: newComment.value.trim(),
+      }),
+    })
+    if (res.ok) {
+      newComment.value = ''
+      await loadComments()
+    } else {
+      const data = await res.json()
+      alert(data.error || '评论失败')
+    }
+  } catch {
+    alert('网络错误，请重试')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 点赞
+async function toggleLike() {
+  if (!isLoggedIn.value) { router.push('/login'); return }
+  isLiked.value = !isLiked.value
+  post.value.likes = (post.value.likes || 0) + (isLiked.value ? 1 : -1)
+}
+
+// 收藏
+function toggleFavorite() {
+  if (!isLoggedIn.value) { router.push('/login'); return }
+  isFavorited.value = !isFavorited.value
+}
+
+// 分享
+function sharePost() {
+  const url = window.location.href
+  if (navigator.share) {
+    navigator.share({ title: post.value?.title, url })
+  } else {
+    navigator.clipboard.writeText(url)
+    alert('链接已复制到剪贴板')
+  }
+}
+
+// 监听路由变化
+watch(() => route.params.id, () => {
+  post.value = null
+  comments.value = []
+  loadPost()
+  loadComments()
 })
 
-const postNotExists = computed(() => !apiLoading.value && !apiPost.value && !post.value)
-
-onMounted(async () => {
-  const loaded = await loadApiPost()
-  apiLoading.value = false
-  if (!loaded) {
-    // API 没有数据，使用静态 fallback
-    apiLoading.value = false
-  }
+onMounted(() => {
+  loadPost()
+  loadComments()
 })
 </script>
-

@@ -27,6 +27,7 @@ app.use("/api/", limiter);
 // API 路由
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/posts", require("./routes/posts"));
+app.use("/api/comments", require("./routes/comments"))
 app.use("/api/search", require("./routes/search"));
 
 // 健康检查
