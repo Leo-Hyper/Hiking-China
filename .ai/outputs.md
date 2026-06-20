@@ -8,11 +8,11 @@
 | 2026-06-18 | 页面 | src/views/Forum.vue | 动态论坛帖子列表（API + 分类筛选） |
 | 2026-06-18 | 页面 | src/views/Gear.vue | 装备指南网格 |
 | 2026-06-18 | 页面 | src/views/Events.vue | 活动召集列表 |
-| 2026-06-18 | 页面 | src/views/PostDetail.vue | 帖子详情（API + 静态 fallback） |
+| 2026-06-18 | 页面 | src/views/PostDetail.vue | 帖子详情（API 驱动 + 评论/点赞/收藏/分享） |
 | 2026-06-19 | 页面 | src/views/PublishPost.vue | 发帖页面 |
 | 2026-06-18 | 页面 | src/views/auth/AuthPage.vue | 登录/注册 |
 | 2026-06-18 | 页面 | src/views/auth/ProfilePage.vue | 个人中心 |
-| 2026-06-19 | 组件 | src/components/CommentItem.vue | 评论组件（点赞/回复/嵌套） |
+| 2026-06-19 | 组件 | src/components/CommentItem.vue | 评论组件（嵌套回复 + 点赞 + 头像） |
 | 2026-06-18 | 组件 | src/components/Footer.vue | 深色页脚 |
 | 2026-06-18 | 组件 | src/components/Hero.vue | 全屏沉浸首屏 |
 | 2026-06-18 | 组件 | src/components/PostCard.vue | 帖子卡片 |
@@ -20,7 +20,8 @@
 | 2026-06-18 | 组件 | src/components/SearchOverlay.vue | 全屏搜索 UI |
 | 2026-06-18 | 样式 | src/styles/main.css | 设计系统+Tailwind |
 | 2026-06-18 | 样式 | src/styles/design-system.css | CSS 变量定义 |
-| 2026-06-18 | 数据 | src/data/postContent.js | 15篇帖子内容 |
+| 2026-06-18 | 数据 | src/data/postContent.js | 15篇原始 HTML 内容 |
+| 2026-06-19 | 数据 | src/data/postContentCleaned.js | 15篇纯净正文（已提取） |
 | 2026-06-18 | 数据 | src/data/postIndex.js | 可搜索索引（43条） |
 | 2026-06-18 | 逻辑 | src/composables/useSearch.js | 搜索逻辑 composable |
 | 2026-06-19 | 逻辑 | src/stores/auth.js | 统一 Auth store（响应式） |

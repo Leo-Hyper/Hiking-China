@@ -9,7 +9,7 @@
 已完成：
 - Vue 3 + Vite + Tailwind CSS 4 全栈重构
 - 杂志级视觉风格重设计
-- 15 条静态帖子数据迁移
+- 15 条静态帖子 HTML 迁移到数据库（纯净正文提取，去除冗余 HTML）
 - 两次代码审查 + 全部修复
 - Git + GitHub 版本控制
 - 图片压缩优化：13MB → 1.8MB（-86%）
@@ -27,21 +27,29 @@
 
 ## Architecture
 ```
-Netlify (前端 SPA)  ↔  Render (Express API)  ↔  SQLite
-                                          ├─ users (JWT auth)
-                                          ├─ posts (CRUD)
-                                          ├─ comments (nested replies + likes)
+Netlify (前端 SPA)  ↔  Render (Express API, free tier)  ↔  SQLite
+                                          ├─ users (JWT auth, 3 用户)
+                                          ├─ posts (15 篇迁移)
+                                          ├─ comments (嵌套回复 + 点赞)
                                           ├─ comment_likes
-                                          └─ search_index
+                                          └─ search_index (16 条目)
 ```
 
+## Database Status (2026-06-20)
+- Posts: 15 条（15 篇静态帖子迁移）
+- Comments: 1 条（测试评论）
+- Users: 3 个（测试用户）
+- Comment Likes: 2 条
+- Search Index: 16 条
+
 ## Known Issues
-- Render 免费版空闲休眠导致间歇性 503，已通过 fetchWithRetry（2次重试）缓解
+- Render 免费版空闲休眠导致间歇性 503，已通过 fetchWithRetry（2 次重试）缓解
 - 建议设置 UptimeRobot 每 5 分钟 ping `/api/health` 保持活跃
-- 长期建议迁移到 Railway/Vercel Serverless 避免休眠问题
+- 长期建议迁移到 Railway/Vercel 避免休眠问题
 
 ## Next Actions
 1. 设置 UptimeRobot 监控 Render 后端
 2. PWA 支持（manifest + service worker）
 3. PostDetail.vue 大体积懒加载优化（当前 142KB）
 4. 评估迁移到 Railway/Vercel
+5. 帖子图片上传功能（当前仅支持外链）

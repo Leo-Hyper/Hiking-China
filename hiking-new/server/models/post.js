@@ -1,5 +1,20 @@
 ﻿const { getDb } = require("./db");
 
+// Helper: normalize post data for API responses
+function normalizePost(row) {
+  if (!row) return null;
+  let imageUrls = [];
+  try {
+    imageUrls = typeof row.image_urls === 'string' ? JSON.parse(row.image_urls) : (Array.isArray(row.image_urls) ? row.image_urls : []);
+  } catch(e) { imageUrls = []; }
+  if (!Array.isArray(imageUrls)) imageUrls = [];
+  const tags = typeof row.tags === 'string' ? row.tags.split(',').filter(Boolean) : (Array.isArray(row.tags) ? row.tags : []);
+  let content = row.content || '';
+  content = content.replace(/\\n/g, '\n');
+  return { ...row, image_urls: JSON.stringify(imageUrls), tags: tags.join(',') };
+}
+
+
 // 创建帖子
 function createPost(userId, { title, content, category, tags, imageUrls }) {
   const db = getDb();
@@ -26,7 +41,7 @@ function getAllPosts(limit = 50, offset = 0) {
       [limit, offset],
       (err, rows) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else resolve((rows || []).map(normalizePost));
       }
     );
   });
@@ -41,7 +56,7 @@ function getPostsByCategory(category, limit = 20) {
       [category, limit],
       (err, rows) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else resolve((rows || []).map(normalizePost));
       }
     );
   });
@@ -61,7 +76,7 @@ function getPostById(id) {
           [id],
           (err, row) => {
             if (err) reject(err);
-            else resolve(row || null);
+            else resolve(normalizePost(row) || null);
           }
         );
       }
@@ -80,7 +95,7 @@ function searchPosts(query, limit = 20) {
       [`%${query}%`, `%${query}%`, `%${query}%`, limit],
       (err, rows) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else resolve((rows || []).map(normalizePost));
       }
     );
   });

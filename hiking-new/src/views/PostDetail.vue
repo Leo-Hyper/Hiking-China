@@ -97,7 +97,6 @@
               @keydown.enter.shift.exact.stop
               @keydown.enter.exact="submitComment"
             ></textarea>
-            <p class="text-xs text-slate-400 mt-1">Enter 发送 · Shift+Enter 换行</p>
             <div class="flex justify-end mt-2">
               <button @click="submitComment" :disabled="!newComment.trim() || submitting"
                 class="px-5 py-2 bg-forest-600 text-white text-sm font-medium rounded-xl hover:bg-forest-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">

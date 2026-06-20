@@ -25,13 +25,19 @@
 **Lesson:** localStorage.setItem 不会触发 computed/watch，必须用 Vue ref 管理状态并通过 watch 同步
 
 ## 2026-06-19 — SQLite 数组字段必须 JSON 序列化
-**Lesson:** SQLite 不原生支持数组，tags 和 image_urls 必须用 JSON.stringify/JSON.parse 转换，否则存为 "[object Object]"
+**Lesson:** SQLite 不原生支持数组，tags 和 image_urls 必须用 JSON.stringify/JSON.parse 转换
 
 ## 2026-06-19 — SQLite IS NULL 查询陷阱
-**Lesson:** `WHERE parent_id IS 'NULL'` 永远匹配不到 NULL 值，必须用 `IS NULL` 关键字而非字符串
+**Lesson:** `WHERE parent_id IS 'NULL'` 永远匹配不到 NULL 值，必须用 `IS NULL` 关键字
 
 ## 2026-06-19 — Vite HMR 不会重新读取 .env
 **Lesson:** 修改 .env.development 后必须完全重启 Vite 进程才能生效
 
 ## 2026-06-19 — onMounted 不响应路由参数变化
-**Lesson:** Vue Router 同组件路由切换（/post/1 → /post/2）不触发 onMounted，必须用 watch(route.params.id)
+**Lesson:** Vue Router 同组件路由切换必须用 watch(route.params.id)
+
+## 2026-06-19 — SQL 导入时 \n 转义问题
+**Lesson:** JavaScript 字符串中的 \n 转义后写入 SQLite，取出时需用 REPLACE(content, '\\n', CHAR(10)) 还原
+
+## 2026-06-19 — 静态 HTML 迁移需提取纯净正文
+**Lesson:** 原始 HTML 包含 .post-header（标题/作者/元信息）、.back-button（返回按钮）等冗余元素，迁移时必须只提取 .post-content-detail 内部内容

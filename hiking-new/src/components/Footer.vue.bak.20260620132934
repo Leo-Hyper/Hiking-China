@@ -21,10 +21,10 @@
         <div>
           <h4 class="text-white font-semibold mb-4 text-sm">热门路线</h4>
           <ul class="space-y-2.5 text-sm">
-            <li><RouterLink to="/post/25" class="hover:text-white transition-colors">四姑娘山</RouterLink></li>
-            <li><RouterLink to="/post/26" class="hover:text-white transition-colors">虎跳峡</RouterLink></li>
-            <li><RouterLink to="/post/29" class="hover:text-white transition-colors">稻城亚丁</RouterLink></li>
-            <li><RouterLink to="/post/28" class="hover:text-white transition-colors">贡嘎转山</RouterLink></li>
+            <li><RouterLink to="/post/1" class="hover:text-white transition-colors">四姑娘山</RouterLink></li>
+            <li><RouterLink to="/post/2" class="hover:text-white transition-colors">虎跳峡</RouterLink></li>
+            <li><RouterLink to="/post/3" class="hover:text-white transition-colors">稻城亚丁</RouterLink></li>
+            <li><RouterLink to="/post/4" class="hover:text-white transition-colors">贡嘎转山</RouterLink></li>
           </ul>
         </div>
         <div>
@@ -47,4 +47,3 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 </script>
-

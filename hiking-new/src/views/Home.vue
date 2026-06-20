@@ -100,13 +100,17 @@ async function loadPosts() {
     const res = await fetch(`${API_URL}/api/posts?limit=5`)
     const data = await res.json()
     posts.value = (data.posts || []).map(p => {
-      const images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : [])
+      let images = []
+      try { images = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : (Array.isArray(p.image_urls) ? p.image_urls : []) } catch { images = [] }
+      if (!Array.isArray(images)) images = []
       const tags = typeof p.tags === 'string' ? p.tags.split(',').filter(Boolean) : (Array.isArray(p.tags) ? p.tags : [])
+      const stripHtml = (html) => (html || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
+      const excerptText = stripHtml(p.content || '').substring(0, 150)
       const date = p.created_at ? p.created_at.split('T')[0] : ''
       return {
         id: p.id,
         title: p.title,
-        excerpt: (p.content || '').substring(0, 150) + '...',
+        excerpt: excerptText + (stripHtml(p.content || '').length > 150 ? '...' : ''),
         author: p.username || '匿名',
         date,
         category: p.category || '其他',

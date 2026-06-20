@@ -25,11 +25,15 @@
 - [x] Render 冷启动重试机制
 - [x] **统一 Auth 状态管理（useAuth store，响应式登录态）**
 - [x] **完整发帖功能（CRUD API + PublishPost.vue + 动态列表）**
-- [x] **评论系统（创建/点赞/嵌套回复 API + CommentItem 组件）**
-- [x] **帖子详情页增强（标签/点赞/收藏/分享/评论）**
+- [x] **评论系统：创建/点赞/嵌套回复 API + CommentItem 组件**
+- [x] **帖子详情页增强：标签/点赞/收藏/分享/评论**
 - [x] **修复 API URL 环境自适应（DEV → localhost, PROD → Render）**
 - [x] **修复数据库 schema（comments parent_id/likes, comment_likes 表）**
 - [x] **修复 PostDetail.vue 路由切换加载问题 + loading 状态**
+- [x] **静态帖子 HTML 迁移到数据库（纯净正文提取，去除冗余 HTML）**
+- [x] **修复帖子详情页内容 \n 转义问题**
+- [x] **修复帖子封面图片路径**
+- [x] **评论输入框 Enter/Shift+Enter 优化**
 
 ## Todo
 - [ ] 设置 UptimeRobot 定时 ping Render 后端（防冷启动）
