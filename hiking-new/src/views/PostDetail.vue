@@ -114,7 +114,7 @@
 
         <!-- 评论列表 -->
         <div class="space-y-6">
-          <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :post-id="postId" @updated="loadComments" />
+          <component :is="CommentItemComponent" v-for="comment in comments" :key="comment.id" :comment="comment" :post-id="postId" @updated="loadComments" />
         </div>
 
         <!-- 空状态 -->
@@ -130,10 +130,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuth } from '../stores/auth'
-import CommentItem from '../components/CommentItem.vue'
+const CommentItemComponent = defineAsyncComponent(() => import("../components/CommentItem.vue"))
 
 const route = useRoute()
 const router = useRouter()
