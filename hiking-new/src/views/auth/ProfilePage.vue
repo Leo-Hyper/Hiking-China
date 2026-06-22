@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-screen bg-[#fafaf9]">
     <div class="max-w-4xl mx-auto px-6 lg:px-8 py-12">
       <!-- 头部 -->
@@ -440,7 +440,7 @@ async function loadRecentPosts() {
           category: p.category,
           viewed_at: new Date().toISOString(),
           image: (() => {
-            try { const imgs = JSON.parse(p.image_urls); const first = Array.isArray(imgs) ? imgs[0] : null; if (!first) return null; if (first.startsWith('http')) return first; if (first.startsWith('/')) return API_URL + first; return first } catch { return null }
+            try { const imgs = JSON.parse(p.image_urls); const first = Array.isArray(imgs) ? imgs[0] : null; if (!first) return null; if (first.startsWith('http')) return first; if (first.startsWith('/uploads/')) return API_URL + first; if (first.startsWith('/')) return first; return first } catch { return null }
           })()
         }))
     }
