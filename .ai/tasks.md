@@ -1,44 +1,33 @@
-﻿# Tasks — 徒步论坛网站
+# Tasks — 徒步论坛网站 (Updated 2026-06-22)
 
-## Done
-- [x] 审查原站结构（20 个 HTML，14.5MB 图片）
-- [x] 选择技术方案 A（Vue 3 + Vite + Tailwind）
-- [x] 搭建项目脚手架（hiking-new/）
-- [x] 配置 Tailwind CSS 4 + PostCSS
-- [x] 设计新视觉系统（森林系杂志风格）
-- [x] 创建 6 个页面组件
-- [x] 创建 5 个公共组件
-- [x] 替换图片为本地素材
-- [x] 迁移 15 个帖子详情页内容
-- [x] 修复构建错误
-- [x] 全栈代码审查 × 2，全部修复
-- [x] Git + GitHub 初始化
-- [x] Netlify 生产部署
-- [x] 图片压缩优化：13MB → 1.8MB（-86%）
-- [x] 搜索功能（Ctrl+K + 加权排序）
-- [x] 后端 API（Express + SQLite + JWT）
-- [x] 前端登录/注册/个人中心
-- [x] 搜索 API 集成
-- [x] Render 部署 + CORS 配置
-- [x] 修复 netlify.toml BOM 问题
-- [x] 修复 SPA 路由 404
-- [x] Render 冷启动重试机制
-- [x] **统一 Auth 状态管理（useAuth store，响应式登录态）**
-- [x] **完整发帖功能（CRUD API + PublishPost.vue + 动态列表）**
-- [x] **评论系统：创建/点赞/嵌套回复 API + CommentItem 组件**
-- [x] **帖子详情页增强：标签/点赞/收藏/分享/评论**
-- [x] **修复 API URL 环境自适应（DEV → localhost, PROD → Render）**
-- [x] **修复数据库 schema（comments parent_id/likes, comment_likes 表）**
-- [x] **修复 PostDetail.vue 路由切换加载问题 + loading 状态**
-- [x] **静态帖子 HTML 迁移到数据库（纯净正文提取，去除冗余 HTML）**
-- [x] **修复帖子详情页内容 \n 转义问题**
-- [x] **修复帖子封面图片路径**
-- [x] **评论输入框 Enter/Shift+Enter 优化**
+## ✅ Completed
+- [x] Phase 1: 数据层改造 (users/posts 扩展 + post_likes/bookmarks 表 + 索引)
+- [x] Phase 1: user.js/post.js 模型适配 (getUserById/updateUserProfile 扩展 new fields)
+- [x] Phase 1: auth.js PUT /profile 扩展 (location/hikinglevel/gear_prefs)
+- [x] Phase 1: bookmarks.js 路由创建 (toggle/list/check)
+- [x] Phase 1: posts.js 点赞路由 (like/toggle)
+- [x] Phase 2: Quill WYSIWYG 编辑器 (RichEditor.vue + CDN + 图片粘贴上传)
+- [x] Phase 2: 草稿自动保存 (localStorage 30s + beforeunload + 恢复)
+- [x] Phase 2: PublishPost/EditPost 替换 BBCode → Quill
+- [x] Phase 2: PostDetail 移除 BBCode, 直接 v-html
+- [x] Phase 2: 删除 bbcode.js / BBCodeToolbar.vue
+- [x] Phase 3: ProfilePage 4Tab 重写 (帖子/收藏/评论/资料)
+- [x] Phase 3: 用户等级/所在地/装备偏好/隐私开关
+- [x] Phase 3: UserProfilePage 等级徽章 + 装备展示
+- [x] Phase 3: GET /api/comments/my 路由
+- [x] Phase 4: Leaflet CDN (cdn.bootcdn.net)
+- [x] Phase 4: RouteMap/LocationMap/MapPicker 组件
+- [x] Phase 4: extrainfo 扩展表单 (路线/装备/活动)
+- [x] Phase 4: 路线统计卡片 + 地图渲染
 
-## Todo
-- [ ] 设置 UptimeRobot 定时 ping Render 后端（防冷启动）
-- [ ] PWA 支持
-- [ ] PostDetail.vue 大体积懒加载优化
-- [ ] 评估迁移到 Railway/Vercel（替代 Render 免费版休眠）
-- [ ] 帖子图片上传功能（当前仅支持外链）
-- [ ] 用户评论/帖子编辑/删除功能
+## 🚧 In Progress
+- [ ] 发帖 extrainfo 数据链路验证 (buildExtrainfo → DB → PostDetail)
+
+## 📋 Backlog
+- [ ] 敏感词过滤 (AC 自动机)
+- [ ] 防暴力破解 (登录失败计数)
+- [ ] 分页限制
+- [ ] 图片上传前端压缩 (Canvas WebP)
+- [ ] 数据导出/注销账号
+- [ ] 用户足迹地图功能
+- [ ] 帖子附加信息表单 (发布页已实现, 编辑页已完成)

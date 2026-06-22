@@ -1,8 +1,7 @@
-﻿const express = require("express");
+const express = require("express");
 const router = express.Router();
-const { getDb } = require("../models/db");
 
-// GET /api/search?q=xxx
+// GET /api/search?q=xxx - 搜索帖子
 router.get("/", (req, res) => {
   const { getDb } = require("../models/db");
   const db = getDb();
@@ -12,19 +11,24 @@ router.get("/", (req, res) => {
     return res.json({ results: [] });
   }
 
-  // SQLite LIKE 模糊搜索（后续可替换为全文索引）
-  const sql = `
-    SELECT type, title, category, tags, excerpt, route, created_at
-    FROM search_index
-    WHERE title LIKE ? OR category LIKE ? OR tags LIKE ? OR excerpt LIKE ?
-    ORDER BY created_at DESC
-    LIMIT 20
-  `;
-  const pattern = `%${q}%`;
+  const pattern = "%" + q + "%";
+  const sql = "SELECT id, title, category, tags, content, created_at, user_id FROM posts WHERE title LIKE ? OR tags LIKE ? OR content LIKE ? ORDER BY created_at DESC LIMIT 20";
 
-  db.all(sql, [pattern, pattern, pattern, pattern], (err, rows) => {
+  db.all(sql, [pattern, pattern, pattern], (err, rows) => {
     if (err) return res.status(500).json({ error: "搜索出错" });
-    res.json({ results: rows });
+
+    const results = (rows || []).map(r => ({
+      id: r.id,
+      type: "post",
+      title: r.title,
+      category: r.category || "",
+      tags: (r.tags || "").split(",").filter(Boolean),
+      excerpt: (r.content || "").replace(/<[^>]*>/g, "").substring(0, 200),
+      route: "/post/" + r.id,
+      created_at: r.created_at
+    }));
+
+    res.json({ results });
   });
 });
 

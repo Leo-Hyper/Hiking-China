@@ -9,6 +9,11 @@
           <div class="flex items-center gap-2 mb-2">
             <span class="text-xs font-medium text-forest-700 bg-forest-50 px-2.5 py-1 rounded-full">{{ post.category }}</span>
             <span class="text-xs text-slate-400">{{ post.date }}</span>
+            <RouterLink v-if="post.authorId" :to="`/user/${post.authorId}`" @click.stop
+                        class="text-xs text-forest-600 hover:text-forest-700 font-medium">
+              {{ post.author }}
+            </RouterLink>
+            <span v-else class="text-xs text-slate-400">{{ post.author }}</span>
           </div>
           <h3 class="font-bold text-charcoal group-hover:text-forest-700 transition-colors line-clamp-2 mb-2"
               style="font-size: 1.125rem; line-height: 1.4;">
@@ -36,5 +41,6 @@
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router'
 defineProps({ post: { type: Object, required: true } })
 </script>

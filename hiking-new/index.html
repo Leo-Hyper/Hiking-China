@@ -5,8 +5,9 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="徒步中国 - 中国领先的户外徒步社区" />
+  <link rel="stylesheet" href="https://unpkg.com/quill@2.0.3/dist/quill.snow.css" />
   <title>徒步中国 - 户外徒步论坛</title>
-</head>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.css" /></head>
 <body>
   <div id="app"><div style="padding:40px;text-align:center;font-size:20px;color:#888;">徒步中国正在加载...</div></div>
   <script type="module">
@@ -17,6 +18,7 @@
       document.getElementById('app').innerHTML = '<div style="padding:40px;color:red;font-family:monospace;"><h2>Promise 错误</h2><p>'+e.reason+'</p></div>'
     })
   </script>
-  <script type="module" src="/src/main.js"></script>
+<script src="https://unpkg.com/quill@2.0.3/dist/quill.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>  <script type="module" src="/src/main.js"></script>
 </body>
 </html>

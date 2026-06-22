@@ -1,4 +1,4 @@
-﻿const bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt");
 
 function register(username, email, password) {
   const { getDb } = require("./db");
@@ -47,11 +47,80 @@ function getUserById(id) {
   const db = getDb();
 
   return new Promise((resolve, reject) => {
-    db.get("SELECT id, username, email, avatar, bio, created_at FROM users WHERE id = ?", [id], (err, user) => {
+    db.get("SELECT id, username, email, avatar, bio, location, hikinglevel, gear_prefs, profile_public, status, created_at FROM users WHERE id = ?", [id], (err, user) => {
       if (err) reject(err);
       else resolve(user || null);
     });
   });
 }
 
-module.exports = { register, login, getUserById };
+// 更新个人资料
+function updateUserProfile(userId, { username, avatar, bio, location, hikinglevel, gear_prefs, profile_public }) {
+  const { getDb } = require("./db");
+  const db = getDb();
+  const fields = [];
+  const params = [];
+
+  if (username !== undefined) {
+    fields.push("username = ?");
+    params.push(username);
+  }
+  if (avatar !== undefined) {
+    fields.push("avatar = ?");
+    params.push(avatar);
+  }
+  if (bio !== undefined) {
+    fields.push("bio = ?");
+    params.push(bio);
+  }
+  if (location !== undefined) {
+    fields.push("location = ?");
+    params.push(location);
+  }
+  if (hikinglevel !== undefined) {
+    fields.push("hikinglevel = ?");
+    params.push(hikinglevel);
+  }
+  if (gear_prefs !== undefined) {
+    fields.push("gear_prefs = ?");
+    params.push(typeof gear_prefs === "string" ? gear_prefs : JSON.stringify(gear_prefs));
+  }
+  if (profile_public !== undefined) {
+    fields.push("profile_public = ?");
+    params.push(profile_public);
+  }
+
+  if (fields.length === 0) return Promise.resolve({});
+
+  params.push(userId);
+
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE users SET ${fields.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      params,
+      function (err) {
+        if (err) reject(err);
+        else resolve({ changes: this.changes });
+      }
+    );
+  });
+}
+
+// 获取公开用户信息（不含邮箱、密码）
+function getPublicUserById(id) {
+  const { getDb } = require("./db");
+  const db = getDb();
+
+  return new Promise((resolve, reject) => {
+    db.get(
+      "SELECT id, username, avatar, bio, location, hikinglevel, gear_prefs, profile_public, created_at FROM users WHERE id = ?",
+      [id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row || null);
+      }
+    );
+  });
+}
+
+module.exports = { register, login, getUserById, updateUserProfile, getPublicUserById };

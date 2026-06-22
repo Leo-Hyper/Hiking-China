@@ -12,6 +12,8 @@ const routes = [
   { path: '/register', name: 'Register', component: () => import('./views/auth/AuthPage.vue') },
   { path: '/profile', name: 'Profile', component: () => import('./views/auth/ProfilePage.vue') },
   { path: '/publish', name: 'Publish', component: () => import('./views/PublishPost.vue') },
+  { path: '/post/:id/edit', name: 'EditPost', component: () => import('./views/EditPost.vue') },
+  { path: '/user/:id', name: 'UserProfile', component: () => import('./views/UserProfilePage.vue') },
 ]
 
 const router = createRouter({
@@ -23,7 +25,7 @@ const router = createRouter({
 })
 
 // 路由守卫：需要登录的页面
-const protectedRoutes = ['publish', 'profile']
+const protectedRoutes = ['publish', 'profile', 'EditPost']
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')

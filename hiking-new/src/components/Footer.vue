@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <footer class="bg-charcoal text-slate-400">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
@@ -21,10 +21,10 @@
         <div>
           <h4 class="text-white font-semibold mb-4 text-sm">热门路线</h4>
           <ul class="space-y-2.5 text-sm">
-            <li><RouterLink to="/post/25" class="hover:text-white transition-colors">四姑娘山</RouterLink></li>
-            <li><RouterLink to="/post/26" class="hover:text-white transition-colors">虎跳峡</RouterLink></li>
-            <li><RouterLink to="/post/29" class="hover:text-white transition-colors">稻城亚丁</RouterLink></li>
-            <li><RouterLink to="/post/28" class="hover:text-white transition-colors">贡嘎转山</RouterLink></li>
+            <li v-if="popularRoutes.length === 0" class="text-slate-600">加载中...</li>
+            <li v-for="route in popularRoutes" :key="route.id">
+              <RouterLink :to="'/post/' + route.id" class="hover:text-white transition-colors">{{ route.title }}</RouterLink>
+            </li>
           </ul>
         </div>
         <div>
@@ -45,6 +45,22 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-</script>
 
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
+const popularRoutes = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/posts?limit=4`)
+    if (res.ok) {
+      const data = await res.json()
+      popularRoutes.value = (data.posts || []).slice(0, 4).map(p => ({
+        id: p.id,
+        title: p.title
+      }))
+    }
+  } catch {}
+})
+</script>

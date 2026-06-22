@@ -1,7 +1,7 @@
-﻿import { ref, computed, watch } from "vue"
+import { ref, computed, watch } from "vue"
 import { searchIndex, SEARCH_FIELDS } from "@/data/postIndex.js"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://hiking-china-api.onrender.com"
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://hiking-china-api.onrender.com")
 
 // 搜索 composable — 支持本地 + API 双模式
 export function useSearch() {

@@ -8,7 +8,7 @@
 | 2026-06-18 | 页面 | src/views/Forum.vue | 动态论坛帖子列表（API + 分类筛选） |
 | 2026-06-18 | 页面 | src/views/Gear.vue | 装备指南网格 |
 | 2026-06-18 | 页面 | src/views/Events.vue | 活动召集列表 |
-| 2026-06-18 | 页面 | src/views/PostDetail.vue | 帖子详情（API 驱动 + 评论/点赞/收藏/分享） |
+| 2026-06-18 | 页面 | src/views/PostDetail.vue | 帖子详情（API 驱动 + 评论懒加载） |
 | 2026-06-19 | 页面 | src/views/PublishPost.vue | 发帖页面 |
 | 2026-06-18 | 页面 | src/views/auth/AuthPage.vue | 登录/注册 |
 | 2026-06-18 | 页面 | src/views/auth/ProfilePage.vue | 个人中心 |
@@ -25,6 +25,8 @@
 | 2026-06-18 | 数据 | src/data/postIndex.js | 可搜索索引（43条） |
 | 2026-06-18 | 逻辑 | src/composables/useSearch.js | 搜索逻辑 composable |
 | 2026-06-19 | 逻辑 | src/stores/auth.js | 统一 Auth store（响应式） |
+| 2026-06-20 | 逻辑 | src/composables/useComments.js | 评论逻辑 composable |
+| 2026-06-20 | 逻辑 | src/composables/useActions.js | 点赞/收藏/分享 composable |
 | 2026-06-18 | 图标 | public/favicon.svg | 山形 Logo |
 | 2026-06-18 | 配置 | netlify.toml | 前端部署配置 |
 | 2026-06-19 | 配置 | .env.development | 开发环境 API URL |

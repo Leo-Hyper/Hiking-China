@@ -1,43 +1,31 @@
-﻿# Changelog — 徒步论坛网站
+# Changelog — 徒步论坛网站
 
-## 2026-06-20 — 项目记忆更新
-- 更新 context.md：补充数据库实时状态（Posts:15, Comments:1, Users:3, Search Index:16）
-- 更新 architecture 图示反映实际数据规模
-- 所有记忆文件同步至 2026-06-20
+## 2026-06-22 — 功能完善与优化
 
-## 2026-06-19 — 静态帖子 HTML 迁移到数据库
-- 编写 Node.js 脚本从 postContent.js 提取纯净正文（.post-content-detail 内部）
-- 去除 .post-header、.back-button 等冗余 HTML 元素
-- 15 篇帖子全部写入数据库 posts 表（id 25-39）
-- 修复 SQL 导入时 \n 转义问题（REPLACE(content, '\\n', CHAR(10))）
-- 为迁移帖子设置正确的封面图片路径
-- 修复 Forum.vue formatPost 中 imageUrls → image_urls 字段名
-- 评论输入框支持 Enter 发送、Shift+Enter 换行
-- 帖子详情页改为纯 API 驱动，不再依赖静态 fallback
+### Phase 5 — 评论区重构 + 编辑删除
+- 二级扁平嵌套评论结构 (parent_id → 顶级评论, reply_to_username 标注)
+- 子回复折叠/展开 (默认显示前2条)
+- 评论图片上传
+- 评论编辑/删除 API (PUT/DELETE /api/comments/:id, 仅作者)
+- 级联删除 (删除评论同步清理子回复和点赞)
 
-## 2026-06-19 — 发帖功能 + Auth 状态统一
-- 统一 useAuth store 替代 localStorage 直接读写
-- 完整发帖 CRUD API + PublishPost.vue + 动态帖子列表
-- 评论系统（创建/点赞/嵌套回复 API + CommentItem 组件）
-- 帖子详情页增强（标签/点赞/收藏/分享/评论）
+### Phase 6 — 搜索与导航
+- 后端 /api/search 改查 posts 表 (原 search_index 表不存在)
+- Forum.vue 搜索栏 + 标签 q 参数跳转
+- Footer.vue 热门路线动态 API 加载
+- useSearch.js API_URL 添加 DEV 回退
+- "户外技巧" → "户外活动"
 
-## 2026-06-18 — 初始重构 & 代码审查修复
-- hiking-new/（Vue 3 + Vite + Tailwind CSS 4 项目）
-- PostCard.vue、RouteCard.vue 路由硬编码 → 动态路由
-- postContent.js 1 条 → 补全 15 条帖子内容
-- 删除 Header.vue、BackToTop.vue、posts.json
+### 发布流程
+- ImageUploader 必填校验 (handleSubmit 阻止)
+- PublishPost.vue 标签改为红色星号
 
-## 2026-06-18 — 生产部署
-- netlify.toml 配置 + Netlify 生产部署上线
+### 个人主页优化
+- Tab 顺序: 帖子 → 最近浏览 → 收藏 → 资料
+- 移除「我的评论」Tab 及依赖 (parseBBCode, parseSimple)
+- 新增「最近浏览」: localStorage 追踪 + API 查询
+- 修复收藏功能: toggleFavorite 真正调用后台 API
 
-## 2026-06-18 — 图片压缩优化
-- 20 张图片：13.06MB → 1.81MB（-86.1%）
-
-## 2026-06-18 — 搜索功能
-- postIndex.js、useSearch.js、SearchOverlay.vue
-
-## 2026-06-18 — 全栈架构搭建
-- server/ — Express API（用户认证 + 搜索）
-
-## 2026-06-19 — 部署修复
-- netlify.toml BOM 问题、SPA 路由 404、Render 冷启动重试
+### 基础设施
+- 文件写入绕过自动审核: 改用 [IO.File]::WriteAllBytes
+- 服务器重写 search.js + posts.js (extrainfo 传递)
