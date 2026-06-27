@@ -34,3 +34,6 @@ npm-debug.log*
 # Database
 hiking-new/data/*.db
 hiking-new/data/*.db-journal
+
+# Backups
+hiking-new/hiking-new_*/
