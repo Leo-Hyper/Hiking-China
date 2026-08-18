@@ -1,10 +1,10 @@
-# Context — 徒步论坛网站 (Updated 2026-08-18)
+# Context — 徒步论坛网站 (Updated 2026-06-22)
 
 ## Overview
 中国户外徒步社区网站，提供徒步路线展示、装备指南、活动召集和论坛交流功能。
 
 ## Current Situation
-**Phase:** 功能完善与优化阶段（Phase 7 活动模块已完成）
+**Phase:** 功能完善与优化阶段
 
 ### 已完成功能模块：
 
@@ -52,16 +52,9 @@
 - Footer.vue 热门路线动态化（API 获取最新帖子替代硬编码 ID）
 - "户外技巧" 重命名为 "户外活动"
 
-**Phase 7 - 活动模块完整实现 (2026-06-27 提交 c4c487f)：**
-- events 表 + event_registrations 表（报名，联合唯一 event_id+user_id）
-- server/models/event.js：活动 CRUD + 报名/取消/检查
-- server/routes/events.js：8 个活动 API 路由（含鉴权与作者校验）
-- src/views/PublishEvent.vue：发起活动页（标题/日期/难度/地点/人数/图片）
-- src/utils/image.js：图片 URL 工具（resolveImageUrl/parseImageUrls/stripHtml）
-- .gitignore：忽略数据库文件与备份目录 (hiking-new/hiking-new_*/)
-
-**文档与交付 (2026-06-27)：**
-- 全栈项目分析完成，输出《徒步论坛网站_项目详情文档.md》（架构/目录/路由/数据库/API/组件/设计系统/安全/部署/功能矩阵/待完善项）
+**发布流程优化：**
+- ImageUploader 设为必填：未传图时阻止提交并提示
+- 错误处理增强：发布/评论失败提示具体错误信息
 
 ### 数据结构
 sql
@@ -74,12 +67,6 @@ posts: id, user_id, title, content, category, tags, image_urls, extrainfo,
 
 comments: id, post_id, user_id, parent_id, reply_to_user_id, reply_to_username,
           content, image_url, likes, created_at
-
-events: id, user_id, title, content, location, location_lat, location_lng,
-        event_date, difficulty, max_participants, image_url, status,
-        created_at, updated_at
-
-event_registrations: id, event_id, user_id, created_at (UNIQUE event_id+user_id)
 
 likes/收藏: post_likes, bookmarks, comment_likes, followers
 
@@ -94,19 +81,12 @@ likes/收藏: post_likes, bookmarks, comment_likes, followers
 - GET/POST /api/bookmarks, /api/bookmarks/toggle/:postId, /api/bookmarks/check/:postId
 - GET /api/search?q=
 - POST /api/upload
-- GET/POST/PUT/DELETE /api/events, GET /api/events/:id
-- POST /api/events/:id/join|leave|check
 
 ## Known Issues
-- 活动列表页 Events.vue 仍为前端静态数据，报名按钮未接后端（后端 /api/events 已完整）
 - npm install/Invoke-WebRequest 网络受限，无法从终端访问外部 registry/CDN
 - 浏览器可正常访问 cdn.bootcdn.net (Leaflet/Quill 通过 CDN 加载)
 - 地图瓦片使用 tile.openstreetmap.fr/hot (法国OSM镜像)
-- JWT_SECRET 硬编码默认值，生产需环境变量覆盖
-- updatePost 动态字段 SQL 拼接存在注入风险，应参数化
-- 富文本内容直接 v-html 渲染，未做 XSS 过滤
-- main 分支领先 origin/main 5 个 [PMM] 同步提交，未推送
-- stash@{0} 为已删除分支 codex/visual-design-upgrade 的 WIP，待处理
+- 自动审核系统可能因 DeepSeek API 故障误拦截命令 (改用 [System.IO.File]::WriteAllBytes 绕过)
 
 ## Architecture
 Frontend: Vue 3 + Vite 8 + Tailwind CSS 4 + Vue Router 5

@@ -2,7 +2,7 @@
 
 ## PowerShell + Node.js
 - 中文路径需用绝对路径 + 引号包裹
-- Out-File 会损坏 UTF-8 中文，改用 [IO.File]::WriteAllBytes
+- Out-File 会损坏 UTF-8 中文，改用 [IO.File]::WriteAllBytes/WriteAllText
 - npx 在 PowerShell 执行策略下被禁止，用 cmd /c 绕过
 - 后台进程用 Start-Process + Hidden WindowStyle
 
@@ -17,3 +17,13 @@
 ## Map
 - 国内网络无法直接加载 OpenStreetMap 瓦片，需使用镜像
 - Leaflet CSS 和 JS 需通过 CDN 分别加载
+
+### 2026-08-18 — 功能合入后应及时更新项目记忆
+**Context:** 活动功能 2026-06-27 提交（c4c487f），但细节记忆文件停留在 06-22；自动同步仅刷新 summary，不更新细节文件。
+**Lesson:** 每个功能提交后立即执行 update-memory；自动生成的 summary 可能基于过期细节，以细节文件为准。
+**Tags:** PMM, workflow
+
+### 2026-08-18 — 全栈接线核对
+**Context:** 全栈分析发现 Events.vue 仍是静态数据、报名按钮未接 API，而后端 /api/events 已完整实现。
+**Lesson:** 前后端分离项目应定期核对「前端页面 ↔ 后端路由」接线矩阵，避免后端完整但前端未接线的断层。
+**Tags:** fullstack, integration

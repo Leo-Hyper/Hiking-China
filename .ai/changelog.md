@@ -29,3 +29,25 @@
 ### 基础设施
 - 文件写入绕过自动审核: 改用 [IO.File]::WriteAllBytes
 - 服务器重写 search.js + posts.js (extrainfo 传递)
+
+## 2026-06-27 — 活动模块完整实现 + 项目分析文档
+
+### Phase 7 — 活动功能
+- events 表 + event_registrations 表（报名联合唯一约束）
+- server/models/event.js：活动 CRUD + join/leave/check
+- server/routes/events.js：8 个活动 API 路由（鉴权 + 作者校验）
+- src/views/PublishEvent.vue：发起活动页
+- src/utils/image.js：图片 URL 工具函数
+- .gitignore：忽略 hiking-new/data/*.db 与 hiking-new/hiking-new_*/ 备份目录
+- 提交 c4c487f (2026-06-27)
+
+### 文档
+- 输出《徒步论坛网站_项目详情文档.md》（全栈分析：架构/路由/数据库/API/组件/设计系统/安全/部署/待完善项）
+
+## 2026-08-18 — 项目记忆同步
+
+### 记忆更新
+- context.md/tasks.md/decisions.md/lessons.md/outputs.md 沉淀 Phase 7 活动功能
+- 登记项目详情文档交付物
+- 补记 Events.vue 静态数据等接线缺口与安全待办（JWT_SECRET/SQL 拼接/XSS）
+- memory-summary.md 按 diff-gated 规则重写（细节文件有实质变化）
