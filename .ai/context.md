@@ -1,4 +1,4 @@
-# Context — 徒步论坛网站 (Updated 2026-08-18)
+# Context — 徒步论坛网站 (Updated 2026-08-21)
 
 ## Overview
 中国户外徒步社区网站，提供徒步路线展示、装备指南、活动召集和论坛交流功能。
@@ -113,3 +113,38 @@ Frontend: Vue 3 + Vite 8 + Tailwind CSS 4 + Vue Router 5
 Backend: Express + SQLite3 + JWT + bcrypt
 CDN: cdn.bootcdn.net (Leaflet + Quill)
 Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
+
+## Phase 8 (2026-08-21) — 妙搭前端迁移 + 免费部署方案落地
+
+**背景：** 用户将原站功能用妙搭重制为 React 19 前端（hiking-frontend-source.zip），确认走免费部署方案（Render 免费实例 + Turso + Cloudinary），后端留在本地仓库打补丁，前端迁移回本地 Vite 工程后按原架构部署（Netlify + Render）。
+
+**后端改造（server/，已全链路验证）：**
+- models/db.js 双模式：本地无 env 读 data/hikingchina.db；生产 TURSO_DATABASE_URL+TURSO_AUTH_TOKEN 走远程 libsql。统一 all/get/run async 接口，模型层签名不变
+- 5 个模型 + 4 个路由内联 db（bookmarks/comments/posts/search）全部改为统一接口；rg 无残留
+- services/upload.js provider：local 写盘 / cloudinary 直链（UPLOAD_PROVIDER 切换），5MB/9 张限制保留
+- 补丁：/api/events 挂载、CORS 逗号分隔多域名（FRONTEND_URL）、生产 JWT_SECRET fail-loud、帖子查询补 status=1、events 建表 + signup_deadline 迁移、4 条活动 seed、旧 post17 标记删除、报名原子满员校验、删除帖子/活动显式级联清理
+- 新依赖 @libsql/client 已加入 package.json 并安装验证
+
+**前端迁移（hiking-new/frontend/，全新 Vite 7 + React 19 + TS + Tailwind 4 骨架）：**
+- 三别名 @/@client/@shared 配齐；剥离全部 @lark-apaas 平台依赖（business-ui/入口/index.css/resolveAppUrl/avatar-service）
+- utils/http.ts（VITE_API_BASE_URL + JWT hiking_token + 401 清会话）、api/index.ts（8 组路由）、hiking-store.ts 35 个函数改异步 API 调用（snake→camel 映射）
+- 18 个调用方文件适配 async + loading/空态；新增 useAsyncData hook、共享 PostStats（异步评论数/作者头像）
+- 图片上传改 multipart POST /api/upload；登录/注册存 JWT；localStorage 仅保留会话/草稿/最近浏览
+- npm run type:check 零错误、vite build 成功；netlify.toml（SPA redirect + /api/* 反代到 Render）
+- 修复 2 个运行时隐患：store 登录后未存 JWT token；发布页 createPost/createEvent 未 await
+
+**交付物：** 部署指南-免费方案-Render-Turso-Netlify.md（Turso 建库导入/Render/Netlify/Cloudinary 配置 + 走查清单）
+
+## Next Actions（2026-08-21）
+- [ ] 上线部署：按《部署指南-免费方案-Render-Turso-Netlify.md》建 Turso 库导入 → Render 起后端 → Netlify 起前端 → 全链路走查（需用户账号操作）
+- [ ] 部署后把 frontend/netlify.toml 的反代目标改为实际 Render 域名
+- [ ] 上线前可选优化：hero 视频 16.9MB 改 poster 首屏 + 点击播放；单 chunk >500KB 做路由级 code-split
+- [ ] 旧 Vue 前端保留于 git 历史（当前 Netlify 域名若在跑 Vue 版，替换前确认备份）
+- [ ] 安全加固 backlog：updatePost SQL 参数化、富文本 XSS 过滤、敏感词、防爆破
+- [ ] main 分支推送 origin
+
+## Risks（2026-08-21 更新）
+- Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
+- 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）
+- 帖子点赞按钮当前为本地语义（未接 API），后端 like/toggle 已具备，后续可接线
+- frontend/ 尚未提交 git（含 node_modules 需 gitignore）

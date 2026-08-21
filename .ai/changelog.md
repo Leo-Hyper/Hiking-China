@@ -51,3 +51,26 @@
 - 登记项目详情文档交付物
 - 补记 Events.vue 静态数据等接线缺口与安全待办（JWT_SECRET/SQL 拼接/XSS）
 - memory-summary.md 按 diff-gated 规则重写（细节文件有实质变化）
+
+## 2026-08-21 — 妙搭前端迁移 + 免费部署方案（Phase 8）
+
+### 后端
+- models/db.js 双模式（本地 SQLite / Turso 远程），统一 all/get/run async 接口
+- 5 模型 + 4 路由内联 db 改写；services/upload.js provider（local/cloudinary）
+- index.js 挂载 /api/events、CORS 多源、initDb→listen 串行；auth.js 生产 JWT_SECRET fail-loud
+- post.js status=1 过滤；event.js 原子满员校验；删除显式级联；4 条活动 seed；post17 标记删除
+- server/package.json 增加 @libsql/client
+
+### 前端（hiking-new/frontend/ 新建）
+- Vite 7 + React 19 + TS + Tailwind 4 骨架，三别名，剥离全部 @lark-apaas 依赖
+- utils/http.ts + api/index.ts（8 组路由）+ hiking-store.ts 35 函数异步化 + snake→camel 映射
+- 18 个调用方适配 async；useAsyncData hook；PostStats 共享组件；上传/头像改 multipart
+- 修复：登录未存 JWT、发布页未 await
+- type:check 零错误、vite build 通过、平台/localStorage 验收 grep 通过
+
+### 文档/交付
+- 部署指南-免费方案-Render-Turso-Netlify.md
+- frontend/netlify.toml（SPA redirect + /api/* 反代）
+
+### 验证
+- 后端 curl 全链路（含满员拒绝/取消重报）通过；测试数据已清理，DB 还原 17 帖/3 用户/12 评论/4 活动

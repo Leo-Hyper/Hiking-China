@@ -27,3 +27,24 @@
 **Context:** 全栈分析发现 Events.vue 仍是静态数据、报名按钮未接 API，而后端 /api/events 已完整实现。
 **Lesson:** 前后端分离项目应定期核对「前端页面 ↔ 后端路由」接线矩阵，避免后端完整但前端未接线的断层。
 **Tags:** fullstack, integration
+
+### 2026-08-21 — async 迁移的隐性 bug：fire-and-forget 不报错
+**Context:** store 函数从同步改 async 后，type:check 只抓「Promise 赋给同步变量」，抓不到「调用但不 await」——发布页 createPost/createEvent 的 try/catch 失效，错误变未处理 rejection。
+**Lesson:** 大范围同步→异步改造后，除 type:check 外必须 grep「调用点是否 await」，尤其 try/catch 包裹的 fire-and-forget。
+**证据：** PublishPostPage/PublishEventPage 两处 createPost(...)/createEvent(...) 无 await，补上后错误路径才正确
+**适用范围：** 任何 store/服务层同步→异步改造
+**Tags:** async, refactoring, type-check
+
+### 2026-08-21 — 登录后必须显式存 JWT
+**Context:** http.ts 已定义 setToken，但 store 的 loginUser/registerUser 只存了 session user 没存 token——登录后所有请求仍 401。
+**Lesson:** 认证封装里「拿 token」和「存 token」是两个职责，接入真实后端时逐个核对。
+**证据：** 前端联调前代码审查发现 data/hiking-store.ts 缺少 setToken(data.token)，修复后全链路才通
+**适用范围:** 前端 API 层接入
+**Tags:** auth, jwt
+
+### 2026-08-21 — sqlite3/Turso 默认外键关闭，CASCADE 不可依赖
+**Context:** 删除帖子后评论/收藏残留孤儿数据；PRAGMA foreign_keys 仅本地有效，Turso 远程同样默认 OFF。
+**Lesson:** 多模式（本地/远程）数据库删除逻辑一律显式级联，不依赖 ON DELETE CASCADE。
+**证据：** 本地冒烟测试删除后查询关联表发现残留；补显式级联后清零
+**适用范围:** 本仓库所有删除路径 + 未来迁移其他 SQLite 项目
+**Tags:** sqlite, turso, cascade

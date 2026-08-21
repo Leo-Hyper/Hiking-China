@@ -1,4 +1,4 @@
-# Tasks — 徒步论坛网站 (Updated 2026-08-18)
+# Tasks — 徒步论坛网站 (Updated 2026-08-21)
 
 ## ✅ Completed
 - [x] Phase 1: 数据层改造 (users/posts 扩展 + post_likes/bookmarks 表 + 索引)
@@ -43,4 +43,25 @@
 - [ ] 用户足迹地图功能
 - [ ] 帖子附加信息表单 (发布页已实现, 编辑页已完成)
 - [ ] main 分支推送 origin（领先 5 个提交）
+- [ ] 处理 stash@{0}（visual-design-upgrade WIP）或清理
+
+- [x] Phase 8: 后端存储层双模式改造（db.js all/get/run + Turso 远程）
+- [x] Phase 8: 后端功能补丁（events 挂载/JWT_SECRET env/CORS 多源/status=1 过滤/活动 seed/满员校验/显式级联）
+- [x] Phase 8: 后端全链路 curl 验证（注册→登录→发帖→评论→点赞→收藏→关注→活动→报名→满员拒绝→取消）
+- [x] Phase 8: 前端 Vite 骨架迁移（剥离 @lark-apaas、三别名、入口重写）
+- [x] Phase 8: 前端 API 层（http.ts + api/index.ts + hiking-store 35 函数异步化）
+- [x] Phase 8: 18 个调用方页面/组件异步适配 + type:check 零错误 + build 通过
+- [x] Phase 8: 上传组件 multipart 接入 + 登录存 JWT + localStorage 清理
+- [x] Phase 8: 部署指南文档（Turso/Render/Netlify/Cloudinary）
+
+## 🚧 In Progress
+- [ ] 上线部署（Turso 建库 → Render 后端 → Netlify 前端 → 走查清单）
+
+## 📋 Backlog
+- [ ] 部署后验证图片 URL 跨重部署持久（Cloudinary）
+- [ ] hero 视频 16.9MB → poster 首屏 + 点击播放
+- [ ] 路由级 code-split（chunk >500KB 警告）
+- [ ] 帖子点赞接后端 API（现为本地语义）
+- [ ] 安全加固：updatePost SQL 参数化 / 富文本 XSS 过滤 / 敏感词 / 防爆破
+- [ ] main 分支推送 origin（领先多个提交）
 - [ ] 处理 stash@{0}（visual-design-upgrade WIP）或清理
