@@ -6,18 +6,25 @@ const path = require("path");
 
 // 数据库初始化
 const { initDb } = require("./models/db");
-initDb();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // 中间件
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
+// CORS：支持 FRONTEND_URL 逗号分隔多个域名（如 Netlify 站点 + 本地开发）
+const FRONTEND_ORIGINS = (process.env.FRONTEND_URL || "http://localhost:5173")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+app.use(cors({ origin: FRONTEND_ORIGINS }));
 app.use(express.json({ limit: "50mb" }));
 
-// 静态文件 — 上传目录
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// 静态文件 — 上传目录（仅本地存储模式；Cloudinary 模式图片由 CDN 托管）
+const { PROVIDER, UPLOADS_DIR } = require("./services/upload");
+if (PROVIDER === "local") {
+  app.use("/uploads", express.static(UPLOADS_DIR));
+}
 
 // 速率限制
 const limiter = rateLimit({
@@ -35,6 +42,7 @@ app.use("/api/search", require("./routes/search"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/follow", require("./routes/follow"));
 app.use("/api/bookmarks", require("./routes/bookmarks"));
+app.use("/api/events", require("./routes/events"));
 
 // 健康检查
 app.get("/api/health", (req, res) => {
@@ -49,8 +57,15 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB init failed:", err);
+    process.exit(1);
+  });
 
 module.exports = app;

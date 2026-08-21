@@ -1,0 +1,401 @@
+/* ===== 徒步中国 · 山径手册（Field Guide）设计令牌 =====
+ * 色彩体系：OKLCH 感知均匀色空间
+ * 主色 pine（深松绿）/ 强调 ember（信号橙，仅 ~10%）/ 纸白底 / 墨绿字
+ * forest-* / amber-* / charcoal 为兼容旧类名的别名，指向新色阶
+ */
+:root {
+  --button-outline: rgba(0, 0, 0, 0.10);
+  --badge-outline: rgba(0, 0, 0, 0.05);
+  --opaque-button-border-intensity: -8;
+
+  --elevate-1: rgba(0, 0, 0, 0.03);
+  --elevate-2: rgba(0, 0, 0, 0.08);
+
+  /* --- 基础色板 --- */
+  --paper: oklch(0.985 0.004 95);
+  --ink: oklch(0.24 0.03 170);
+
+  --pine-50: oklch(0.972 0.008 155);
+  --pine-100: oklch(0.95 0.02 155);
+  --pine-200: oklch(0.905 0.045 158);
+  --pine-300: oklch(0.84 0.075 160);
+  --pine-400: oklch(0.73 0.1 162);
+  --pine-500: oklch(0.62 0.11 164);
+  --pine-600: oklch(0.53 0.11 165);
+  --pine-700: oklch(0.45 0.1 166);
+  --pine-800: oklch(0.38 0.08 167);
+  --pine-900: oklch(0.32 0.065 168);
+  --pine-950: oklch(0.22 0.05 169);
+
+  --ember-100: oklch(0.955 0.03 60);
+  --ember-200: oklch(0.9 0.07 55);
+  --ember-300: oklch(0.84 0.11 50);
+  --ember-400: oklch(0.77 0.14 46);
+  --ember-500: oklch(0.7 0.155 43);
+  --ember-600: oklch(0.61 0.145 40);
+  --ember-700: oklch(0.52 0.12 38);
+
+  --mist-400: oklch(0.77 0.07 235);
+  --mist-500: oklch(0.66 0.09 238);
+  --mist-600: oklch(0.55 0.11 240);
+
+  /* --- 兼容别名（旧类名自动换装，页面任务逐步替换后移除） --- */
+  --forest-50: var(--pine-50);
+  --forest-100: var(--pine-100);
+  --forest-200: var(--pine-200);
+  --forest-300: var(--pine-300);
+  --forest-400: var(--pine-400);
+  --forest-500: var(--pine-500);
+  --forest-600: var(--pine-600);
+  --forest-700: var(--pine-700);
+  --forest-800: var(--pine-800);
+  --forest-900: var(--pine-900);
+  --forest-950: var(--pine-950);
+  --amber-400: var(--ember-400);
+  --amber-500: var(--ember-500);
+  --amber-600: var(--ember-600);
+  --charcoal: var(--ink);
+  --graphite: oklch(0.32 0.03 170);
+  --accent-warm: var(--ember-500);
+
+  /* --- shadcn/ui 语义令牌（中性色向松绿色相偏移） --- */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: oklch(0.996 0.002 95);
+  --card-foreground: var(--ink);
+  --popover: oklch(0.996 0.002 95);
+  --popover-foreground: var(--ink);
+  --primary: var(--pine-700);
+  --primary-foreground: var(--paper);
+  --secondary: var(--pine-50);
+  --secondary-foreground: var(--ink);
+  --muted: oklch(0.96 0.008 140);
+  --muted-foreground: oklch(0.54 0.035 165);
+  --accent: oklch(0.94 0.02 140);
+  --accent-foreground: oklch(0.27 0.06 168);
+  --info: var(--mist-600);
+  --info-foreground: oklch(0.97 0.015 235);
+  --destructive: oklch(0.58 0.19 27);
+  --destructive-foreground: var(--paper);
+  --success: var(--pine-600);
+  --success-foreground: var(--pine-50);
+  --warning: var(--ember-500);
+  --warning-foreground: oklch(0.99 0.02 80);
+  --border: oklch(0.915 0.012 140);
+  --input: oklch(0.915 0.012 140);
+  --ring: var(--pine-600);
+  --chart-1: var(--pine-600);
+  --chart-2: var(--ember-500);
+  --chart-3: var(--mist-500);
+  --chart-4: var(--pine-300);
+  --chart-5: var(--pine-900);
+  --sidebar: var(--pine-50);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--pine-700);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: var(--pine-100);
+  --sidebar-accent-foreground: var(--pine-700);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--pine-600);
+
+  /* 组件描边（相对主色加深一档） */
+  --primary-border: var(--pine-800);
+  --secondary-border: oklch(0.92 0.01 140);
+  --destructive-border: oklch(0.5 0.19 27);
+  --accent-border: oklch(0.9 0.02 140);
+  --muted-border: oklch(0.92 0.01 140);
+
+  /* --- 字体族 ---
+   * display: Bricolage Grotesque（西文/数字）+ Noto Serif SC（中文衬线）
+   * body: Archivo（西文）+ Noto Sans SC（中文）
+   * data: Spline Sans Mono（路书数据：距离/海拔/时长）
+   */
+  --font-display: 'Bricolage Grotesque Variable', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+  --font-body: 'Archivo Variable', 'Noto Sans SC Variable', 'PingFang SC', 'Microsoft Yahei', system-ui, sans-serif;
+  --font-data: 'Spline Sans Mono Variable', 'Noto Sans SC Variable', ui-monospace, monospace;
+  --font-sans: var(--font-body);
+  --font-serif: 'Noto Serif SC', 'Songti SC', Georgia, Cambria, serif;
+  --font-mono: var(--font-data);
+
+  /* --- 圆角（收敛：卡片 8-12px 为主） --- */
+  --radius: 0.5rem;
+  /* --- 纸感阴影（松绿墨色染色，双层低对比） --- */
+  --shadow-x: 0px;
+  --shadow-y: 2px;
+  --shadow-blur: 12px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.06;
+  --shadow-color: oklch(0.25 0.03 170);
+  --shadow-2xs: 0px 1px 2px 0px oklch(0.25 0.03 170 / 0.04);
+  --shadow-xs: 0px 1px 3px 0px oklch(0.25 0.03 170 / 0.05);
+  --shadow-sm:
+    0px 1px 3px 0px oklch(0.25 0.03 170 / 0.06),
+    0px 1px 2px -1px oklch(0.25 0.03 170 / 0.05);
+  --shadow:
+    0px 2px 6px -1px oklch(0.25 0.03 170 / 0.07),
+    0px 1px 2px -1px oklch(0.25 0.03 170 / 0.05);
+  --shadow-md:
+    0px 6px 14px -4px oklch(0.25 0.03 170 / 0.09),
+    0px 2px 4px -2px oklch(0.25 0.03 170 / 0.05);
+  --shadow-lg:
+    0px 10px 24px -8px oklch(0.25 0.03 170 / 0.12),
+    0px 4px 8px -4px oklch(0.25 0.03 170 / 0.06);
+  --shadow-xl:
+    0px 18px 36px -12px oklch(0.25 0.03 170 / 0.15),
+    0px 6px 12px -6px oklch(0.25 0.03 170 / 0.07);
+  --shadow-2xl: 0px 24px 48px -16px oklch(0.25 0.03 170 / 0.2);
+
+  /* --- 动效缓动（指数减速，禁 bounce） --- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* 新色板 */
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-pine-50: var(--pine-50);
+  --color-pine-100: var(--pine-100);
+  --color-pine-200: var(--pine-200);
+  --color-pine-300: var(--pine-300);
+  --color-pine-400: var(--pine-400);
+  --color-pine-500: var(--pine-500);
+  --color-pine-600: var(--pine-600);
+  --color-pine-700: var(--pine-700);
+  --color-pine-800: var(--pine-800);
+  --color-pine-900: var(--pine-900);
+  --color-pine-950: var(--pine-950);
+  --color-ember-100: var(--ember-100);
+  --color-ember-200: var(--ember-200);
+  --color-ember-300: var(--ember-300);
+  --color-ember-400: var(--ember-400);
+  --color-ember-500: var(--ember-500);
+  --color-ember-600: var(--ember-600);
+  --color-ember-700: var(--ember-700);
+  --color-mist-400: var(--mist-400);
+  --color-mist-500: var(--mist-500);
+  --color-mist-600: var(--mist-600);
+
+  /* 兼容旧类名 */
+  --color-forest-50: var(--forest-50);
+  --color-forest-100: var(--forest-100);
+  --color-forest-200: var(--forest-200);
+  --color-forest-300: var(--forest-300);
+  --color-forest-400: var(--forest-400);
+  --color-forest-500: var(--forest-500);
+  --color-forest-600: var(--forest-600);
+  --color-forest-700: var(--forest-700);
+  --color-forest-800: var(--forest-800);
+  --color-forest-900: var(--forest-900);
+  --color-forest-950: var(--forest-950);
+  --color-amber-400: var(--amber-400);
+  --color-amber-500: var(--amber-500);
+  --color-amber-600: var(--amber-600);
+  --color-charcoal: var(--charcoal);
+  --color-graphite: var(--graphite);
+  --color-accent-warm: var(--accent-warm);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-data: var(--font-data);
+
+  /* 字阶：1.25+ 步进的模块化尺度 */
+  --text-display: clamp(3rem, 1.5rem + 4.5vw, 4.75rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 700;
+  --text-h1: clamp(2.25rem, 1.5rem + 2.4vw, 3.25rem);
+  --text-h1--line-height: 1.12;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h1--font-weight: 700;
+  --text-h2: clamp(1.75rem, 1.4rem + 1.3vw, 2.375rem);
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h2--font-weight: 700;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.35;
+  --text-h3--font-weight: 600;
+  --text-kicker: 0.75rem;
+  --text-kicker--line-height: 1.4;
+  --text-kicker--letter-spacing: 0.14em;
+  --text-kicker--font-weight: 600;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --ease-out-quint: var(--ease-out-quint);
+  --ease-out-expo: var(--ease-out-expo);
+
+  --animate-fade-in: fadeIn 0.8s ease-out forwards;
+  --animate-slide-up: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulseSlow 4s ease-in-out infinite;
+}
+
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, these are six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
+@layer utilities {
+  /* Hide ugly search cancel button in Chrome until we style it properly */
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  /* Placeholder styling for contentEditable div */
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
+
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
+  .no-default-hover-elevate {}
+  .no-default-active-elevate {}
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: -1;
+    /* sits behind content but above backdrop */
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  /* Does not work on elements with overflow:hidden! */
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: 999;
+    /* sits in front of content */
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}

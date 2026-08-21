@@ -144,30 +144,17 @@ router.get("/user/:userId", async (req, res) => {
 // POST /api/posts/like/toggle/:postId
 router.post("/like/toggle/:postId", authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require("../models/db");
-    const db = getDb();
+    const { get, run } = require("../models/db");
     const postId = parseInt(req.params.postId);
     const userId = req.userId;
-    const existing = await new Promise((resolve, reject) => {
-      db.get("SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?", [postId, userId], (err, row) => {
-        if (err) reject(err); else resolve(row);
-      });
-    });
+    const existing = await get("SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?", [postId, userId]);
     if (existing) {
-      await new Promise((resolve, reject) => {
-        db.run("DELETE FROM post_likes WHERE post_id = ? AND user_id = ?", [postId, userId], function(err) {
-          if (err) reject(err); else resolve();
-        });
-      });
-      db.run("UPDATE posts SET likes_count = MAX(0, likes_count - 1) WHERE id = ?", [postId]);
+      await run("DELETE FROM post_likes WHERE post_id = ? AND user_id = ?", [postId, userId]);
+      await run("UPDATE posts SET likes_count = MAX(0, likes_count - 1) WHERE id = ?", [postId]);
       res.json({ liked: false });
     } else {
-      await new Promise((resolve, reject) => {
-        db.run("INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)", [postId, userId], function(err) {
-          if (err) reject(err); else resolve();
-        });
-      });
-      db.run("UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?", [postId]);
+      await run("INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)", [postId, userId]);
+      await run("UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?", [postId]);
       res.json({ liked: true });
     }
   } catch (err) {
@@ -178,13 +165,8 @@ router.post("/like/toggle/:postId", authMiddleware, async (req, res) => {
 // GET /api/posts/like/check/:postId
 router.get("/like/check/:postId", authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require("../models/db");
-    const db = getDb();
-    const row = await new Promise((resolve, reject) => {
-      db.get("SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?", [parseInt(req.params.postId), req.userId], (err, row) => {
-        if (err) reject(err); else resolve(row);
-      });
-    });
+    const { get } = require("../models/db");
+    const row = await get("SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?", [parseInt(req.params.postId), req.userId]);
     res.json({ liked: !!row });
   } catch (err) {
     res.status(500).json({ error: err.message });

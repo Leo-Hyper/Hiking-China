@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
-const { createComment, getAllCommentsByPostId, likeComment, updateComment, deleteComment } = require("../models/comment");
+const { createComment, getAllCommentsByPostId, likeComment, isCommentLiked, updateComment, deleteComment } = require("../models/comment");
 
 // 二级扁平嵌套树：
 // 顶级评论 parent_id=NULL，子回复的 parent_id 指向所属顶级评论（而非直接父评论）
@@ -66,25 +66,15 @@ router.post("/", authMiddleware, async (req, res) => {
     let replyToUsername = null;
 
     if (reply_to_user_id) {
-      const { getDb } = require("../models/db");
-      const db = getDb();
-      const replyUser = await new Promise((resolve, reject) => {
-        db.get("SELECT username FROM users WHERE id = ?", [reply_to_user_id], (err, row) => {
-          err ? reject(err) : resolve(row);
-        });
-      });
+      const { get } = require("../models/db");
+      const replyUser = await get("SELECT username FROM users WHERE id = ?", [reply_to_user_id]);
       replyToUsername = replyUser ? replyUser.username : null;
     }
 
     // 如果 parent_id 本身是子回复（它的 parent_id 非空），则提升到顶级评论
     if (finalParentId) {
-      const { getDb } = require("../models/db");
-      const db = getDb();
-      const parentComment = await new Promise((resolve, reject) => {
-        db.get("SELECT parent_id FROM comments WHERE id = ?", [finalParentId], (err, row) => {
-          err ? reject(err) : resolve(row);
-        });
-      });
+      const { get } = require("../models/db");
+      const parentComment = await get("SELECT parent_id FROM comments WHERE id = ?", [finalParentId]);
       if (parentComment && parentComment.parent_id) {
         // parent_id 指向的是一条子回复 → 提升到该子回复所属的顶级评论
         finalParentId = parentComment.parent_id;
@@ -101,15 +91,12 @@ router.post("/", authMiddleware, async (req, res) => {
       image_url: image_url || null,
     });
 
-    const { getDb } = require("../models/db");
-    const db = getDb();
+    const { get } = require("../models/db");
     const sql = `SELECT c.*, u.username, u.avatar
                  FROM comments c
                  LEFT JOIN users u ON c.user_id = u.id
                  WHERE c.id = ?`;
-    const comment = await new Promise((resolve, reject) => {
-      db.get(sql, [result.id], (err, row) => err ? reject(err) : resolve(row));
-    });
+    const comment = await get(sql, [result.id]);
 
     res.status(201).json({ comment });
   } catch (err) {
@@ -128,21 +115,24 @@ router.post("/:id/like", authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/comments/:id/like/check - 检查是否已点赞（需登录）
+router.get("/:id/like/check", authMiddleware, async (req, res) => {
+  try {
+    const liked = await isCommentLiked(parseInt(req.params.id), req.userId);
+    res.json({ liked });
+  } catch (err) {
+    res.status(500).json({ error: "操作失败" });
+  }
+});
+
 // GET /api/comments/my - 获取我的评论
 router.get('/my', authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require("../models/db");
-    const db = getDb();
-    const comments = await new Promise((resolve, reject) => {
-      db.all(
-        'SELECT c.*, p.title as post_title FROM comments c LEFT JOIN posts p ON c.post_id = p.id WHERE c.user_id = ? ORDER BY c.created_at DESC LIMIT 50',
-        [req.userId],
-        (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows || []);
-        }
-      );
-    });
+    const { all } = require("../models/db");
+    const comments = await all(
+      'SELECT c.*, p.title as post_title FROM comments c LEFT JOIN posts p ON c.post_id = p.id WHERE c.user_id = ? ORDER BY c.created_at DESC LIMIT 50',
+      [req.userId]
+    );
     res.json({ comments });
   } catch (err) {
     res.status(500).json({ error: err.message });

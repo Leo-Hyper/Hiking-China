@@ -94,13 +94,8 @@ router.put("/profile", async (req, res) => {
     const { username, avatar, bio, location, hikinglevel, gear_prefs, profile_public } = req.body;
 
     if (username) {
-      const { getDb } = require("../models/db");
-      const db = getDb();
-      const existing = await new Promise((resolve, reject) => {
-        db.get("SELECT id FROM users WHERE username = ? AND id != ?", [username, decoded.id], (err, row) => {
-          err ? reject(err) : resolve(row);
-        });
-      });
+      const { get } = require("../models/db");
+      const existing = await get("SELECT id FROM users WHERE username = ? AND id != ?", [username, decoded.id]);
       if (existing) {
         return res.status(400).json({ error: "用户名已被使用" });
       }

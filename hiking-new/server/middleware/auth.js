@@ -1,4 +1,9 @@
-﻿const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
+
+// 生产环境必须显式配置 JWT_SECRET，缺失即启动失败（fail-loud），避免使用硬编码默认值上线
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required in production');
+}
 const SECRET = process.env.JWT_SECRET || 'hiking-china-secret-change-in-production';
 
 function generateToken(user) {

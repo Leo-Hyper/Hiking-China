@@ -16,35 +16,19 @@ function authMiddleware(req, res, next) {
 // POST /api/bookmarks/toggle - 收藏/取消收藏
 router.post('/toggle/:postId', authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require('../models/db');
-    const db = getDb();
+    const { get, run } = require('../models/db');
     const userId = req.userId;
     const postId = parseInt(req.params.postId);
 
-    const existing = await new Promise((resolve, reject) => {
-      db.get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const existing = await get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
 
     if (existing) {
       // 取消收藏
-      await new Promise((resolve, reject) => {
-        db.run('DELETE FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId], function(err) {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
+      await run('DELETE FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
       res.json({ bookmarked: false, message: '已取消收藏' });
     } else {
       // 添加收藏
-      await new Promise((resolve, reject) => {
-        db.run('INSERT INTO bookmarks (user_id, post_id) VALUES (?, ?)', [userId, postId], function(err) {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
+      await run('INSERT INTO bookmarks (user_id, post_id) VALUES (?, ?)', [userId, postId]);
       res.json({ bookmarked: true, message: '已收藏' });
     }
   } catch (err) {
@@ -55,23 +39,16 @@ router.post('/toggle/:postId', authMiddleware, async (req, res) => {
 // GET /api/bookmarks - 我的收藏列表
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require('../models/db');
-    const db = getDb();
+    const { all } = require('../models/db');
     const userId = req.userId;
 
-    const rows = await new Promise((resolve, reject) => {
-      db.all(
-        'SELECT p.*, u.username, b.created_at as bookmarked_at FROM bookmarks b ' +
-        'JOIN posts p ON b.post_id = p.id ' +
-        'LEFT JOIN users u ON p.user_id = u.id ' +
-        'WHERE b.user_id = ? ORDER BY b.created_at DESC',
-        [userId],
-        (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows || []);
-        }
-      );
-    });
+    const rows = await all(
+      'SELECT p.*, u.username, b.created_at as bookmarked_at FROM bookmarks b ' +
+      'JOIN posts p ON b.post_id = p.id ' +
+      'LEFT JOIN users u ON p.user_id = u.id ' +
+      'WHERE b.user_id = ? ORDER BY b.created_at DESC',
+      [userId]
+    );
 
     // normalize
     const posts = rows.map(row => {
@@ -92,17 +69,11 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET /api/bookmarks/check/:postId - 检查是否已收藏
 router.get('/check/:postId', authMiddleware, async (req, res) => {
   try {
-    const { getDb } = require('../models/db');
-    const db = getDb();
+    const { get } = require('../models/db');
     const userId = req.userId;
     const postId = parseInt(req.params.postId);
 
-    const row = await new Promise((resolve, reject) => {
-      db.get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const row = await get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
 
     res.json({ bookmarked: !!row });
   } catch (err) {

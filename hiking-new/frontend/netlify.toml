@@ -1,0 +1,24 @@
+# 徒步中国 · 新前端（React 19 + Vite 7）
+# Netlify 配置：构建目录指向本目录（Base directory = hiking-new/frontend）
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # 方式一（推荐·免 CORS）：留空，前端走同源 /api/*，由下方 redirects 反代到 Render。
+  # 方式二：直接填后端地址，如 https://hiking-china-api.onrender.com（此时删除下方 /api/* 反代，后端 CORS 需加 Netlify 域名）
+  VITE_API_BASE_URL = ""
+  CLIENT_BASE_PATH = "/"
+
+# SPA 路由回退
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 方式一配套：/api/* 反代到 Render（如需方式二请删除此段）
+[[redirects]]
+  from = "/api/*"
+  to = "https://hiking-china-api.onrender.com/api/:splat"
+  status = 200

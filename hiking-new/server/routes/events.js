@@ -81,6 +81,7 @@ router.post("/:id/join", authMiddleware, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     if (err.message === "已报名") return res.status(400).json({ error: err.message });
+    if (err.message === "报名人数已满") return res.status(400).json({ error: err.message });
     console.error("[ERROR] POST /api/events/:id/join:", err);
     res.status(500).json({ error: "服务器错误" });
   }

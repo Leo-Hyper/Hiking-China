@@ -1,0 +1,185 @@
+/* 自托管字体（npm 包，禁 CDN） */
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/archivo";
+@import "@fontsource-variable/spline-sans-mono";
+@import "@fontsource/noto-serif-sc/600.css";
+@import "@fontsource/noto-serif-sc/700.css";
+@import "@fontsource-variable/noto-sans-sc";
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./tailwind-theme.css";
+@import "./typography.css";
+
+@source "../../node_modules/streamdown/dist/*.js";
+
+/* 细体（200）仅供 Hero 标题“中国”二字使用：以独立字体族名声明，
+   避免向 'Noto Serif SC' 全局注入 200 字重连带改变其他文本的字重 */
+@font-face {
+  font-family: 'Noto Serif SC Thin';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200;
+  src: url('../../node_modules/@fontsource/noto-serif-sc/files/noto-serif-sc-119-200-normal.woff2') format('woff2');
+  unicode-range: U+4E2D;
+}
+@font-face {
+  font-family: 'Noto Serif SC Thin';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200;
+  src: url('../../node_modules/@fontsource/noto-serif-sc/files/noto-serif-sc-118-200-normal.woff2') format('woff2');
+  unicode-range: U+56FD;
+}
+
+/* ===== 徒步中国 · 山径手册 全局样式 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@keyframes heroKenburns {
+  0% { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.15) translate(-2%, -1%); }
+}
+@keyframes topoDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.03); }
+  50% { transform: translate3d(-1.5%, 1.2%, 0) scale(1.05); }
+}
+@keyframes dotPop {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.topo-drift {
+  animation: topoDrift 46s ease-in-out infinite;
+}
+.dot-pop {
+  animation: dotPop 0.5s var(--ease-out-expo) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .topo-drift,
+  .dot-pop {
+    animation: none;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  ::selection {
+    background-color: var(--pine-200);
+    color: var(--pine-950);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* 实底纸面导航：暖纸底色 + 发丝线下边框 */
+  .nav-paper {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 纸面卡片：发丝线 + 低对比阴影，hover 轻微抬升 */
+  .magazine-card {
+    background: var(--card);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition:
+      transform 0.4s var(--ease-out-expo),
+      box-shadow 0.4s var(--ease-out-expo),
+      border-color 0.4s var(--ease-out-expo);
+  }
+
+  .magazine-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--pine-200);
+  }
+
+  /* 章节记号线：实色松绿短线 */
+  .accent-line {
+    width: 40px;
+    height: 2px;
+    background: var(--pine-700);
+    border-radius: 9999px;
+  }
+
+  .img-container {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .img-container img {
+    transition: transform 0.8s var(--ease-out-expo);
+  }
+
+  .img-container:hover img {
+    transform: scale(1.04);
+  }
+
+  /* Hero 大图 Ken Burns 缓慢呼吸动效 */
+  .hero-kenburns {
+    animation: heroKenburns 25s ease-in-out infinite alternate;
+  }
+}
+
+/* 全局动效降级：尊重系统减弱动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leaflet maps must not overlay the fixed nav (z-50) */
+.leaflet-container {
+  isolation: isolate;
+}
+
+/* Quill editor adjustments */
+.ql-container {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+.ql-editor {
+  min-height: 240px;
+  line-height: 1.8;
+}
+.ql-editor.ql-blank::before {
+  color: var(--muted-foreground);
+  font-style: normal;
+}

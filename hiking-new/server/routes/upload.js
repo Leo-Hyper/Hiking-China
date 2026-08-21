@@ -1,11 +1,4 @@
-﻿const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
-
-const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const MAX_FILES = 9;
@@ -83,10 +76,7 @@ function parseMultipart(req, res, next) {
           if (files.length >= MAX_FILES) {
             return res.status(400).json({ error: `最多上传 ${MAX_FILES} 张图片` });
           }
-          const uniqueName = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`;
-          const filePath = path.join(UPLOADS_DIR, uniqueName);
-          fs.writeFileSync(filePath, contentBuffer);
-          files.push({ fieldname: name, originalname: originalName, filename: uniqueName, size: contentBuffer.length });
+          files.push({ fieldname: name, originalname: originalName, buffer: contentBuffer, size: contentBuffer.length });
         } else {
           fields[name] = contentBuffer.toString("utf-8").trim();
         }
@@ -113,10 +103,16 @@ function parseMultipart(req, res, next) {
 const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
+const { saveUpload } = require("../services/upload");
 
-router.post("/", authMiddleware, parseMultipart, (req, res) => {
-  const urls = req.files.map((f) => `/uploads/${f.filename}`);
-  res.json({ urls, message: "上传成功" });
+router.post("/", authMiddleware, parseMultipart, async (req, res) => {
+  try {
+    const urls = await Promise.all(req.files.map((f) => saveUpload(f)));
+    res.json({ urls, message: "上传成功" });
+  } catch (err) {
+    console.error("[UPLOAD SAVE]", err);
+    res.status(500).json({ error: "图片保存失败: " + err.message });
+  }
 });
 
 module.exports = router;
