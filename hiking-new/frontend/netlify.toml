@@ -20,5 +20,5 @@
 # 方式一配套：/api/* 反代到 Render（如需方式二请删除此段）
 [[redirects]]
   from = "/api/*"
-  to = "https://hiking-china-api.onrender.com/api/:splat"
+  to = "https://hiking-china-api-t250.onrender.com/api/:splat"
   status = 200
