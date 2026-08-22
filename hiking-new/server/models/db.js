@@ -39,7 +39,7 @@ function getRawDb() {
 
 async function all(sql, params = []) {
   if (USE_REMOTE) {
-    const res = await remoteDb.execute({ sql, args: params });
+    const res = await getRawDb().execute({ sql, args: params });
     return res.rows;
   }
   return new Promise((resolve, reject) => {
@@ -49,7 +49,7 @@ async function all(sql, params = []) {
 
 async function get(sql, params = []) {
   if (USE_REMOTE) {
-    const res = await remoteDb.execute({ sql, args: params });
+    const res = await getRawDb().execute({ sql, args: params });
     return res.rows[0];
   }
   return new Promise((resolve, reject) => {
@@ -59,7 +59,7 @@ async function get(sql, params = []) {
 
 async function run(sql, params = []) {
   if (USE_REMOTE) {
-    const res = await remoteDb.execute({ sql, args: params });
+    const res = await getRawDb().execute({ sql, args: params });
     return { lastInsertRowid: Number(res.lastInsertRowid ?? 0), changes: res.rowsAffected };
   }
   return new Promise((resolve, reject) => {
