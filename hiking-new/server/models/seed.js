@@ -1,4 +1,5 @@
 const { get, run } = require("./db");
+const bcrypt = require("bcrypt");
 
 // 从 postIndex.js 提取的数据种子
 const searchData = [
@@ -46,11 +47,20 @@ async function loadSeedSearchData() {
 async function loadSeedEvents() {
   const row = await get("SELECT COUNT(*) as cnt FROM events");
   if (!row || Number(row.cnt) > 0) return;
+  let owner = await get("SELECT id FROM users ORDER BY id LIMIT 1");
+  if (!owner) {
+    await run(
+      "INSERT OR IGNORE INTO users (id, username, email, password_hash) VALUES (1, ?, ?, ?)",
+      ["system", "system@hiking-china.local", bcrypt.hashSync(crypto.randomUUID(), 10)]
+    );
+    owner = await get("SELECT id FROM users WHERE username = ?", ["system"]);
+  }
+  const ownerId = owner.id;
   for (const ev of STATIC_EVENTS) {
     await run(
       `INSERT INTO events (user_id, title, content, location, event_date, difficulty, max_participants, image_url, signup_deadline, status)
        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [ev.title, ev.content, ev.location, ev.event_date, ev.difficulty, ev.max_participants, ev.image_url, ev.signup_deadline]
+      [ownerId, ev.title, ev.content, ev.location, ev.event_date, ev.difficulty, ev.max_participants, ev.image_url, ev.signup_deadline]
     );
   }
   console.log(`Seeded ${STATIC_EVENTS.length} events`);
