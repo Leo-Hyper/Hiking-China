@@ -1,4 +1,4 @@
-﻿# Goals
+# Goals
 
 ## Vision
 (High-level vision)
