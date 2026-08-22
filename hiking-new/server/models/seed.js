@@ -59,7 +59,7 @@ async function loadSeedEvents() {
   for (const ev of STATIC_EVENTS) {
     await run(
       `INSERT INTO events (user_id, title, content, location, event_date, difficulty, max_participants, image_url, signup_deadline, status)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
       [ownerId, ev.title, ev.content, ev.location, ev.event_date, ev.difficulty, ev.max_participants, ev.image_url, ev.signup_deadline]
     );
   }
