@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "hiking-china-api",
   "version": "1.0.0",
   "description": "徒步中国 API Server",
@@ -10,6 +10,7 @@
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "bcrypt": "^5.1.1",
+    "cloudinary": "^2.10.1",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.0",
