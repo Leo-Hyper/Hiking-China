@@ -1,4 +1,4 @@
-﻿# Outputs — 徒步论坛网站
+# Outputs — 徒步论坛网站
 
 | Date | Type | File / URL | Description |
 |------|------|-----------|-------------|
@@ -38,3 +38,14 @@
 | 2026-06-18 | 仓库 | GitHub | Leo-Hyper/Hiking-China |
 | 2026-06-18 | 前端部署 | Netlify | https://hiking-china.netlify.app |
 | 2026-06-18 | 后端部署 | Render | https://hiking-china-api.onrender.com |
+| 2026-06-25 | 页面 | src/views/PublishEvent.vue | 发起活动页 |
+| 2026-06-25 | 后端 | server/models/event.js | 活动模型（CRUD + 报名/取消/检查） |
+| 2026-06-25 | 后端 | server/routes/events.js | 活动 API 路由（8 端点） |
+| 2026-06-25 | 逻辑 | src/utils/image.js | 图片 URL 工具函数 |
+| 2026-06-27 | 文档 | 徒步论坛网站_项目详情文档.md | 全栈项目详情文档（架构/数据库/API/组件/安全/部署） |
+
+| 2026-08-21 | 前端 | hiking-new/frontend/ | 妙搭 React 19 前端迁移（Vite 7 骨架，全 API 异步化，type:check/build 通过） |
+| 2026-08-21 | 后端 | hiking-new/server/ | 双模式 db.js + Turso/Cloudinary provider + 8 组路由全链路补丁 |
+| 2026-08-21 | 配置 | hiking-new/frontend/netlify.toml | Netlify 构建 + SPA redirect + /api/* 反代 |
+| 2026-08-21 | 文档 | 部署指南-免费方案-Render-Turso-Netlify.md | 免费方案部署指南（Turso/Render/Netlify/Cloudinary + 走查清单） |
+| 2026-08-23 | 工具 | hiking-new/server/scripts/migrate-local-to-turso.cjs | 远端备份 + 单事务 SQLite→Turso 导入/回滚工具 |
