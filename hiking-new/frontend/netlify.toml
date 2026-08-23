@@ -9,7 +9,7 @@
   # 方式一（推荐·免 CORS）：留空，前端走同源 /api/*，由下方 redirects 反代到 Render。
   # 方式二：直接填后端地址，如 https://hiking-china-api.onrender.com（此时删除下方 /api/* 反代，后端 CORS 需加 Netlify 域名）
   VITE_API_BASE_URL = ""
-  CLIENT_BASE_PATH = "/"
+  CLIENT_BASE_PATH = ""
 
 # 方式一配套：/api/* 反代到 Render（如需方式二请删除此段）
 [[redirects]]

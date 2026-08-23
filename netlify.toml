@@ -5,7 +5,7 @@
 
 [build.environment]
   VITE_API_BASE_URL = ""
-  CLIENT_BASE_PATH = "/"
+  CLIENT_BASE_PATH = ""
 
 # API proxy must precede the SPA fallback.
 [[redirects]]

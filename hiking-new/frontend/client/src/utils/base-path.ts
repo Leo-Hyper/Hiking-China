@@ -1,4 +1,7 @@
-export const BASE_PATH: string = process.env.CLIENT_BASE_PATH || '';
+const configuredBasePath = process.env.CLIENT_BASE_PATH || '';
+
+// Netlify commonly uses "/" for a root deployment, but "//img/x.png" becomes a protocol-relative URL.
+export const BASE_PATH: string = configuredBasePath === '/' ? '' : configuredBasePath;
 
 export function withBasePath(path: string): string {
   if (!path) return path;
