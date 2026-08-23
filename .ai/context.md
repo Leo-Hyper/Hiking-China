@@ -135,15 +135,25 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 
 **交付物：** 部署指南-免费方案-Render-Turso-Netlify.md（Turso 建库导入/Render/Netlify/Cloudinary 配置 + 走查清单）
 
-## Next Actions（2026-08-21）
-- [ ] 上线部署：按《部署指南-免费方案-Render-Turso-Netlify.md》建 Turso 库导入 → Render 起后端 → Netlify 起前端 → 全链路走查（需用户账号操作）
+## Next Actions（2026-08-23）
+- [ ] 设置 TURSO_DATABASE_URL/TURSO_AUTH_TOKEN 后执行 `npm run migrate:check` 和 `npm run migrate:apply` 导入旧帖数据
+- [ ] 推送资源与导入工具提交，触发 Netlify/Render 部署并全链路走查
 - [ ] 部署后把 frontend/netlify.toml 的反代目标改为实际 Render 域名
 - [ ] 上线前可选优化：hero 视频 16.9MB 改 poster 首屏 + 点击播放；单 chunk >500KB 做路由级 code-split
 - [ ] 旧 Vue 前端保留于 git 历史（当前 Netlify 域名若在跑 Vue 版，替换前确认备份）
 - [ ] 安全加固 backlog：updatePost SQL 参数化、富文本 XSS 过滤、敏感词、防爆破
 - [ ] main 分支推送 origin
 
-## Risks（2026-08-21 更新）
+## Phase 8.1 (2026-08-23) — 资源上线准备
+
+- 线上健康检查正常、4 条活动已 seed，但 `/api/posts` 返回空数组；确认旧帖未导入 Turso。
+- Git 树核对完成：logo、favicon、静态帖图、活动图和既有上传图均已在 `origin/main` 与 React 前端 public 目录中。
+- React `index.html` 补充 favicon fallback、apple-touch-icon、OG/Twitter 图片元数据。
+- 新增 `server/scripts/migrate-local-to-turso.cjs` 和 npm migrate dry-run/check/apply 命令；导入前自动备份远端 JSON 快照，单批事务替换数据。
+- 导入器默认隐藏本地测试帖 16/20，级联排除 3 条孤儿关系记录，保留 15 篇正式帖发布状态。
+- 使用本地 `file:` SQLite 副本完成完整 apply 冒烟测试：外键检查为空，17 帖/11 评论/3 用户/4 活动/16 搜索索引导入成功。
+
+## Risks（2026-08-23 更新）
 - Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
 - 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）
 - 帖子点赞按钮当前为本地语义（未接 API），后端 like/toggle 已具备，后续可接线

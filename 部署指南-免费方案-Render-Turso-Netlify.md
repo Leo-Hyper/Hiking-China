@@ -36,6 +36,17 @@
    sqlite3 hiking-new/data/hikingchina.db .dump > hikingchina.sql
    turso db shell hiking-china < hikingchina.sql
    ```
+   推荐使用项目内导入工具（先备份远端，再在单事务中替换数据；默认把本地两篇测试帖设为未发布）：
+   ```powershell
+   cd hiking-new/server
+   $env:TURSO_DATABASE_URL = "<libsql://...>"
+   $env:TURSO_AUTH_TOKEN = "<Turso token>"
+   npm run migrate:dry-run
+   npm run migrate:check
+   npm run migrate:apply
+   ```
+   如需连测试帖一起发布，执行 `node scripts/migrate-local-to-turso.cjs --apply --include-test-posts`。
+   工具会在 `.backup/turso-preimport-*.json` 生成远端快照；误导入时可用同一脚本加 `--restore <备份文件> --apply` 回滚。
    > 不导入也行：后端启动时会自动建全部表并 seed 4 条活动 + 搜索索引，只是没有旧帖子数据。
 4. 拿连接信息（填到 Render 环境变量）：
    ```bash

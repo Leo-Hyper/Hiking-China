@@ -1,5 +1,16 @@
 # Changelog — 徒步论坛网站
 
+## 2026-08-23 — 资源上线准备 + Turso 导入工具
+
+### 资源核查
+- 确认 logo/favicon、静态帖图、活动图和既有上传图已在仓库及前端构建输入中。
+- React index.html 补充 favicon fallback、apple-touch-icon、OG/Twitter 图片。
+
+### 数据迁移
+- 新增 `server/scripts/migrate-local-to-turso.cjs` 与 `migrate:dry-run/check/apply` scripts。
+- 导入前自动备份远端数据；单批事务替换；默认隐藏测试帖 16/20 并级联排除 3 条孤儿关系。
+- 本地 SQLite 副本完整 apply 测试通过，外键检查为空；前端 type:check/build 通过。
+
 ## 2026-06-22 — 功能完善与优化
 
 ### Phase 5 — 评论区重构 + 编辑删除

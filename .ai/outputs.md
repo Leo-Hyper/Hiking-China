@@ -48,3 +48,4 @@
 | 2026-08-21 | 后端 | hiking-new/server/ | 双模式 db.js + Turso/Cloudinary provider + 8 组路由全链路补丁 |
 | 2026-08-21 | 配置 | hiking-new/frontend/netlify.toml | Netlify 构建 + SPA redirect + /api/* 反代 |
 | 2026-08-21 | 文档 | 部署指南-免费方案-Render-Turso-Netlify.md | 免费方案部署指南（Turso/Render/Netlify/Cloudinary + 走查清单） |
+| 2026-08-23 | 工具 | hiking-new/server/scripts/migrate-local-to-turso.cjs | 远端备份 + 单事务 SQLite→Turso 导入/回滚工具 |

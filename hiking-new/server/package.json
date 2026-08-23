@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "migrate:dry-run": "node scripts/migrate-local-to-turso.cjs",
+    "migrate:check": "node scripts/migrate-local-to-turso.cjs --check",
+    "migrate:apply": "node scripts/migrate-local-to-turso.cjs --apply"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

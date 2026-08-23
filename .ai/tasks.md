@@ -55,7 +55,15 @@
 - [x] Phase 8: 部署指南文档（Turso/Render/Netlify/Cloudinary）
 
 ## 🚧 In Progress
-- [ ] 上线部署（Turso 建库 → Render 后端 → Netlify 前端 → 走查清单）
+- [ ] 设置真实 Turso 凭据并执行 `npm run migrate:check` / `npm run migrate:apply`
+- [ ] 提交推送后触发部署，验证线上帖子、图片和 logo
+
+## ✅ Recently Completed (2026-08-23)
+- [x] 核对线上 API：活动已 seed，posts 为空，确认缺口在 Turso 数据导入
+- [x] 核对 logo/favicon、静态图片和既有上传图的 Git/构建链路
+- [x] 新增安全 Turso 导入工具（备份、dry-run/check/apply、事务、孤儿清理、测试帖隐藏）
+- [x] 补充 HTML favicon/apple-touch/OG/Twitter logo 元数据
+- [x] 本地副本完整导入冒烟测试通过；type:check 和 Vite build 通过
 
 ## 📋 Backlog
 - [ ] 部署后验证图片 URL 跨重部署持久（Cloudinary）

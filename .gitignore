@@ -30,6 +30,7 @@ npm-debug.log*
 *.bak
 *.backup-*
 *.err
+.backup/
 
 # Database
 hiking-new/data/*.db
