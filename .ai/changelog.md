@@ -1,5 +1,17 @@
 # Changelog — 徒步论坛网站
 
+## 2026-08-24 — 全链路体检与安全热修
+
+### 前端/托管
+- 修复根部署 `CLIENT_BASE_PATH` 导致的 `//img/...` 破图。
+- 验证最新 Netlify 构建无协议相对图片路径；20 张 Git 内图片全部 200 且 MIME 正确。
+- Netlify 新增 `/uploads/*` 到 Render 的反代，旧上传资源恢复为 image/png。
+
+### 后端/安全
+- Express 设置 `trust proxy`，避免 Netlify/Render 代理后全站共享限流桶。
+- 当前 HEAD 停止跟踪公开仓库中的 SQLite 快照；本地文件保留为迁移源。
+- 记录 Render 所连库未导入的证据、Cloudinary/JWT Secret 截图泄露、CORS 配置错误、XSS 和上传校验风险。
+
 ## 2026-08-23 — 资源上线准备 + Turso 导入工具
 
 ### 资源核查

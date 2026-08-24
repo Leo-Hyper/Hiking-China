@@ -55,8 +55,20 @@
 - [x] Phase 8: 部署指南文档（Turso/Render/Netlify/Cloudinary）
 
 ## 🚧 In Progress
-- [ ] 设置真实 Turso 凭据并执行 `npm run migrate:check` / `npm run migrate:apply`
-- [ ] 提交推送后触发部署，验证线上帖子、图片和 logo
+- [ ] 轮换 Cloudinary API Secret 和 JWT_SECRET，并更新 Render 后重新部署
+- [ ] 将 `FRONTEND_URL` 设置为 `https://hiking-china.netlify.app`
+- [ ] 使用 Render 完全相同的 Turso URL/Token 执行 `migrate:check` / `migrate:apply`
+- [ ] 清理公开 Git 历史中的 SQLite 快照，并重置受影响账号密码
+- [ ] 修复帖子/活动/编辑预览的存储型 XSS
+- [ ] 上传解析增加 MIME/文件头校验；优化 hero 视频与 JS/CSS bundle
+
+## ✅ Recently Completed (2026-08-24)
+- [x] 全链路体检前端、Netlify、Render、数据库、CORS、上传与安全面
+- [x] 修复根部署 `CLIENT_BASE_PATH` 造成的 `//img/...` 破图并验证上线
+- [x] 验证 Git 内全部 20 张前端图片线上状态 200 且 MIME 正确
+- [x] Express 增加 `trust proxy`，避免代理后全站共享限流桶
+- [x] Netlify 增加 `/uploads/*` 反代，旧上传已返回 image/png
+- [x] 当前 Git HEAD 停止跟踪 SQLite 快照
 
 ## ✅ Recently Completed (2026-08-23)
 - [x] 核对线上 API：活动已 seed，posts 为空，确认缺口在 Turso 数据导入
