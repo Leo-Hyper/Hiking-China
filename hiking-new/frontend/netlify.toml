@@ -17,6 +17,11 @@
   to = "https://hiking-china-api-t250.onrender.com/api/:splat"
   status = 200
 
+[[redirects]]
+  from = "/uploads/*"
+  to = "https://hiking-china-api-t250.onrender.com/uploads/:splat"
+  status = 200
+
 # SPA 路由回退
 [[redirects]]
   from = "/*"

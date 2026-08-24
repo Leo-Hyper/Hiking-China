@@ -10,6 +10,9 @@ const { initDb } = require("./models/db");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Render and Netlify terminate TLS/proxying before the Express process.
+app.set("trust proxy", 1);
+
 // 中间件
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // CORS：支持 FRONTEND_URL 逗号分隔多个域名（如 Netlify 站点 + 本地开发）
@@ -21,10 +24,9 @@ app.use(cors({ origin: FRONTEND_ORIGINS }));
 app.use(express.json({ limit: "50mb" }));
 
 // 静态文件 — 上传目录（仅本地存储模式；Cloudinary 模式图片由 CDN 托管）
-const { PROVIDER, UPLOADS_DIR } = require("./services/upload");
-if (PROVIDER === "local") {
-  app.use("/uploads", express.static(UPLOADS_DIR));
-}
+const { UPLOADS_DIR } = require("./services/upload");
+// Keep legacy /uploads URLs available after switching new uploads to Cloudinary.
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 // 速率限制
 const limiter = rateLimit({
