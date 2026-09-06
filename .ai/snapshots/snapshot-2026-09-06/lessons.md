@@ -48,3 +48,13 @@
 **证据：** 本地冒烟测试删除后查询关联表发现残留；补显式级联后清零
 **适用范围:** 本仓库所有删除路径 + 未来迁移其他 SQLite 项目
 **Tags:** sqlite, turso, cascade
+
+### 2026-08-23 — 跨驱动数据库工具必须做真实冒烟测试
+**Context:** 导入脚本干跑通过后，libsql 冒烟暴露 `client.all` 不存在；继续冒烟又发现点赞引用的评论本身是孤儿，需要先确定有效评论集合再校验点赞。
+**Lesson:** 同时支持 sqlite3/libsql 时要封装查询接口；关系型清理必须按父表到子表级联校验，不能只看当前外键列。
+**Tags:** sqlite, libsql, migration
+
+### 2026-08-24 — 配置截图等同于凭据泄露
+**Context:** Render 环境变量截图暴露 Cloudinary API Secret 和 JWT_SECRET；公开仓库又包含 SQLite 用户表。
+**Lesson:** 环境变量面板、数据库快照和终端输出在分享前必须脱敏；Secret 一旦进入截图或聊天即视为泄露并立即轮换。
+**Tags:** security, secrets, incident-response
