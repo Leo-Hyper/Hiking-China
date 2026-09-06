@@ -135,15 +135,37 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 
 **交付物：** 部署指南-免费方案-Render-Turso-Netlify.md（Turso 建库导入/Render/Netlify/Cloudinary 配置 + 走查清单）
 
-## Next Actions（2026-08-21）
-- [ ] 上线部署：按《部署指南-免费方案-Render-Turso-Netlify.md》建 Turso 库导入 → Render 起后端 → Netlify 起前端 → 全链路走查（需用户账号操作）
-- [ ] 部署后把 frontend/netlify.toml 的反代目标改为实际 Render 域名
+## Next Actions（2026-08-23）
+- [ ] 立即轮换已截图暴露的 Cloudinary API Secret 和 JWT_SECRET，并更新 Render
+- [ ] 将 Render `FRONTEND_URL` 改为 `https://hiking-china.netlify.app`
+- [ ] 用 Render 中完全相同的 Turso URL/Token 执行 `npm run migrate:check` 和 `npm run migrate:apply`
+- [ ] 清理公开 Git 历史中的数据库快照，并重置受影响用户密码
+- [ ] 修复富文本存储型 XSS、上传 MIME 校验、hero 视频和 bundle 体积
 - [ ] 上线前可选优化：hero 视频 16.9MB 改 poster 首屏 + 点击播放；单 chunk >500KB 做路由级 code-split
 - [ ] 旧 Vue 前端保留于 git 历史（当前 Netlify 域名若在跑 Vue 版，替换前确认备份）
 - [ ] 安全加固 backlog：updatePost SQL 参数化、富文本 XSS 过滤、敏感词、防爆破
 - [ ] main 分支推送 origin
 
-## Risks（2026-08-21 更新）
+## Phase 8.1 (2026-08-23) — 资源上线准备
+
+- 线上健康检查正常、4 条活动已 seed，但 `/api/posts` 返回空数组；确认旧帖未导入 Turso。
+- Git 树核对完成：logo、favicon、静态帖图、活动图和既有上传图均已在 `origin/main` 与 React 前端 public 目录中。
+- React `index.html` 补充 favicon fallback、apple-touch-icon、OG/Twitter 图片元数据。
+- 新增 `server/scripts/migrate-local-to-turso.cjs` 和 npm migrate dry-run/check/apply 命令；导入前自动备份远端 JSON 快照，单批事务替换数据。
+- 导入器默认隐藏本地测试帖 16/20，级联排除 3 条孤儿关系记录，保留 15 篇正式帖发布状态。
+- 使用本地 `file:` SQLite 副本完成完整 apply 冒烟测试：外键检查为空，17 帖/11 评论/3 用户/4 活动/16 搜索索引导入成功。
+
+## Phase 8.2 (2026-08-24) — 全链路体检
+
+- 前端根路径 `CLIENT_BASE_PATH="/" 导致 withBasePath 生成协议相对地址 `//img/...`，是截图破图的根因；已改为根部署时使用空串并上线。
+- 最新 Netlify 构建无 `//img/` 命中；Git 内全部 20 张前端图片在线上均为 HTTP 200 且 MIME 为 image/*。
+- Render API 正常但冷启动约 22.7 秒；`/api/posts` 为空，用户仍是 `system` 和两个 API smoke 用户，证明 Render 所连库未收到本地快照导入。
+- Render/Netlify 代理链路补充 `trust proxy`，避免全站共享一个限流桶；Netlify 增加 `/uploads/*` 反代，旧上传已返回 image/png。
+- 公开 GitHub 仓库曾跟踪 SQLite 快照；当前 HEAD 已停止跟踪，但历史仍含用户邮箱/密码哈希，需要清理历史并轮换凭据。
+- Render 环境截图暴露 Cloudinary API Secret 和 JWT_SECRET；必须立即轮换。`FRONTEND_URL` 仍为 localhost，生产 Origin 的 CORS 未放行。
+- React 帖子/活动/编辑预览仍直接渲染数据库 HTML，存在存储型 XSS；上传解析只校验扩展名，未校验 MIME/文件头。
+
+## Risks（2026-08-23 更新）
 - Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
 - 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）
 - 帖子点赞按钮当前为本地语义（未接 API），后端 like/toggle 已具备，后续可接线

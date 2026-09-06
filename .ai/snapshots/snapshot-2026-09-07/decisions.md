@@ -71,3 +71,15 @@
 **状态：** ✓ 已确认
 **验证依据：** 代码审查 + 部署指南强制配置
 **Rationale:** fail-loud 优于 fallback 到弱默认值。
+
+### 2026-08-23 — 旧库导入用备份型事务工具
+**Context:** 线上 Turso 活动已 seed 但 posts 为空；直接 `.dump | turso db shell` 不含远端备份，且本地快照有历史孤儿数据和测试帖。
+**Decision:** 使用 `migrate-local-to-turso.cjs` 先写远端 JSON 备份，再在一个 libsql write batch 中删除/重建全部业务表。默认将测试帖 16/20 置为 status=0，并按用户→帖子→评论依赖级联排除无效关系。
+**Rationale:** 可重复、可回滚、避免外键失败，也避免测试内容进入生产首页。
+**状态：** ✓ 本地 SQLite 副本完整冒烟通过
+
+### 2026-08-24 — 数据库快照退出 Git，Turso 作为生产事实源
+**Context:** 仓库公开且 SQLite 快照包含用户邮箱和密码哈希；Render 生产已切换 Turso。
+**Decision:** 当前 HEAD 使用 `git rm --cached` 停止跟踪 `hiking-new/data/hikingchina.db`，本地文件仅作为迁移源保留；后续以 Turso 为生产事实源。
+**Rationale:** 降低凭据/个人数据暴露面，避免本地测试库覆盖线上事实。
+**状态：** ✓ bedbdf5 已推送；历史清理待用户确认后执行
