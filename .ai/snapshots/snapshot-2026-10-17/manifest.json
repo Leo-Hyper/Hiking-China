@@ -2,8 +2,8 @@
     "schema_version":  "1.0",
     "contract_version":  "recovery-integration-contract-v1",
     "artifact_type":  "pmm-memory-snapshot-manifest",
-    "created_at_utc":  "2026-10-05T16:15:05.0069918+00:00",
-    "snapshot_directory":  "D:\\AI-Workspace\\Projects\\徒步论坛网站\\.ai\\snapshots\\snapshot-2026-10-06",
+    "created_at_utc":  "2026-10-16T16:15:06.2139743+00:00",
+    "snapshot_directory":  "D:\\AI-Workspace\\Projects\\徒步论坛网站\\.ai\\snapshots\\snapshot-2026-10-17",
     "files":  {
 
               }
