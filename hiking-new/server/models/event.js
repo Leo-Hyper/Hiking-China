@@ -131,4 +131,22 @@ async function checkJoined(eventId, userId) {
   return !!row;
 }
 
-module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, joinEvent, leaveEvent, checkJoined };
+async function getJoinedEventIds(userId) {
+  const rows = await all(
+    "SELECT event_id FROM event_registrations WHERE user_id = ? ORDER BY event_id",
+    [userId],
+  );
+  return (rows || []).map((row) => Number(row.event_id));
+}
+
+module.exports = {
+  createEvent,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  joinEvent,
+  leaveEvent,
+  checkJoined,
+  getJoinedEventIds,
+};

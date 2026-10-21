@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarDays, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import {
-  isEventSignedUp,
   listEvents,
+  listEventSignupStatuses,
   toggleEventSignup,
 } from '@client/src/data/hiking-store';
 import type { HikingEvent } from '@client/src/data/hiking-types';
@@ -63,26 +63,24 @@ const EventsPage = () => {
   const [openKey, setOpenKey] = useState<EventFilterKey | null>(null);
   const [tab, setTab] = useState<EventTab>('all');
 
-  // 批量拉取已报名状态（仅登录时）
+  // 一次拉取当前用户已报名的活动，避免每个卡片各发一个请求
   useEffect(() => {
     if (!isLoggedIn) {
       setSignedUpMap({});
       return;
     }
     let cancelled = false;
-    Promise.all(
-      events.map((e: HikingEvent) =>
-        isEventSignedUp(e.id).then((v: boolean) => [e.id, v] as const)
-      )
-    )
-      .then((pairs) => {
-        if (!cancelled) setSignedUpMap(Object.fromEntries(pairs));
+    listEventSignupStatuses()
+      .then((ids) => {
+        if (!cancelled) {
+          setSignedUpMap(Object.fromEntries(ids.map((id) => [id, true])));
+        }
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [events, isLoggedIn]);
+  }, [isLoggedIn]);
 
   const filterGroups: FilterGroup[] = useMemo(
     () => [

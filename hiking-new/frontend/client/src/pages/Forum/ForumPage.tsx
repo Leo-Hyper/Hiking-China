@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, MessagesSquare, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getCurrentUser, listPosts } from '@client/src/data/hiking-store';
@@ -25,18 +25,24 @@ const ForumPage = () => {
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') ?? '');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(() => searchParams.get('q') ?? '');
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_LIMIT);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
   const isLoggedIn: boolean = getCurrentUser() !== null;
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
   const { data: filteredData, loading } = useAsyncData<Post[]>(
     () =>
       listPosts({
         category: activeCategory || undefined,
-        q: searchQuery || undefined,
+        q: debouncedSearch || undefined,
       }),
-    [activeCategory, searchQuery]
+    [activeCategory, debouncedSearch]
   );
 
   const filteredPosts: Post[] = filteredData ?? [];
@@ -46,6 +52,7 @@ const ForumPage = () => {
   const selectCategory = (cat: string): void => {
     setActiveCategory(cat);
     setSearchQuery('');
+    setDebouncedSearch('');
     setVisibleCount(PAGE_LIMIT);
     setPanelOpen(false);
   };
@@ -57,6 +64,7 @@ const ForumPage = () => {
 
   const clearSearch = (): void => {
     setSearchQuery('');
+    setDebouncedSearch('');
     setVisibleCount(PAGE_LIMIT);
   };
 

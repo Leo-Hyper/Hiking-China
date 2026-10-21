@@ -152,6 +152,10 @@ export function checkJoined(eventId: number): Promise<{ joined: boolean }> {
   return http.get<{ joined: boolean }>(`/api/events/${eventId}/check`);
 }
 
+export function getEventSignupStatuses(): Promise<{ event_ids: number[] }> {
+  return http.get<{ event_ids: number[] }>('/api/events/signup-statuses');
+}
+
 // ---------- follow ----------
 export function toggleFollow(userId: number): Promise<{ following: boolean }> {
   return http.post<{ following: boolean }>(`/api/follow/toggle/${userId}`);

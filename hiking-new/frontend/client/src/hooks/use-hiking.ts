@@ -27,14 +27,18 @@ export function useAsyncData<T>(
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState<number>(0);
   const mounted = useRef<boolean>(true);
+  const dataRef = useRef<T | null>(null);
 
   useEffect(() => {
     mounted.current = true;
-    setLoading(true);
+    setLoading(dataRef.current === null);
     setError(null);
     loader()
       .then((result: T) => {
-        if (mounted.current) setData(result);
+        if (mounted.current) {
+          dataRef.current = result;
+          setData(result);
+        }
       })
       .catch((e: unknown) => {
         if (mounted.current) setError(e instanceof Error ? e.message : String(e));

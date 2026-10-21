@@ -183,9 +183,10 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 - 架构：前端 431 行 store 拆为 session/post/comment/event/social/user/mappers/runtime，保留兼容门面；上传解析拆到 middleware；书签与帖子点赞归入 model 层。
 - 性能：路由懒加载 + vendor 拆包；API gzip + 30 秒公共缓存；帖子/活动列表瘦身；评论数/作者头像并入列表；最近浏览批量接口；浏览数异步更新；复合索引。
 - 请求收敛：帖子详情直接返回作者头像和评论数；编辑/发布回读走受保护的 `/:id/manage`，不会误增浏览量；公开用户统计复用同一响应。
-- 回源收敛：公共 GET 响应同时设置浏览器 30 秒缓存和 Netlify CDN 60 秒 `stale-while-revalidate` 缓存提示，降低 Render 冷启动回源。
+- 回源收敛：公共 GET 响应同时设置浏览器 30 秒缓存和 Netlify CDN 120 秒 `stale-while-revalidate` 缓存提示，降低 Render 冷启动回源。
 - Render 部署失败修复：生产 Turso 模式改为懒加载 sqlite3，并将其标记为 optionalDependency，避免 Node 24 加载或构建失败阻断部署。
 - 线上破图复核：导航栏仍引用妙搭 `/spark/...` 临时资源，已改回本地 `/img/logo.png`；图片组件移除平台远程处理白名单。
+- 切页优化：公共 GET 增加 2 分钟新鲜/10 分钟 SWR 客户端缓存与请求去重；主路由代码和帖子/活动数据空闲预取；搜索 300ms 防抖；登录用户报名状态改为单次批量接口；详情和评论支持缓存。
 - 图片：生成 1600px WebP 大图与 800px 卡片图，列表自动使用卡片图；Hero 保留自动循环播放，改为桌面 720p / 移动 540p 双分辨率并预加载海报。
 - 验证：前后端及工具包 `npm audit` 全为 0；前端 type:check/build 通过；安全样例、运行期 gzip/缓存/CORS/鉴权测试通过；迁移干跑通过。
 - 实测：CSS 576KB→178KB（gzip 186→27.6KB）；帖子列表 JSON 66.5KB→23.8KB（gzip 7.8KB）；原图 10.03MB→2.28MB 大图 + 0.84MB 卡片图。

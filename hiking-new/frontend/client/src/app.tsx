@@ -1,13 +1,19 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import { useAuth } from './hooks/use-hiking';
 
-const Home = lazy(() => import('./pages/Home/Home'));
-const RoutesPage = lazy(() => import('./pages/Routes/RoutesPage'));
-const ForumPage = lazy(() => import('./pages/Forum/ForumPage'));
-const GearPage = lazy(() => import('./pages/Gear/GearPage'));
-const EventsPage = lazy(() => import('./pages/Events/EventsPage'));
+const loadHome = () => import('./pages/Home/Home');
+const loadRoutesPage = () => import('./pages/Routes/RoutesPage');
+const loadForumPage = () => import('./pages/Forum/ForumPage');
+const loadGearPage = () => import('./pages/Gear/GearPage');
+const loadEventsPage = () => import('./pages/Events/EventsPage');
+
+const Home = lazy(loadHome);
+const RoutesPage = lazy(loadRoutesPage);
+const ForumPage = lazy(loadForumPage);
+const GearPage = lazy(loadGearPage);
+const EventsPage = lazy(loadEventsPage);
 const EventDetailPage = lazy(() => import('./pages/Events/EventDetailPage'));
 const PostDetailPage = lazy(() => import('./pages/PostDetail/PostDetailPage'));
 const PublishPostPage = lazy(() => import('./pages/PublishPost/PublishPostPage'));
@@ -35,6 +41,22 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 };
 
 const RoutesComponent = () => {
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadRoutesPage();
+      void loadGearPage();
+      void loadEventsPage();
+      void loadForumPage();
+      void import('./data/post-store')
+        .then(({ listPosts }) => listPosts())
+        .catch(() => {});
+      void import('./data/event-store')
+        .then(({ listEvents }) => listEvents())
+        .catch(() => {});
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>

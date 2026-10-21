@@ -3,7 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
 const {
   createEvent, getAllEvents, getEventById,
-  updateEvent, deleteEvent, joinEvent, leaveEvent, checkJoined
+  updateEvent, deleteEvent, joinEvent, leaveEvent, checkJoined, getJoinedEventIds
 } = require("../models/event");
 const { publicCache, clearPublicCache } = require("../middleware/public-cache");
 const { sanitizeRichText } = require("../services/sanitize");
@@ -52,6 +52,15 @@ router.get("/", publicCache(30000), async (req, res) => {
     res.json({ events });
   } catch (err) {
     console.error("[ERROR] GET /api/events:", err);
+    res.status(500).json({ error: "服务器错误" });
+  }
+});
+
+router.get("/signup-statuses", authMiddleware, async (req, res) => {
+  try {
+    res.json({ event_ids: await getJoinedEventIds(req.userId) });
+  } catch (error) {
+    console.error("[ERROR] GET /api/events/signup-statuses:", error);
     res.status(500).json({ error: "服务器错误" });
   }
 });

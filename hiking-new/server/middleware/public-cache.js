@@ -12,7 +12,7 @@ function publicCache(ttlMs = 30000) {
       res.set("X-Cache", "HIT");
       res.set("Age", String(Math.floor((now - hit.createdAt) / 1000)));
       res.set("Cache-Control", `public, max-age=${Math.floor(ttlMs / 1000)}, stale-while-revalidate=120`);
-      res.set("Netlify-CDN-Cache-Control", "public, max-age=60, stale-while-revalidate=600");
+      res.set("Netlify-CDN-Cache-Control", "public, max-age=120, stale-while-revalidate=600");
       return res.json(hit.body);
     }
 
@@ -26,7 +26,7 @@ function publicCache(ttlMs = 30000) {
         cache.set(key, { body, createdAt: now });
         res.set("X-Cache", "MISS");
         res.set("Cache-Control", `public, max-age=${Math.floor(ttlMs / 1000)}, stale-while-revalidate=120`);
-        res.set("Netlify-CDN-Cache-Control", "public, max-age=60, stale-while-revalidate=600");
+        res.set("Netlify-CDN-Cache-Control", "public, max-age=120, stale-while-revalidate=600");
       }
       return originalJson(body);
     };

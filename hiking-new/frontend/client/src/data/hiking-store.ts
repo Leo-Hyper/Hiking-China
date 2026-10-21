@@ -35,6 +35,7 @@ export {
   getEventById,
   isEventSignedUp,
   listEvents,
+  listEventSignupStatuses,
   toggleEventSignup,
 } from './event-store';
 export {

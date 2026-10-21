@@ -12,6 +12,74 @@ export class ApiError extends Error {
 }
 
 const API_BASE: string = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '';
+const GET_CACHE_TTL = 2 * 60 * 1000;
+const GET_CACHE_MAX_AGE = 10 * 60 * 1000;
+const GET_CACHE_PREFIX = 'hiking_get_cache:';
+
+interface GetCacheEntry<T = unknown> {
+  data: T;
+  savedAt: number;
+}
+
+const getCache = new Map<string, GetCacheEntry>();
+const inFlightGets = new Map<string, Promise<unknown>>();
+
+function isCacheableGet(path: string): boolean {
+  return path === '/api/posts'
+    || path.startsWith('/api/posts?')
+    || path.startsWith('/api/posts/batch?')
+    || /^\/api\/posts\/\d+$/.test(path)
+    || path === '/api/events'
+    || path.startsWith('/api/events?')
+    || /^\/api\/events\/\d+$/.test(path)
+    || path.startsWith('/api/comments?post_id=')
+    || /^\/api\/auth\/users\/\d+$/.test(path);
+}
+
+function readGetCache<T>(path: string): GetCacheEntry<T> | null {
+  const memoryEntry = getCache.get(path) as GetCacheEntry<T> | undefined;
+  if (memoryEntry && Date.now() - memoryEntry.savedAt < GET_CACHE_TTL) return memoryEntry;
+
+  try {
+    const raw = sessionStorage.getItem(`${GET_CACHE_PREFIX}${path}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as GetCacheEntry<T>;
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt >= GET_CACHE_MAX_AGE) {
+      sessionStorage.removeItem(`${GET_CACHE_PREFIX}${path}`);
+      return null;
+    }
+    getCache.set(path, parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeGetCache<T>(path: string, data: T): void {
+  const entry: GetCacheEntry<T> = { data, savedAt: Date.now() };
+  getCache.set(path, entry);
+  try {
+    sessionStorage.setItem(`${GET_CACHE_PREFIX}${path}`, JSON.stringify(entry));
+  } catch {
+    // In-memory cache still avoids repeated requests in this tab.
+  }
+}
+
+export function invalidateGetCache(prefix = ''): void {
+  for (const key of [...getCache.keys()]) {
+    if (key.startsWith(prefix)) getCache.delete(key);
+  }
+  try {
+    for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = sessionStorage.key(index);
+      if (!key?.startsWith(GET_CACHE_PREFIX)) continue;
+      const path = key.slice(GET_CACHE_PREFIX.length);
+      if (path.startsWith(prefix)) sessionStorage.removeItem(key);
+    }
+  } catch {
+    // Cache invalidation is best effort when storage is unavailable.
+  }
+}
 
 export function getToken(): string | null {
   try {
@@ -106,6 +174,36 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+async function cachedGet<T>(path: string): Promise<T> {
+  if (!isCacheableGet(path)) return request<T>(path);
+
+  const cached = readGetCache<T>(path);
+  if (cached) {
+    if (Date.now() - cached.savedAt >= GET_CACHE_TTL && !inFlightGets.has(path)) {
+      const revalidate = request<T>(path)
+        .then((data) => writeGetCache(path, data))
+        .catch(() => {})
+        .finally(() => inFlightGets.delete(path));
+      inFlightGets.set(path, revalidate);
+    }
+    return cached.data;
+  }
+
+  const inFlight = inFlightGets.get(path) as Promise<T> | undefined;
+  if (inFlight) return inFlight;
+
+  const promise = request<T>(path)
+    .then((data) => {
+      writeGetCache(path, data);
+      return data;
+    })
+    .finally(() => {
+      inFlightGets.delete(path);
+    });
+  inFlightGets.set(path, promise);
+  return promise;
+}
+
 function jsonBody(method: string) {
   return <T>(path: string, body?: unknown): Promise<T> =>
     request<T>(path, {
@@ -116,7 +214,7 @@ function jsonBody(method: string) {
 }
 
 export const http = {
-  get: <T>(path: string) => request<T>(path),
+  get: <T>(path: string) => cachedGet<T>(path),
   post: jsonBody('POST'),
   put: jsonBody('PUT'),
   delete: jsonBody('DELETE'),

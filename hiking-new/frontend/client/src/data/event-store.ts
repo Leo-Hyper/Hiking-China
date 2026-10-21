@@ -1,4 +1,5 @@
 import * as api from '../api';
+import { invalidateGetCache } from '../utils/http';
 import type { HikingEvent } from './hiking-types';
 import { mapEvent } from './mappers';
 import { notify } from './store-runtime';
@@ -29,6 +30,7 @@ export async function createEvent(input: Omit<HikingEvent, 'id' | 'participants'
     signup_deadline: input.signupDeadline || '',
   });
   const event = await getEventById(data.id);
+  invalidateGetCache('/api/events');
   if (!event) throw new Error('活动创建后读取失败');
   return event;
 }
@@ -38,14 +40,21 @@ export async function isEventSignedUp(eventId: number): Promise<boolean> {
   return data.joined;
 }
 
+export async function listEventSignupStatuses(): Promise<number[]> {
+  const data = await api.getEventSignupStatuses();
+  return Array.isArray(data.event_ids) ? data.event_ids.map(Number) : [];
+}
+
 export async function toggleEventSignup(eventId: number): Promise<boolean> {
   const { joined } = await api.checkJoined(eventId);
   if (joined) {
     await api.leaveEvent(eventId);
+    invalidateGetCache('/api/events');
     notify();
     return false;
   }
   await api.joinEvent(eventId);
+  invalidateGetCache('/api/events');
   notify();
   return true;
 }

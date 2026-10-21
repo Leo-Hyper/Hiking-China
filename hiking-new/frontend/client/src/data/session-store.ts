@@ -1,5 +1,5 @@
 import * as api from '../api';
-import { setToken } from '../utils/http';
+import { invalidateGetCache, setToken } from '../utils/http';
 import type { HikingUser } from './hiking-types';
 import { mapUser } from './mappers';
 import { notify, readJson, SESSION_USER_KEY, writeJson } from './store-runtime';
@@ -17,6 +17,7 @@ export async function registerUser(username: string, email: string, password: st
   setToken(data.token);
   const user = mapUser(data.user);
   saveSessionUser(user);
+  invalidateGetCache('/api/auth/users');
   notify();
   return user;
 }
@@ -54,6 +55,7 @@ export async function updateProfile(
   const data = await api.updateProfile(body);
   const user = mapUser(data.user);
   saveSessionUser(user);
+  invalidateGetCache('/api/auth/users');
   notify();
   return user;
 }

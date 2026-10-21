@@ -1,4 +1,5 @@
 import * as api from '../api';
+import { invalidateGetCache } from '../utils/http';
 import type { Post, PostInput } from './hiking-types';
 import { mapPost } from './mappers';
 import { notify, readJson, RECENT_VIEWS_KEY, writeJson } from './store-runtime';
@@ -60,6 +61,7 @@ export async function createPost(input: PostInput): Promise<Post> {
     status: input.status,
   });
   const post = await getPostForEdit(data.postId);
+  invalidateGetCache('/api/posts');
   if (!post) throw new Error('帖子创建后读取失败');
   return post;
 }
@@ -75,12 +77,14 @@ export async function updatePost(id: number, patch: Partial<PostInput>): Promise
   if (patch.status !== undefined) body.status = patch.status;
   await api.updatePost(id, body);
   const post = await getPostForEdit(id);
+  invalidateGetCache('/api/posts');
   if (!post) throw new Error('帖子更新后读取失败');
   return post;
 }
 
 export async function deletePost(id: number): Promise<void> {
   await api.deletePost(id);
+  invalidateGetCache('/api/posts');
   notify();
 }
 
