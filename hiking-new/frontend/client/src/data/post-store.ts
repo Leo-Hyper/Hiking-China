@@ -30,6 +30,15 @@ export async function getPostById(id: number): Promise<Post | undefined> {
   }
 }
 
+export async function getPostForEdit(id: number): Promise<Post | undefined> {
+  try {
+    const data = await api.getManagePost(id);
+    return data.post ? mapPost(data.post) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function listMyPosts(): Promise<Post[]> {
   const data = await api.listMyPosts();
   return (data.posts || []).map((post: Record<string, unknown>) => ({ ...mapPost(post), isUserPost: true }));
@@ -50,7 +59,7 @@ export async function createPost(input: PostInput): Promise<Post> {
     extrainfo: input.extrainfo ? JSON.stringify(input.extrainfo) : undefined,
     status: input.status,
   });
-  const post = await getPostById(data.postId);
+  const post = await getPostForEdit(data.postId);
   if (!post) throw new Error('帖子创建后读取失败');
   return post;
 }
@@ -65,7 +74,7 @@ export async function updatePost(id: number, patch: Partial<PostInput>): Promise
   if (patch.extrainfo !== undefined) body.extrainfo = patch.extrainfo ? JSON.stringify(patch.extrainfo) : '';
   if (patch.status !== undefined) body.status = patch.status;
   await api.updatePost(id, body);
-  const post = await getPostById(id);
+  const post = await getPostForEdit(id);
   if (!post) throw new Error('帖子更新后读取失败');
   return post;
 }

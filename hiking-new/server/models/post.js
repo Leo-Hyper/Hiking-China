@@ -57,7 +57,11 @@ async function getPostsByCategory(category, limit = 20) {
 // 获取单个帖子
 async function getPostById(id) {
   const row = await get(
-    "SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.id = ? AND p.status = 1",
+    `SELECT p.*, u.username, u.avatar AS author_avatar,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+     FROM posts p
+     LEFT JOIN users u ON p.user_id = u.id
+     WHERE p.id = ? AND p.status = 1`,
     [id]
   );
   if (row) {
@@ -65,6 +69,18 @@ async function getPostById(id) {
       console.error("[POST] view increment failed:", error.message);
     });
   }
+  return normalizePost(row) || null;
+}
+
+async function getOwnPostById(id, userId) {
+  const row = await get(
+    `SELECT p.*, u.username, u.avatar AS author_avatar,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+     FROM posts p
+     LEFT JOIN users u ON p.user_id = u.id
+     WHERE p.id = ? AND p.user_id = ?`,
+    [id, userId],
+  );
   return normalizePost(row) || null;
 }
 
@@ -184,6 +200,7 @@ module.exports = {
   getAllPosts,
   getPostsByCategory,
   getPostById,
+  getOwnPostById,
   searchPosts,
   deletePost,
   updatePost,

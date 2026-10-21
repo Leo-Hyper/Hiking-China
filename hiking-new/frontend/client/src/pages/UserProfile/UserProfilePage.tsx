@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
-import { getUserById, getUserStats, listUserPosts } from '@client/src/data/hiking-store';
+import { getUserById, listUserPosts } from '@client/src/data/hiking-store';
 import type { HikingUser, Post, UserStats } from '@client/src/data/hiking-types';
 import { stripHtml, withBasePath, withCardImage } from '@client/src/utils/base-path';
 import PostCard from './PostCard';
@@ -54,14 +54,11 @@ const UserProfilePage = () => {
   );
   const profileUser: HikingUser | undefined = profileUserData ?? undefined;
 
-  const { data: statsData } = useAsyncData<UserStats>(
-    () =>
-      profileUser
-        ? getUserStats(profileUser.id)
-        : Promise.resolve({ postCount: 0, followersCount: 0, followingCount: 0 }),
-    [profileUser?.id]
-  );
-  const stats: UserStats = statsData ?? { postCount: 0, followersCount: 0, followingCount: 0 };
+  const stats: UserStats = {
+    postCount: profileUser?.postCount ?? 0,
+    followersCount: profileUser?.followersCount ?? 0,
+    followingCount: profileUser?.followingCount ?? 0,
+  };
 
   const { data: userPostsData, loading: postsLoading } = useAsyncData<Post[]>(
     () => (Number.isNaN(userId) ? Promise.resolve([]) : listUserPosts(userId)),

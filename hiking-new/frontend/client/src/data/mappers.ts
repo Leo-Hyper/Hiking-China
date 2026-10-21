@@ -43,6 +43,9 @@ export function mapUser(raw: Record<string, unknown>): HikingUser {
     gearPrefs: parseTags(raw.gear_prefs ?? raw.gearPrefs),
     profilePublic: raw.profile_public === undefined ? true : Number(raw.profile_public) === 1,
     createdAt: raw.created_at ? String(raw.created_at) : new Date().toISOString(),
+    postCount: raw.post_count === undefined ? undefined : Number(raw.post_count),
+    followersCount: raw.followers_count === undefined ? undefined : Number(raw.followers_count),
+    followingCount: raw.following_count === undefined ? undefined : Number(raw.following_count),
   };
 }
 

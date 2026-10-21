@@ -52,6 +52,10 @@ export function getPost(postId: number): Promise<{ post: Record<string, unknown>
   return http.get<{ post: Record<string, unknown> }>(`/api/posts/${postId}`);
 }
 
+export function getManagePost(postId: number): Promise<{ post: Record<string, unknown> }> {
+  return http.get<{ post: Record<string, unknown> }>(`/api/posts/${postId}/manage`);
+}
+
 export function getPostsByIds(ids: number[]): Promise<{ posts: Record<string, unknown>[] }> {
   return http.get<{ posts: Record<string, unknown>[] }>(`/api/posts/batch?ids=${ids.join(',')}`);
 }

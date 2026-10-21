@@ -9,6 +9,9 @@ export interface HikingUser {
   gearPrefs: string[];
   profilePublic: boolean;
   createdAt: string;
+  postCount?: number;
+  followersCount?: number;
+  followingCount?: number;
 }
 
 export interface UserStats {

@@ -2,10 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   getPostById,
-  getUserById,
   isBookmarked,
   isFollowing,
-  listComments,
   recordView,
   toggleBookmark,
   toggleFollow,
@@ -65,8 +63,6 @@ const PostDetailPage: React.FC = () => {
   const [likeCount, setLikeCount] = useState<number>(0);
   const [isFavorited, setFavorited] = useState<boolean>(false);
   const [authorFollowed, setAuthorFollowed] = useState<boolean>(false);
-  const [authorAvatar, setAuthorAvatar] = useState<string | undefined>();
-  const [commentsCount, setCommentsCount] = useState<number>(0);
 
   const { data: postData, loading } = useAsyncData<Post | undefined>(() => getPostById(postId), [postId]);
   const post: Post | undefined = postData ?? undefined;
@@ -116,37 +112,9 @@ const PostDetailPage: React.FC = () => {
     };
   }, [post, isLoggedIn, user]);
 
-  // 作者头像
-  useEffect(() => {
-    if (!post?.authorId) {
-      setAuthorAvatar(undefined);
-      return;
-    }
-    let cancelled = false;
-    getUserById(post.authorId)
-      .then((u) => {
-        if (!cancelled) setAuthorAvatar(u?.avatar);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [post]);
-
-  // 评论数（评论区会再拉一次，这里仅用于头部展示）
-  useEffect(() => {
-    let cancelled = false;
-    listComments(postId)
-      .then((cs) => {
-        if (!cancelled) setCommentsCount(cs.length);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [postId]);
-
   const date: string = post ? new Date(post.createdAt).toLocaleDateString('zh-CN') : '';
+  const authorAvatar = post?.authorAvatar;
+  const commentsCount = post?.commentCount ?? 0;
 
   // 点赞（本地状态，源码语义）
   const toggleLike = (): void => {

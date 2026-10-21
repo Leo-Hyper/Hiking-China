@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getPostById, updatePost } from '@client/src/data/hiking-store';
+import { getPostForEdit, updatePost } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
 import type { Post, PostExtraInfo } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
@@ -62,7 +62,7 @@ const EditPostPage: React.FC = () => {
   const [form, setForm] = useState<EditFormState>({ title: '', content: '', category: '其他', tagsStr: '' });
   const [extra, setExtra] = useState<ExtraFormState>(DEFAULT_EXTRA);
 
-  const { data: postData, loading } = useAsyncData<Post | undefined>(() => getPostById(postId), [
+  const { data: postData, loading } = useAsyncData<Post | undefined>(() => getPostForEdit(postId), [
     postId,
   ]);
 

@@ -12,6 +12,7 @@ export {
   createPost,
   deletePost,
   getPostById,
+  getPostForEdit,
   listMyPosts,
   listPosts,
   listRecentViewPosts,

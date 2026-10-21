@@ -8,6 +8,7 @@ const {
   getMyPosts,
   getMyPostCount,
   getPostById,
+  getOwnPostById,
   getPostsByCategory,
   getPostsByIds,
   getPublicPostsByUser,
@@ -69,6 +70,21 @@ router.get("/batch", publicCache(30000), async (req, res) => {
     res.json({ posts });
   } catch (error) {
     console.error("[ERROR] GET /api/posts/batch:", error);
+    res.status(500).json({ error: "服务器错误" });
+  }
+});
+
+router.get("/:id/manage", authMiddleware, async (req, res) => {
+  try {
+    const postId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return res.status(400).json({ error: "帖子 ID 无效" });
+    }
+    const post = await getOwnPostById(postId, req.userId);
+    if (!post) return res.status(404).json({ error: "帖子不存在或无权访问" });
+    res.json({ post });
+  } catch (error) {
+    console.error("[ERROR] GET /api/posts/:id/manage:", error);
     res.status(500).json({ error: "服务器错误" });
   }
 });
