@@ -20,7 +20,8 @@ export function useAuth(): { isLoggedIn: boolean; user: HikingUser | null } {
 // 通用异步数据加载：loader 返回 Promise，自动管理 loading/error/reload
 export function useAsyncData<T>(
   loader: () => Promise<T>,
-  deps: unknown[] = []
+  deps: unknown[] = [],
+  options: { keepPreviousData?: boolean } = {},
 ): { data: T | null; loading: boolean; error: string | null; reload: () => void } {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -28,10 +29,15 @@ export function useAsyncData<T>(
   const [tick, setTick] = useState<number>(0);
   const mounted = useRef<boolean>(true);
   const dataRef = useRef<T | null>(null);
+  const keepPreviousData = Boolean(options.keepPreviousData);
 
   useEffect(() => {
     mounted.current = true;
-    setLoading(dataRef.current === null);
+    if (!keepPreviousData && dataRef.current !== null) {
+      dataRef.current = null;
+      setData(null);
+    }
+    setLoading(!keepPreviousData || dataRef.current === null);
     setError(null);
     loader()
       .then((result: T) => {
@@ -50,7 +56,7 @@ export function useAsyncData<T>(
       mounted.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, tick]);
+  }, [...deps, tick, keepPreviousData]);
 
   const reload = useCallback(() => setTick((t: number) => t + 1), []);
   return { data, loading, error, reload };

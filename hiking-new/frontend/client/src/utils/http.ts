@@ -41,11 +41,11 @@ function readGetCache<T>(path: string): GetCacheEntry<T> | null {
   if (memoryEntry && Date.now() - memoryEntry.savedAt < GET_CACHE_TTL) return memoryEntry;
 
   try {
-    const raw = sessionStorage.getItem(`${GET_CACHE_PREFIX}${path}`);
+    const raw = localStorage.getItem(`${GET_CACHE_PREFIX}${path}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GetCacheEntry<T>;
     if (!parsed?.savedAt || Date.now() - parsed.savedAt >= GET_CACHE_MAX_AGE) {
-      sessionStorage.removeItem(`${GET_CACHE_PREFIX}${path}`);
+      localStorage.removeItem(`${GET_CACHE_PREFIX}${path}`);
       return null;
     }
     getCache.set(path, parsed);
@@ -59,7 +59,7 @@ function writeGetCache<T>(path: string, data: T): void {
   const entry: GetCacheEntry<T> = { data, savedAt: Date.now() };
   getCache.set(path, entry);
   try {
-    sessionStorage.setItem(`${GET_CACHE_PREFIX}${path}`, JSON.stringify(entry));
+    localStorage.setItem(`${GET_CACHE_PREFIX}${path}`, JSON.stringify(entry));
   } catch {
     // In-memory cache still avoids repeated requests in this tab.
   }
@@ -70,11 +70,11 @@ export function invalidateGetCache(prefix = ''): void {
     if (key.startsWith(prefix)) getCache.delete(key);
   }
   try {
-    for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
-      const key = sessionStorage.key(index);
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
       if (!key?.startsWith(GET_CACHE_PREFIX)) continue;
       const path = key.slice(GET_CACHE_PREFIX.length);
-      if (path.startsWith(prefix)) sessionStorage.removeItem(key);
+      if (path.startsWith(prefix)) localStorage.removeItem(key);
     }
   } catch {
     // Cache invalidation is best effort when storage is unavailable.

@@ -47,11 +47,8 @@ const RoutesComponent = () => {
       void loadGearPage();
       void loadEventsPage();
       void loadForumPage();
-      void import('./data/post-store')
-        .then(({ listPosts }) => listPosts())
-        .catch(() => {});
-      void import('./data/event-store')
-        .then(({ listEvents }) => listEvents())
+      void import('./data/prefetch')
+        .then(({ prefetchPrimaryData }) => prefetchPrimaryData())
         .catch(() => {});
     }, 1500);
     return () => window.clearTimeout(timer);

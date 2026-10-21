@@ -42,7 +42,8 @@ const ForumPage = () => {
         category: activeCategory || undefined,
         q: debouncedSearch || undefined,
       }),
-    [activeCategory, debouncedSearch]
+    [activeCategory, debouncedSearch],
+    { keepPreviousData: true },
   );
 
   const filteredPosts: Post[] = filteredData ?? [];
