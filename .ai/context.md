@@ -186,7 +186,7 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 - 回源收敛：公共 GET 响应同时设置浏览器 30 秒缓存和 Netlify CDN 60 秒 `stale-while-revalidate` 缓存提示，降低 Render 冷启动回源。
 - Render 部署失败修复：生产 Turso 模式改为懒加载 sqlite3，并将其标记为 optionalDependency，避免 Node 24 加载或构建失败阻断部署。
 - 线上破图复核：导航栏仍引用妙搭 `/spark/...` 临时资源，已改回本地 `/img/logo.png`；图片组件移除平台远程处理白名单。
-- 图片：生成 1600px WebP 大图与 800px 卡片图，列表自动使用卡片图；Hero 视频改为点击加载，海报预加载。
+- 图片：生成 1600px WebP 大图与 800px 卡片图，列表自动使用卡片图；Hero 保留自动循环播放，改为桌面 720p / 移动 540p 双分辨率并预加载海报。
 - 验证：前后端及工具包 `npm audit` 全为 0；前端 type:check/build 通过；安全样例、运行期 gzip/缓存/CORS/鉴权测试通过；迁移干跑通过。
 - 实测：CSS 576KB→178KB（gzip 186→27.6KB）；帖子列表 JSON 66.5KB→23.8KB（gzip 7.8KB）；原图 10.03MB→2.28MB 大图 + 0.84MB 卡片图。
 
