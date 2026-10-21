@@ -83,3 +83,9 @@
 **Decision:** 当前 HEAD 使用 `git rm --cached` 停止跟踪 `hiking-new/data/hikingchina.db`，本地文件仅作为迁移源保留；后续以 Turso 为生产事实源。
 **Rationale:** 降低凭据/个人数据暴露面，避免本地测试库覆盖线上事实。
 **状态：** ✓ bedbdf5 已推送；历史清理待用户确认后执行
+
+### 2026-10-21 — 迁移保留线上用户，按用户名合并内容
+**Context:** 线上已有 12 个账号（11 个测试账号 + 真实 `Leo`），本地 17 帖和评论均属于本地 `Leo`；直接全量替换会删除线上账号。
+**Decision:** 新增 `--merge-content`，保留远端 users/events/event_registrations/followers，仅替换内容表和搜索索引；通过用户名映射作者，并增加业务键去重和 ID 重映射。
+**Rationale:** 保留真实账号登录态与活动数据，同时安全导入旧内容并防止重复执行产生重复帖子。
+**状态：** ✓ 模拟线上环境与重复数据测试通过

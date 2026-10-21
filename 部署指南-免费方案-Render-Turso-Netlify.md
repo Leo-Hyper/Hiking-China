@@ -45,8 +45,14 @@
    npm run migrate:check
    npm run migrate:apply
    ```
+   如果 Turso 已有注册用户，使用安全合并模式：保留远端用户、活动、报名和关注，只导入帖子、评论、点赞、收藏和搜索索引，并按用户名映射作者：
+   ```powershell
+   npm run migrate:merge:check
+   npm run migrate:merge:apply
+   ```
+   合并模式会拒绝覆盖远端已有的帖子、评论、点赞或收藏，防止误删线上内容；导入前还会按帖子内容、评论内容、关系组合和搜索路由去除重复数据，并重映射关联 ID。
    如需连测试帖一起发布，执行 `node scripts/migrate-local-to-turso.cjs --apply --include-test-posts`。
-   工具会在 `.backup/turso-preimport-*.json` 生成远端快照；误导入时可用同一脚本加 `--restore <备份文件> --apply` 回滚。
+   工具会在 `.backup/turso-preimport-*.json` 或 `.backup/turso-premerge-*.json` 生成远端快照；误导入时可用同一脚本加 `--restore <备份文件> --apply` 回滚。
    > 不导入也行：后端启动时会自动建全部表并 seed 4 条活动 + 搜索索引，只是没有旧帖子数据。
 4. 拿连接信息（填到 Render 环境变量）：
    ```bash

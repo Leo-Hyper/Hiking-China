@@ -157,7 +157,7 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 
 ## Phase 8.2 (2026-08-24) — 全链路体检
 
-- 前端根路径 `CLIENT_BASE_PATH="/" 导致 withBasePath 生成协议相对地址 `//img/...`，是截图破图的根因；已改为根部署时使用空串并上线。
+- 前端根路径 `CLIENT_BASE_PATH="/"` 导致 `withBasePath` 生成协议相对地址 `//img/...`，是截图破图的根因；已改为根部署时使用空串并上线。
 - 最新 Netlify 构建无 `//img/` 命中；Git 内全部 20 张前端图片在线上均为 HTTP 200 且 MIME 为 image/*。
 - Render API 正常但冷启动约 22.7 秒；`/api/posts` 为空，用户仍是 `system` 和两个 API smoke 用户，证明 Render 所连库未收到本地快照导入。
 - Render/Netlify 代理链路补充 `trust proxy`，避免全站共享一个限流桶；Netlify 增加 `/uploads/*` 反代，旧上传已返回 image/png。
@@ -165,7 +165,16 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 - Render 环境截图暴露 Cloudinary API Secret 和 JWT_SECRET；必须立即轮换。`FRONTEND_URL` 仍为 localhost，生产 Origin 的 CORS 未放行。
 - React 帖子/活动/编辑预览仍直接渲染数据库 HTML，存在存储型 XSS；上传解析只校验扩展名，未校验 MIME/文件头。
 
-## Risks（2026-08-23 更新）
+## Phase 8.3 (2026-10-21) — 保留用户的内容合并
+
+- 线上 Turso 当前 12 用户 / 0 帖子 / 4 活动；除线上 `Leo` 外其余 11 个均为 API 冒烟账号。
+- 新增 `--merge-content` 与 `migrate:merge:check` / `migrate:merge:apply`：保留远端用户、活动和报名，仅替换帖子、评论、点赞、收藏和搜索索引。
+- 本地内容作者按用户名映射，当前 `local 3 Leo -> remote 12 Leo`；缺少映射时直接失败，不静默丢数据。
+- 合并模式拒绝覆盖远端已有的帖子/评论/互动内容，并支持业务键去重及帖子/评论/活动 ID 级联重映射。
+- 模拟 12 用户环境测试通过：保留 12 用户/4 活动，导入 17 帖/11 评论/16 搜索/2 收藏，外键检查 0 违规。
+- 额外构造 1 重复帖 + 1 重复评论 + 1 重复活动，工具正确排除 3 条重复数据，导入结果不变。
+
+## Risks（2026-10-21 更新）
 - Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
 - 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）
 - 帖子点赞按钮当前为本地语义（未接 API），后端 like/toggle 已具备，后续可接线

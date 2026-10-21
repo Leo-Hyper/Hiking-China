@@ -1,6 +1,6 @@
 # Memory Summary
-**Generated:** 2026-08-24
-**Snapshot:** snapshot-2026-08-24
+**Generated:** 2026-10-21
+**Snapshot:** snapshot-2026-10-21
 
 ## Project Summary
 中国户外徒步社区网站（徒步中国）：徒步路线展示、装备指南、活动召集与论坛交流。
@@ -11,7 +11,7 @@
 部署链路：Netlify（前端）→ Render 免费实例（后端）→ Turso（数据库）+ Cloudinary（图片）。
 
 ## Current Status
-**Phase:** Phase 8.2 全链路体检完成；前端资源已恢复，安全轮换和 Turso 导入待处理。
+**Phase:** Phase 8.3 安全合并工具完成；等待对目标 Turso 执行 merge:check/merge:apply。
 
 ### 已完成（2026-08-23）
 - 后端存储层双模式（本地 SQLite / Turso 远程），统一 `all/get/run` 接口，模型层零签名改动
@@ -25,6 +25,8 @@
 - 新增备份型 SQLite→Turso 导入工具，默认隐藏测试帖并级联清理孤儿关系；本地副本 apply 冒烟通过
 - 修复 `//img/...` 破图、代理限流和旧上传反流；全部 20 张 Git 内图片线上 200 且 MIME 正确
 - Render 所连库仍是 seed/API 测试数据；Cloudinary/JWT Secret 已随截图暴露，公开 Git 历史含 SQLite 快照
+- 新增保留线上用户的合并模式，按用户名映射作者并支持业务键去重与关联 ID 重映射
+- 模拟 12 用户/4 活动环境合并通过；构造重复帖/评论/活动后仍稳定为 17 帖/11 评论/4 活动
 
 ### 数据结构
 - `users`（含 location/hikinglevel/gear_prefs/profile_public/status）、`posts`（含 extrainfo/status/comment_closed/likes_count）、`comments`（二级扁平嵌套 + reply_to_username + image_url）
@@ -41,7 +43,7 @@
 
 ## Active Tasks
 - 立即轮换 Cloudinary API Secret 和 JWT_SECRET；设置生产 FRONTEND_URL
-- 使用 Render 完全相同的 Turso URL/Token 执行 migrate:check/migrate:apply
+- 使用目标 Turso 执行 migrate:merge:check/merge:apply，保留线上 12 个账号
 - 清理公开 Git 历史中的 SQLite 快照并重置受影响账号
 - 修复存储型 XSS、上传 MIME 校验、hero 视频和 bundle 体积
 - Backlog：hero 视频优化、路由 code-split、帖子点赞接 API、安全加固（SQL 参数化/XSS/敏感词/防爆破）、推送 origin

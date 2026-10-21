@@ -57,12 +57,18 @@
 ## 🚧 In Progress
 - [ ] 轮换 Cloudinary API Secret 和 JWT_SECRET，并更新 Render 后重新部署
 - [ ] 将 `FRONTEND_URL` 设置为 `https://hiking-china.netlify.app`
-- [ ] 使用 Render 完全相同的 Turso URL/Token 执行 `migrate:check` / `migrate:apply`
+- [ ] 使用目标 Turso 执行 `migrate:merge:check` 后运行 `migrate:merge:apply`，保留线上 12 个账号
 - [ ] 清理公开 Git 历史中的 SQLite 快照，并重置受影响账号密码
 - [ ] 修复帖子/活动/编辑预览的存储型 XSS
 - [ ] 上传解析增加 MIME/文件头校验；优化 hero 视频与 JS/CSS bundle
 
-## ✅ Recently Completed (2026-08-24)
+## ✅ Recently Completed (2026-10-21)
+- [x] 新增保留线上用户的合并导入模式，并按用户名映射作者
+- [x] 合并模式增加业务键去重和关联 ID 重映射
+- [x] 模拟线上 12 用户环境完整合并通过，外键违规为 0
+- [x] 构造重复帖/评论/活动测试，3 条重复数据被正确排除
+
+## ✅ Previously Completed (2026-08-24)
 - [x] 全链路体检前端、Netlify、Render、数据库、CORS、上传与安全面
 - [x] 修复根部署 `CLIENT_BASE_PATH` 造成的 `//img/...` 破图并验证上线
 - [x] 验证 Git 内全部 20 张前端图片线上状态 200 且 MIME 正确

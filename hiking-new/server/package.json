@@ -8,7 +8,9 @@
     "dev": "node --watch index.js",
     "migrate:dry-run": "node scripts/migrate-local-to-turso.cjs",
     "migrate:check": "node scripts/migrate-local-to-turso.cjs --check",
-    "migrate:apply": "node scripts/migrate-local-to-turso.cjs --apply"
+    "migrate:apply": "node scripts/migrate-local-to-turso.cjs --apply",
+    "migrate:merge:check": "node scripts/migrate-local-to-turso.cjs --merge-content --check",
+    "migrate:merge:apply": "node scripts/migrate-local-to-turso.cjs --merge-content --apply"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

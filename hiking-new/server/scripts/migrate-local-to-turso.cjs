@@ -47,10 +47,29 @@ const TABLE_ORDER = {
   followers: "follower_id, following_id",
 };
 
+const MERGE_DELETE_ORDER = [
+  "post_likes",
+  "bookmarks",
+  "comment_likes",
+  "comments",
+  "search_index",
+  "posts",
+];
+
+const MERGE_INSERT_ORDER = [
+  "posts",
+  "comments",
+  "comment_likes",
+  "post_likes",
+  "bookmarks",
+  "search_index",
+];
+
 function parseArgs(argv) {
   const options = {
     apply: false,
     check: false,
+    mergeContent: false,
     includeTestPosts: false,
     from: path.join(__dirname, "..", "..", "data", "hikingchina.db"),
     backupDir: path.join(__dirname, "..", "..", "..", ".backup"),
@@ -61,6 +80,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--apply") options.apply = true;
     else if (arg === "--check") options.check = true;
+    else if (arg === "--merge-content") options.mergeContent = true;
     else if (arg === "--include-test-posts") options.includeTestPosts = true;
     else if (arg === "--from") options.from = path.resolve(argv[++i]);
     else if (arg === "--restore") options.restore = path.resolve(argv[++i]);
@@ -87,6 +107,7 @@ Usage:
 Options:
   --apply                Back up remote rows, replace them with local rows, and commit atomically.
   --check                Connect to Turso and compare row counts without writing.
+  --merge-content        Preserve remote users/events and import only posts, comments, reactions, bookmarks, and search.
   --from <path>          Source SQLite database (default: server/data/hikingchina.db).
   --include-test-posts   Keep the two local test posts published. By default their status becomes 0.
   --restore <file>       Restore a JSON backup produced by --apply.
@@ -180,6 +201,81 @@ function removeOrphans(rows, table, refs) {
   return rows.filter((row) => hasValidReferences(table, row, refs));
 }
 
+function dedupeRows(rows, fields) {
+  const seen = new Map();
+  const kept = [];
+  const idMap = new Map();
+  let removed = 0;
+
+  for (const row of rows) {
+    const key = JSON.stringify(fields.map((field) => row[field] ?? null));
+    const existing = seen.get(key);
+    if (existing) {
+      if (row.id != null && existing.id != null) {
+        idMap.set(Number(row.id), Number(existing.id));
+      }
+      removed += 1;
+      continue;
+    }
+    seen.set(key, row);
+    kept.push(row);
+  }
+
+  return { rows: kept, idMap, removed };
+}
+
+function mergeIdMaps(target, source) {
+  for (const [from, to] of source) target.set(from, to);
+}
+
+function remapRows(rows, field, idMap) {
+  return rows.map((row) => {
+    const mapped = idMap.get(Number(row[field]));
+    return mapped === undefined ? row : { ...row, [field]: mapped };
+  });
+}
+
+function deduplicateImportRows(rowsByTable) {
+  let removed = 0;
+  const dedupe = (table, fields) => {
+    const result = dedupeRows(rowsByTable[table], fields);
+    rowsByTable[table] = result.rows;
+    removed += result.removed;
+    return result.idMap;
+  };
+
+  const postIdMap = dedupe("posts", ["user_id", "title", "content", "created_at"]);
+  rowsByTable.comments = remapRows(rowsByTable.comments, "post_id", postIdMap);
+  rowsByTable.post_likes = remapRows(rowsByTable.post_likes, "post_id", postIdMap);
+  rowsByTable.bookmarks = remapRows(rowsByTable.bookmarks, "post_id", postIdMap);
+
+  const commentIdMap = dedupe("comments", [
+    "post_id", "user_id", "parent_id", "content", "created_at", "image_url",
+  ]);
+  rowsByTable.comments = remapRows(rowsByTable.comments, "parent_id", commentIdMap);
+  rowsByTable.comment_likes = remapRows(rowsByTable.comment_likes, "comment_id", commentIdMap);
+
+  mergeIdMaps(commentIdMap, dedupe("comments", [
+    "post_id", "user_id", "parent_id", "content", "created_at", "image_url",
+  ]));
+  rowsByTable.comments = remapRows(rowsByTable.comments, "parent_id", commentIdMap);
+  rowsByTable.comment_likes = remapRows(rowsByTable.comment_likes, "comment_id", commentIdMap);
+
+  dedupe("comment_likes", ["comment_id", "user_id"]);
+  dedupe("post_likes", ["post_id", "user_id"]);
+  dedupe("followers", ["follower_id", "following_id"]);
+  dedupe("bookmarks", ["user_id", "post_id"]);
+  dedupe("search_index", ["type", "route"]);
+
+  const eventIdMap = dedupe("events", [
+    "user_id", "title", "content", "event_date", "location", "created_at",
+  ]);
+  rowsByTable.event_registrations = remapRows(rowsByTable.event_registrations, "event_id", eventIdMap);
+  dedupe("event_registrations", ["event_id", "user_id"]);
+
+  return removed;
+}
+
 async function loadLocalImportData(client, includeTestPosts) {
   const rawRows = {};
   const sourceColumns = {};
@@ -227,7 +323,8 @@ async function loadLocalImportData(client, includeTestPosts) {
     rowsByTable[table] = accept(table, transformRows(rawRows[table], table, includeTestPosts));
   }
 
-  return { rowsByTable, sourceColumns, sourceCounts, excludedOrphans };
+  const excludedDuplicates = deduplicateImportRows(rowsByTable);
+  return { rowsByTable, sourceColumns, sourceCounts, excludedOrphans, excludedDuplicates };
 }
 
 async function getTableColumns(client, table) {
@@ -287,10 +384,94 @@ function makeInsertStatement(table, columns, row) {
   };
 }
 
-async function writeBackup(backupDir, remote, schemas) {
+function normalizedUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+async function buildMergePlan(remote, importData) {
+  const remoteUsers = await queryRows(remote, 'SELECT id, username FROM users');
+  const remoteUsersByName = new Map(
+    remoteUsers.map((user) => [normalizedUsername(user.username), Number(user.id)]),
+  );
+  const localUsersById = new Map(
+    importData.rowsByTable.users.map((user) => [Number(user.id), user.username]),
+  );
+  const userMappings = new Map();
+
+  for (const [localId, username] of localUsersById) {
+    const remoteId = remoteUsersByName.get(normalizedUsername(username));
+    if (remoteId !== undefined) userMappings.set(localId, remoteId);
+  }
+
+  const mapUser = (localId, context) => {
+    const mapped = userMappings.get(Number(localId));
+    if (mapped === undefined) {
+      const username = localUsersById.get(Number(localId)) || `id=${localId}`;
+      throw new Error(`Merge mapping missing for local user ${username} (${context}).`);
+    }
+    return mapped;
+  };
+
+  const mappedRows = (table, userFields, optionalUserFields = []) => (
+    importData.rowsByTable[table].map((row) => {
+      const next = { ...row };
+      userFields.forEach((field) => {
+        next[field] = mapUser(row[field], `${table}.${field}`);
+      });
+      optionalUserFields.forEach((field) => {
+        if (row[field] != null) next[field] = mapUser(row[field], `${table}.${field}`);
+      });
+      return next;
+    })
+  );
+
+  const rowsByTable = {
+    posts: mappedRows("posts", ["user_id"]),
+    comments: mappedRows("comments", ["user_id"], ["reply_to_user_id"]),
+    comment_likes: mappedRows("comment_likes", ["user_id"]),
+    post_likes: mappedRows("post_likes", ["user_id"]),
+    bookmarks: mappedRows("bookmarks", ["user_id"]),
+    search_index: importData.rowsByTable.search_index.map((row) => ({ ...row })),
+  };
+
+  const mappings = [...userMappings.entries()].map(([localId, remoteId]) => ({
+    localId,
+    remoteId,
+    username: localUsersById.get(localId),
+  }));
+
+  return { rowsByTable, mappings };
+}
+
+function validateMergeTarget(remoteCounts) {
+  const blockingTables = ["posts", "comments", "comment_likes", "post_likes", "bookmarks"];
+  const nonEmpty = blockingTables.filter((table) => remoteCounts[table] > 0);
+  if (nonEmpty.length > 0) {
+    throw new Error(`Merge mode refuses to replace existing content: ${nonEmpty.join(", ")}`);
+  }
+}
+
+function buildMergeStatements(schemas, mergePlan, includeTestPosts) {
+  const statements = MERGE_DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
+  for (const table of MERGE_INSERT_ORDER) {
+    const columns = schemas[table];
+    mergePlan.rowsByTable[table].forEach((row) => {
+      statements.push(makeInsertStatement(table, columns, row));
+    });
+  }
+  if (!includeTestPosts) {
+    statements.push({
+      sql: "DELETE FROM search_index WHERE route IN (?, ?)",
+      args: ["/post/16", "/post/20"],
+    });
+  }
+  return statements;
+}
+
+async function writeBackup(backupDir, remote, schemas, kind = "preimport") {
   await fs.promises.mkdir(backupDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const filename = path.join(backupDir, `turso-preimport-${stamp}.json`);
+  const filename = path.join(backupDir, `turso-${kind}-${stamp}.json`);
   const backup = {
     created_at: new Date().toISOString(),
     tables: {},
@@ -357,12 +538,18 @@ async function main() {
       .map((row) => ({ id: row.id, title: row.title, status: row.status }));
 
     printCounts(`Source counts (${options.from})`, importData.sourceCounts);
+    if (options.mergeContent) {
+      console.log("\nMerge mode: preserve remote users, events, registrations, and followers.");
+    }
     if (!options.includeTestPosts) {
       console.log("\nProduction transforms");
       console.log("  Posts 16 and 20 will be imported with status=0 (unpublished).");
       console.log(`  Search entries to remove: ${testData.hiddenRoutes.join(", ") || "none"}`);
       console.log(`  Test posts after transform: ${JSON.stringify(testData.unpublishedTests)}`);
       if (importData.excludedOrphans > 0) console.log(`  Orphan relationship rows excluded: ${importData.excludedOrphans}`);
+    }
+    if (importData.excludedDuplicates > 0) {
+      console.log(`  Duplicate rows excluded: ${importData.excludedDuplicates}`);
     }
 
     if (!options.check && !options.apply) {
@@ -375,31 +562,52 @@ async function main() {
     const remoteCounts = await countRows(remote);
     printCounts("Current remote counts", remoteCounts);
 
+    let mergePlan = null;
+    if (options.mergeContent) {
+      validateMergeTarget(remoteCounts);
+      mergePlan = await buildMergePlan(remote, importData);
+      console.log("\nUser mappings");
+      mergePlan.mappings.forEach(({ localId, remoteId, username }) => {
+        console.log(`  local ${localId} ${username} -> remote ${remoteId} ${username}`);
+      });
+    }
+
     if (options.check) {
       console.log("\nCheck complete. No rows were changed.");
       return;
     }
 
-    const backupPath = await writeBackup(options.backupDir, remote, schemas);
+    const backupPath = await writeBackup(
+      options.backupDir,
+      remote,
+      schemas,
+      options.mergeContent ? "premerge" : "preimport",
+    );
     console.log(`\nRemote backup: ${backupPath}`);
 
-    const statements = DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
-    for (const table of INSERT_ORDER) {
-      const columns = schemas[table];
-      importData.rowsByTable[table].forEach((row) => statements.push(makeInsertStatement(table, columns, row)));
-    }
-
-    if (!options.includeTestPosts) {
-      statements.push({
-        sql: "DELETE FROM search_index WHERE route IN (?, ?)",
-        args: ["/post/16", "/post/20"],
-      });
+    let statements;
+    if (options.mergeContent) {
+      statements = buildMergeStatements(schemas, mergePlan, options.includeTestPosts);
+    } else {
+      statements = DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
+      for (const table of INSERT_ORDER) {
+        const columns = schemas[table];
+        importData.rowsByTable[table].forEach((row) => statements.push(makeInsertStatement(table, columns, row)));
+      }
+      if (!options.includeTestPosts) {
+        statements.push({
+          sql: "DELETE FROM search_index WHERE route IN (?, ?)",
+          args: ["/post/16", "/post/20"],
+        });
+      }
     }
 
     await remote.batch(statements, "write");
     const finalCounts = await countRows(remote);
     printCounts("Imported remote counts", finalCounts);
-    console.log("\nImport committed successfully.");
+    console.log(options.mergeContent
+      ? "\nContent merge committed successfully."
+      : "\nImport committed successfully.");
   } finally {
     await local.close().catch(() => {});
     remote?.close();
