@@ -45,22 +45,31 @@ const LINE_MASK_CLASS = 'block overflow-hidden pb-[0.12em] -mb-[0.12em]';
 
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const useCompactVideo = window.matchMedia('(max-width: 768px)').matches || Boolean(connection?.saveData);
-  const shouldAutoplay = !reducedMotion && !connection?.saveData;
+  const shouldAutoplay = !connection?.saveData;
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return undefined;
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (motionQuery.matches || !shouldAutoplay) video.pause();
-    const handleChange = (event: MediaQueryListEvent) => {
-      if (event.matches || !shouldAutoplay) video.pause();
-      else void video.play();
+    if (!shouldAutoplay) {
+      video.pause();
+      return undefined;
+    }
+
+    const play = (): void => {
+      void video.play().catch(() => {
+        // The poster remains visible if the browser still rejects playback.
+      });
     };
-    motionQuery.addEventListener('change', handleChange);
-    return () => motionQuery.removeEventListener('change', handleChange);
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      play();
+    } else {
+      video.addEventListener('loadeddata', play, { once: true });
+    }
+
+    return () => video.removeEventListener('loadeddata', play);
   }, [shouldAutoplay]);
 
   return (
