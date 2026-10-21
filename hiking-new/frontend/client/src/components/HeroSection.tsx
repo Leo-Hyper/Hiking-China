@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import heroVideo from '@client/src/assets/hero-sunrise-timelapse.mp4';
-import heroPoster from '@client/src/assets/hero-poster.jpg';
+import { withBasePath } from '@client/src/utils/base-path';
+
+const HERO_POSTER = withBasePath('/img/hero-poster.jpg');
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -42,8 +44,10 @@ const LINE_MASK_CLASS = 'block overflow-hidden pb-[0.12em] -mb-[0.12em]';
 
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [showVideo, setShowVideo] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!showVideo) return undefined;
     const video = videoRef.current;
     if (!video) return undefined;
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -54,26 +58,46 @@ const HeroSection = () => {
     };
     motionQuery.addEventListener('change', handleChange);
     return () => motionQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [showVideo]);
 
   return (
     <section className="relative h-[56vw] min-h-0 md:h-[85vh] md:min-h-[520px] overflow-hidden md:-mt-20">
       {/* 日照金山延时视频铺底 + 单层暗色遮罩（向左渐隐） */}
       <div className="absolute inset-0">
-        <video
-          ref={videoRef}
-          src={heroVideo}
-          poster={heroPoster}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-label="雪山日出延时摄影"
-          className="w-full h-full object-cover"
+        <img
+          src={HERO_POSTER}
+          alt="雪山日出"
+          fetchPriority="high"
+          decoding="async"
+          className="h-full w-full object-cover"
         />
+        {showVideo && (
+          <video
+            ref={videoRef}
+            src={heroVideo}
+            poster={HERO_POSTER}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-label="雪山日出延时摄影"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/75 via-ink/35 to-transparent hidden md:block" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent md:hidden" />
+        {!showVideo && (
+          <button
+            type="button"
+            onClick={() => setShowVideo(true)}
+            className="absolute bottom-4 right-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/55 md:bottom-8 md:right-8"
+            aria-label="播放雪山日出延时视频"
+            title="播放山景视频"
+          >
+            <Play size={16} fill="currentColor" />
+          </button>
+        )}
       </div>
 
       {/* 左对齐编辑式内容 */}

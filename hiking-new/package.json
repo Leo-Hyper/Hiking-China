@@ -1,24 +1,14 @@
 {
-  "name": "hiking-china",
+  "name": "hiking-china-tooling",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "optimize:images": "node scripts/optimize-images.cjs"
   },
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
-    "vue": "^3.5.38",
-    "vue-router": "^5.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.1",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "sharp": "^0.35.1",
-    "tailwindcss": "^4.3.1",
-    "vite": "^8.0.16"
+    "sharp": "^0.35.5"
   },
   "description": "",
   "main": "index.js",

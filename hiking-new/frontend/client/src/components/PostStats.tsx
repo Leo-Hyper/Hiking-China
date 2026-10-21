@@ -6,10 +6,14 @@ import { resolveImageUrl } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 
 // 异步评论数：不阻塞卡片主渲染，加载完成后就地更新
-export function CommentCount({ postId, className = '' }: { postId: number; className?: string }) {
-  const [count, setCount] = useState<number>(0);
+export function CommentCount({ postId, count: providedCount, className = '' }: { postId: number; count?: number; className?: string }) {
+  const [count, setCount] = useState<number>(providedCount ?? 0);
 
   useEffect(() => {
+    if (providedCount !== undefined) {
+      setCount(providedCount);
+      return undefined;
+    }
     let mounted = true;
     listComments(postId)
       .then((comments) => {
@@ -19,7 +23,7 @@ export function CommentCount({ postId, className = '' }: { postId: number; class
     return () => {
       mounted = false;
     };
-  }, [postId]);
+  }, [postId, providedCount]);
 
   return (
     <span className={`flex items-center gap-1 ${className}`}>
@@ -30,10 +34,14 @@ export function CommentCount({ postId, className = '' }: { postId: number; class
 }
 
 // 异步作者头像链接：不阻塞卡片主渲染
-export function AuthorLink({ userId, name }: { userId: number; name: string }) {
-  const [avatar, setAvatar] = useState<string | undefined>();
+export function AuthorLink({ userId, name, avatar: providedAvatar }: { userId: number; name: string; avatar?: string }) {
+  const [avatar, setAvatar] = useState<string | undefined>(providedAvatar);
 
   useEffect(() => {
+    if (providedAvatar !== undefined) {
+      setAvatar(providedAvatar);
+      return undefined;
+    }
     let mounted = true;
     getUserById(userId)
       .then((user) => {
@@ -43,7 +51,7 @@ export function AuthorLink({ userId, name }: { userId: number; name: string }) {
     return () => {
       mounted = false;
     };
-  }, [userId]);
+  }, [userId, providedAvatar]);
 
   return (
     <Link

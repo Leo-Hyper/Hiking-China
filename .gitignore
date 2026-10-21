@@ -14,13 +14,10 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Environment
-.env.local
-.env.*.local
-
-# Keep production env but ignore local ones
-!.env.production
-!.env.development
+# Environment (only examples may be committed)
+.env
+.env.*
+!.env.example
 
 # Logs
 *.log
@@ -31,6 +28,22 @@ npm-debug.log*
 *.backup-*
 *.err
 .backup/
+/.npm-cache/
+/.tmp-*
+/auth
+/auth-*
+/db
+/db-*
+/*.zip
+
+# Generated image optimization leftovers
+/hiking-new/frontend/client/public/img/*.opt.opt.webp
+/hiking-new/frontend/client/public/img/*.opt.card.webp
+/hiking-new/frontend/client/public/img/徒步装备.opt.webp
+/hiking-new/frontend/client/public/img/雨崩村.opt.webp
+/hiking-new/frontend/client/public/img/露营.opt.webp
+/hiking-new/frontend/client/public/img/hero-poster.jpg
+/hiking-new/frontend/client/public/img/hero-poster.card.webp
 
 # Database
 hiking-new/data/*.db

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import type { Post } from '@client/src/data/hiking-types';
-import { withBasePath, stripHtml } from '@client/src/utils/base-path';
+import { stripHtml, withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import { AuthorLink, CommentCount } from '@client/src/components/PostStats';
@@ -18,8 +18,8 @@ const PostCard = ({ post }: PostCardProps) => {
   const author: string = post.authorName || '匿名';
   const image: string =
     post.imageUrls && post.imageUrls.length > 0
-      ? withBasePath(post.imageUrls[0])
-      : withBasePath('/img/徒步装备.avif');
+      ? withCardImage(post.imageUrls[0])
+      : withCardImage('/img/徒步装备.avif');
 
   return (
     <Link to={`/post/${post.id}`} className="group block @container">
@@ -36,7 +36,7 @@ const PostCard = ({ post }: PostCardProps) => {
               <PlayCircle size={12} />
               {post.views}
             </span>
-            <CommentCount postId={post.id} />
+            <CommentCount postId={post.id} count={post.commentCount} />
           </div>
         </div>
 
@@ -49,7 +49,7 @@ const PostCard = ({ post }: PostCardProps) => {
           </p>
           <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground @md:mt-2.5 @md:flex-wrap @md:gap-y-1.5">
             {post.authorId ? (
-              <AuthorLink userId={post.authorId} name={author} />
+              <AuthorLink userId={post.authorId} name={author} avatar={post.authorAvatar} />
             ) : (
               <span className="flex min-w-0 items-center gap-1.5">
                 <span className="h-4 w-4 shrink-0 rounded-full bg-muted" />
@@ -63,7 +63,7 @@ const PostCard = ({ post }: PostCardProps) => {
                 <PlayCircle size={12} />
                 {post.views}
               </span>
-              <CommentCount postId={post.id} />
+              <CommentCount postId={post.id} count={post.commentCount} />
             </span>
           </div>
         </div>

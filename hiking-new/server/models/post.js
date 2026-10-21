@@ -1,5 +1,13 @@
 const { all, get, run } = require("./db");
 
+const LIST_COLUMNS = `
+  p.id, p.user_id, p.title, substr(p.content, 1, 600) AS content,
+  p.category, p.tags, p.image_urls, p.views, p.created_at, p.updated_at,
+  substr(p.extrainfo, 1, 1000) AS extrainfo, p.status, p.comment_closed,
+  p.likes_count, u.username, u.avatar AS author_avatar,
+  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+`;
+
 // Helper: normalize post data for API responses
 function normalizePost(row) {
   if (!row) return null;
@@ -31,7 +39,7 @@ async function createPost(userId, { title, content, category, tags, imageUrls, e
 // 获取所有帖子（按时间倒序）
 async function getAllPosts(limit = 50, offset = 0) {
   const rows = await all(
-    `SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.status = 1 ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.status = 1 ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [limit, offset]
   );
   return (rows || []).map(normalizePost);
@@ -40,7 +48,7 @@ async function getAllPosts(limit = 50, offset = 0) {
 // 按分类获取帖子
 async function getPostsByCategory(category, limit = 20) {
   const rows = await all(
-    "SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.category = ? AND p.status = 1 ORDER BY p.created_at DESC LIMIT ?",
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.category = ? AND p.status = 1 ORDER BY p.created_at DESC LIMIT ?`,
     [category, limit]
   );
   return (rows || []).map(normalizePost);
@@ -48,18 +56,22 @@ async function getPostsByCategory(category, limit = 20) {
 
 // 获取单个帖子
 async function getPostById(id) {
-  await run("UPDATE posts SET views = views + 1 WHERE id = ?", [id]);
   const row = await get(
     "SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.id = ? AND p.status = 1",
     [id]
   );
+  if (row) {
+    run("UPDATE posts SET views = views + 1 WHERE id = ?", [id]).catch((error) => {
+      console.error("[POST] view increment failed:", error.message);
+    });
+  }
   return normalizePost(row) || null;
 }
 
 // 搜索帖子
 async function searchPosts(query, limit = 20) {
   const rows = await all(
-    `SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
     `WHERE p.status = 1 AND (p.title LIKE ? OR p.content LIKE ? OR p.tags LIKE ?) ` +
     `ORDER BY p.created_at DESC LIMIT ?`,
     [`%${query}%`, `%${query}%`, `%${query}%`, limit]
@@ -106,11 +118,58 @@ async function updatePost(id, userId, { title, content, category, tags, imageUrl
 // 获取我的帖子
 async function getMyPosts(userId, limit = 50, offset = 0) {
   const rows = await all(
-    `SELECT p.*, u.username FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
     `WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [userId, limit, offset]
   );
   return (rows || []).map(normalizePost);
+}
+
+async function getPublicPostsByUser(userId, limit = 50, offset = 0) {
+  const rows = await all(
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
+    `WHERE p.user_id = ? AND p.status = 1 ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    [userId, limit, offset]
+  );
+  return (rows || []).map(normalizePost);
+}
+
+async function getPostsByIds(ids) {
+  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isInteger(id) && id > 0))].slice(0, 50);
+  if (uniqueIds.length === 0) return [];
+  const placeholders = uniqueIds.map(() => "?").join(", ");
+  const rows = await all(
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
+    `WHERE p.status = 1 AND p.id IN (${placeholders})`,
+    uniqueIds
+  );
+  return (rows || []).map(normalizePost);
+}
+
+async function togglePostLike(postId, userId) {
+  const post = await get("SELECT id FROM posts WHERE id = ? AND status = 1", [postId]);
+  if (!post) throw new Error("帖子不存在");
+
+  const existing = await get(
+    "SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?",
+    [postId, userId],
+  );
+  if (existing) {
+    await run("DELETE FROM post_likes WHERE post_id = ? AND user_id = ?", [postId, userId]);
+    await run("UPDATE posts SET likes_count = MAX(0, likes_count - 1) WHERE id = ?", [postId]);
+    return { liked: false };
+  }
+  await run("INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)", [postId, userId]);
+  await run("UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?", [postId]);
+  return { liked: true };
+}
+
+async function isPostLiked(postId, userId) {
+  const row = await get(
+    "SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?",
+    [postId, userId],
+  );
+  return !!row;
 }
 
 // 获取我的帖子总数
@@ -119,4 +178,19 @@ async function getMyPostCount(userId) {
   return row.count;
 }
 
-module.exports = { createPost, getAllPosts, getPostsByCategory, getPostById, searchPosts, deletePost, updatePost, getMyPosts, getMyPostCount };
+module.exports = {
+  normalizePost,
+  createPost,
+  getAllPosts,
+  getPostsByCategory,
+  getPostById,
+  searchPosts,
+  deletePost,
+  updatePost,
+  getMyPosts,
+  getMyPostCount,
+  getPublicPostsByUser,
+  getPostsByIds,
+  togglePostLike,
+  isPostLiked,
+};

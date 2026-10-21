@@ -54,15 +54,20 @@ function isTargetSrc(originSrc: string) {
   return SRC_ALLOWLIST.some((item) => originSrc.includes(item));
 }
 
+let cachedWebpSupport: boolean | undefined;
+
 function supportWebp() {
+  if (cachedWebpSupport !== undefined) return cachedWebpSupport;
   try {
-    return (
+    cachedWebpSupport = (
       document
         .createElement('canvas')
         .toDataURL('image/webp')
         .indexOf('data:image/webp') === 0
     );
+    return cachedWebpSupport;
   } catch (err) {
+    cachedWebpSupport = false;
     return false;
   }
 }

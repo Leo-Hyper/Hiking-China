@@ -3,14 +3,40 @@ const configuredBasePath = process.env.CLIENT_BASE_PATH || '';
 // Netlify commonly uses "/" for a root deployment, but "//img/x.png" becomes a protocol-relative URL.
 export const BASE_PATH: string = configuredBasePath === '/' ? '' : configuredBasePath;
 
+const OPTIMIZED_IMAGES = new Set([
+  '云蒙山', '其他装备', '喀纳斯', '四姑娘山', '墨脱', '导航', '张家界',
+  '服装', '稻城亚丁', '背包', '虎跳峡', '贡嘎转山', '鞋履', '首页', '香山', '黄山',
+  'hero-poster',
+]);
+
+const CARD_IMAGES = new Set([
+  '云蒙山', '其他装备', '喀纳斯', '四姑娘山', '墨脱', '导航', '张家界',
+  '徒步装备', '服装', '稻城亚丁', '背包', '虎跳峡', '贡嘎转山',
+  '鞋履', '首页', '香山', '黄山', 'hero-poster',
+]);
+
+export function optimizedImagePath(path: string): string {
+  if (!path || path === '/img/logo.png') return path;
+  const match = path.match(/^\/img\/(.+)\.(jpe?g|png|webp|avif)$/i);
+  if (!match || !OPTIMIZED_IMAGES.has(match[1])) return path;
+  return `/img/${match[1]}.opt.webp`;
+}
+
+export function withCardImage(path: string): string {
+  const match = path.match(/^\/img\/(.+)\.(jpe?g|png|webp|avif)$/i);
+  if (match && CARD_IMAGES.has(match[1])) return `${BASE_PATH}/img/${match[1]}.card.webp`;
+  return withBasePath(path);
+}
+
 export function withBasePath(path: string): string {
   if (!path) return path;
   if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
     return path;
   }
   if (path.startsWith('/spark/')) return path;
-  if (path.startsWith('/')) return `${BASE_PATH}${path}`;
-  return `${BASE_PATH}/${path}`;
+  const optimizedPath = optimizedImagePath(path);
+  if (optimizedPath.startsWith('/')) return `${BASE_PATH}${optimizedPath}`;
+  return `${BASE_PATH}/${optimizedPath}`;
 }
 
 const DEFAULT_IMAGE: string = '/img/徒步装备.avif';

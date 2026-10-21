@@ -174,6 +174,18 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 - 模拟 12 用户环境测试通过：保留 12 用户/4 活动，导入 17 帖/11 评论/16 搜索/2 收藏，外键检查 0 违规。
 - 额外构造 1 重复帖 + 1 重复评论 + 1 重复活动，工具正确排除 3 条重复数据，导入结果不变。
 
+## Phase 9 (2026-10-21) — 全栈安全、性能与架构加固
+
+- 安全：JWT issuer/audience/24h + 生产 Secret 32 字校验；bcrypt 12；登录/注册/上传独立限流；CORS 默认生产域名；JSON 1MB。
+- XSS：服务端 sanitize-html + 前端 DOMPurify；CSP/HSTS/X-Frame-Options 等 Netlify 安全头。
+- 上传：JPEG/PNG/GIF/WebP 文件头校验，扩展名与内容必须一致。
+- 隐私：公开用户帖子只返回已发布内容；私密资料隐藏；错误响应不再泄漏数据库信息。
+- 架构：前端 431 行 store 拆为 session/post/comment/event/social/user/mappers/runtime，保留兼容门面；上传解析拆到 middleware；书签与帖子点赞归入 model 层。
+- 性能：路由懒加载 + vendor 拆包；API gzip + 30 秒公共缓存；帖子/活动列表瘦身；评论数/作者头像并入列表；最近浏览批量接口；浏览数异步更新；复合索引。
+- 图片：生成 1600px WebP 大图与 800px 卡片图，列表自动使用卡片图；Hero 视频改为点击加载，海报预加载。
+- 验证：前后端及工具包 `npm audit` 全为 0；前端 type:check/build 通过；安全样例、运行期 gzip/缓存/CORS/鉴权测试通过；迁移干跑通过。
+- 实测：CSS 576KB→178KB（gzip 186→27.6KB）；帖子列表 JSON 66.5KB→23.8KB（gzip 7.8KB）；原图 10.03MB→2.28MB 大图 + 0.84MB 卡片图。
+
 ## Risks（2026-10-21 更新）
 - Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
 - 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）

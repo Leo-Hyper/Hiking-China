@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { getUserById, getUserStats, listUserPosts } from '@client/src/data/hiking-store';
 import type { HikingUser, Post, UserStats } from '@client/src/data/hiking-types';
-import { stripHtml, withBasePath } from '@client/src/utils/base-path';
+import { stripHtml, withBasePath, withCardImage } from '@client/src/utils/base-path';
 import PostCard from './PostCard';
 import type { FormattedPost } from './PostCard';
 import FollowButton from './FollowButton';
@@ -32,9 +32,11 @@ const formatPost = (p: Post): FormattedPost => {
     excerpt: text.substring(0, 150) + (text.length > 150 ? '...' : ''),
     author: p.authorName || '匿名',
     authorId: p.authorId,
+    authorAvatar: p.authorAvatar ? withBasePath(p.authorAvatar) : undefined,
+    commentCount: p.commentCount,
     date: p.createdAt ? p.createdAt.split('T')[0] : '',
     category: p.category || '其他',
-    image: images[0] || withBasePath('/img/徒步装备.avif'),
+    image: withCardImage(p.imageUrls[0] || '/img/徒步装备.avif'),
     images,
     tags: Array.isArray(p.tags) ? p.tags : [],
     views: p.views || 0,

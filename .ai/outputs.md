@@ -49,3 +49,5 @@
 | 2026-08-21 | 配置 | hiking-new/frontend/netlify.toml | Netlify 构建 + SPA redirect + /api/* 反代 |
 | 2026-08-21 | 文档 | 部署指南-免费方案-Render-Turso-Netlify.md | 免费方案部署指南（Turso/Render/Netlify/Cloudinary + 走查清单） |
 | 2026-08-23 | 工具 | hiking-new/server/scripts/migrate-local-to-turso.cjs | 远端备份 + 单事务 SQLite→Turso 导入/回滚工具 |
+| 2026-10-21 | 文档 | 架构安全与性能说明.md | 当前分层、安全控制、性能基线、残余风险与验证命令 |
+| 2026-10-21 | 工具 | hiking-new/scripts/optimize-images.cjs | 批量生成 WebP 大图与卡片图 |

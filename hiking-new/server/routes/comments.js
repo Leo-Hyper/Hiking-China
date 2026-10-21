@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
 const { createComment, getAllCommentsByPostId, likeComment, isCommentLiked, updateComment, deleteComment } = require("../models/comment");
+const { get } = require("../models/db");
+const { clearPublicCache } = require("../middleware/public-cache");
+const { safeImageUrl } = require("../utils/validation");
 
 // 二级扁平嵌套树：
 // 顶级评论 parent_id=NULL，子回复的 parent_id 指向所属顶级评论（而非直接父评论）
@@ -40,7 +43,11 @@ router.get("/", async (req, res) => {
     const { post_id } = req.query;
     if (!post_id) return res.status(400).json({ error: "缺少 post_id" });
 
-    const allComments = await getAllCommentsByPostId(parseInt(post_id), 1000);
+    const postId = Number.parseInt(post_id, 10);
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return res.status(400).json({ error: "post_id 无效" });
+    }
+    const allComments = await getAllCommentsByPostId(postId, 500);
     const tree = buildCommentTree(allComments);
 
     res.json({ comments: tree });
@@ -53,7 +60,11 @@ router.get("/", async (req, res) => {
 // POST /api/comments - 创建评论
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { post_id, content, parent_id, reply_to_user_id, image_url } = req.body;
+    const post_id = Number.parseInt(req.body.post_id, 10);
+    const content = String(req.body.content || "").trim();
+    const parent_id = req.body.parent_id ? Number.parseInt(req.body.parent_id, 10) : null;
+    const reply_to_user_id = req.body.reply_to_user_id ? Number.parseInt(req.body.reply_to_user_id, 10) : null;
+    const image_url = safeImageUrl(req.body.image_url) || null;
     if (!post_id || !content) {
       return res.status(400).json({ error: "缺少必要字段" });
     }
@@ -62,19 +73,26 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 
     // 如果是回复（有 parent_id 且 parent_id 的父评论有 parent_id），保持 parent_id 指向顶级评论
-    let finalParentId = parent_id ? parseInt(parent_id) : null;
+    const post = await get("SELECT id FROM posts WHERE id = ? AND status = 1", [post_id]);
+    if (!post) return res.status(404).json({ error: "帖子不存在" });
+
+    let finalParentId = parent_id;
     let replyToUsername = null;
 
     if (reply_to_user_id) {
-      const { get } = require("../models/db");
       const replyUser = await get("SELECT username FROM users WHERE id = ?", [reply_to_user_id]);
-      replyToUsername = replyUser ? replyUser.username : null;
+      if (!replyUser) {
+        return res.status(400).json({ error: "回复用户不存在" });
+      }
+      replyToUsername = replyUser.username;
     }
 
     // 如果 parent_id 本身是子回复（它的 parent_id 非空），则提升到顶级评论
     if (finalParentId) {
-      const { get } = require("../models/db");
-      const parentComment = await get("SELECT parent_id FROM comments WHERE id = ?", [finalParentId]);
+      const parentComment = await get("SELECT parent_id, post_id FROM comments WHERE id = ?", [finalParentId]);
+      if (!parentComment || Number(parentComment.post_id) !== post_id) {
+        return res.status(400).json({ error: "父评论无效" });
+      }
       if (parentComment && parentComment.parent_id) {
         // parent_id 指向的是一条子回复 → 提升到该子回复所属的顶级评论
         finalParentId = parentComment.parent_id;
@@ -82,22 +100,22 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 
     const result = await createComment({
-      post_id: parseInt(post_id),
+      post_id,
       user_id: req.userId,
       content: content.trim(),
       parent_id: finalParentId,
-      reply_to_user_id: reply_to_user_id || null,
+      reply_to_user_id,
       reply_to_username: replyToUsername,
-      image_url: image_url || null,
+      image_url,
     });
 
-    const { get } = require("../models/db");
     const sql = `SELECT c.*, u.username, u.avatar
                  FROM comments c
                  LEFT JOIN users u ON c.user_id = u.id
                  WHERE c.id = ?`;
     const comment = await get(sql, [result.id]);
 
+    clearPublicCache();
     res.status(201).json({ comment });
   } catch (err) {
     console.error("[COMMENTS] POST error:", err);
@@ -111,6 +129,9 @@ router.post("/:id/like", authMiddleware, async (req, res) => {
     const result = await likeComment(parseInt(req.params.id), req.userId);
     res.json(result);
   } catch (err) {
+    if (err.message === "评论不存在") {
+      return res.status(404).json({ error: err.message });
+    }
     res.status(500).json({ error: "操作失败" });
   }
 });
@@ -135,7 +156,7 @@ router.get('/my', authMiddleware, async (req, res) => {
     );
     res.json({ comments });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+      res.status(500).json({ error: "服务器错误" });
   }
 });
 
@@ -153,7 +174,8 @@ router.put("/:id", authMiddleware, async (req, res) => {
     await updateComment(parseInt(req.params.id), req.userId, { content: content.trim() });
     res.json({ message: "更新成功" });
   } catch (err) {
-    res.status(403).json({ error: err.message || "编辑失败" });
+    const known = err.message === "评论不存在或无权编辑";
+    res.status(known ? 403 : 500).json({ error: known ? err.message : "编辑失败" });
   }
 });
 
@@ -161,9 +183,11 @@ router.put("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     await deleteComment(parseInt(req.params.id), req.userId);
+    clearPublicCache();
     res.json({ message: "删除成功" });
   } catch (err) {
-    res.status(403).json({ error: err.message || "删除失败" });
+    const known = err.message === "评论不存在" || err.message === "无权删除";
+    res.status(known ? 403 : 500).json({ error: known ? err.message : "删除失败" });
   }
 });
 

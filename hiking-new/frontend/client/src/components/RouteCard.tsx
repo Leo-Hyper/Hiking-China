@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Clock, MapPin, Route as RouteIcon, Star } from 'lucide-react';
 import type { RouteItem } from '@client/src/data/hiking-types';
-import { withBasePath } from '@client/src/utils/base-path';
+import { withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 
@@ -21,7 +21,7 @@ const RouteCard = ({ routeData }: RouteCardProps) => {
       <div className="flex h-full flex-col">
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
           <Image
-            src={withBasePath(routeData.image)}
+            src={withCardImage(routeData.image)}
             alt={routeData.name}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             loading="lazy"

@@ -2,16 +2,11 @@
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/archivo";
 @import "@fontsource-variable/spline-sans-mono";
-@import "@fontsource/noto-serif-sc/600.css";
-@import "@fontsource/noto-serif-sc/700.css";
-@import "@fontsource-variable/noto-sans-sc";
 
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./tailwind-theme.css";
 @import "./typography.css";
-
-@source "../../node_modules/streamdown/dist/*.js";
 
 /* 细体（200）仅供 Hero 标题“中国”二字使用：以独立字体族名声明，
    避免向 'Noto Serif SC' 全局注入 200 字重连带改变其他文本的字重 */

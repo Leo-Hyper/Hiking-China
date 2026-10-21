@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarClock, CalendarDays, ChevronLeft, MapPin, Mountain, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import {
 import type { HikingEvent } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
+import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
@@ -32,6 +33,7 @@ const EventDetailPage = () => {
     [eventId]
   );
   const [signedUp, setSignedUp] = useState<boolean>(false);
+  const safeContent = useMemo(() => sanitizeRichText(event?.content), [event?.content]);
 
   useEffect(() => {
     if (!event) return;
@@ -213,7 +215,7 @@ const EventDetailPage = () => {
         <h3 className="font-display text-lg text-ink md:text-h3">活动介绍</h3>
         <div className="h-px bg-border mt-3 mb-4" />
         <div className="prose max-w-none text-sm leading-[1.9] text-foreground md:text-[15px]"
-          dangerouslySetInnerHTML={{ __html: event.content }} />
+          dangerouslySetInnerHTML={{ __html: safeContent }} />
       </section>
 
       <div className="fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-40 border-t border-border bg-paper p-4 md:hidden">

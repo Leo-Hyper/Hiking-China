@@ -48,6 +48,8 @@ export interface Post {
   imageUrls: string[];
   authorId: number;
   authorName: string;
+  authorAvatar?: string;
+  commentCount?: number;
   views: number;
   status: number;
   createdAt: string;

@@ -1,6 +1,6 @@
 // API 聚合层：对应后端 Express 8 组路由（auth/posts/comments/events/follow/bookmarks/search/upload）
 // 统一走 utils/http.ts（自动携带 JWT、401 清会话）。返回后端原始 snake_case 字段，
-// 字段映射（snake_case → 前端 camelCase）在 data/hiking-store.ts 完成。
+// 字段映射（snake_case → 前端 camelCase）由 data/mappers.ts 统一负责。
 import { http } from '../utils/http';
 
 // ---------- auth ----------
@@ -50,6 +50,10 @@ export function listPosts(params: ListPostsParams = {}): Promise<{ posts: Record
 
 export function getPost(postId: number): Promise<{ post: Record<string, unknown> }> {
   return http.get<{ post: Record<string, unknown> }>(`/api/posts/${postId}`);
+}
+
+export function getPostsByIds(ids: number[]): Promise<{ posts: Record<string, unknown>[] }> {
+  return http.get<{ posts: Record<string, unknown>[] }>(`/api/posts/batch?ids=${ids.join(',')}`);
 }
 
 export function createPost(input: Record<string, unknown>): Promise<{ message: string; postId: number }> {

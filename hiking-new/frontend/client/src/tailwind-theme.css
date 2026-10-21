@@ -110,11 +110,11 @@
    * body: Archivo（西文）+ Noto Sans SC（中文）
    * data: Spline Sans Mono（路书数据：距离/海拔/时长）
    */
-  --font-display: 'Bricolage Grotesque Variable', 'Noto Serif SC', 'Songti SC', Georgia, serif;
-  --font-body: 'Archivo Variable', 'Noto Sans SC Variable', 'PingFang SC', 'Microsoft Yahei', system-ui, sans-serif;
-  --font-data: 'Spline Sans Mono Variable', 'Noto Sans SC Variable', ui-monospace, monospace;
+  --font-display: 'Bricolage Grotesque Variable', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
+  --font-body: 'Archivo Variable', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-data: 'Spline Sans Mono Variable', 'PingFang SC', 'Microsoft YaHei', ui-monospace, monospace;
   --font-sans: var(--font-body);
-  --font-serif: 'Noto Serif SC', 'Songti SC', Georgia, Cambria, serif;
+  --font-serif: 'Songti SC', 'STSong', 'SimSun', Georgia, Cambria, serif;
   --font-mono: var(--font-data);
 
   /* --- 圆角（收敛：卡片 8-12px 为主） --- */

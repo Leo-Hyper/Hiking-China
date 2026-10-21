@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, MapPin, Mountain } from 'lucide-react';
 import type { HikingEvent } from '@client/src/data/hiking-types';
-import { resolveImageUrl, stripHtml } from '@client/src/utils/base-path';
+import { stripHtml, withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 
@@ -70,7 +70,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, signedUp, onSignup }) => {
       {event.imageUrl && (
         <div className="aspect-[21/9] shrink-0 overflow-hidden bg-muted md:aspect-auto md:w-52">
           <Image
-            src={resolveImageUrl(event.imageUrl)}
+            src={withCardImage(event.imageUrl)}
             alt={event.title}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             loading="lazy"

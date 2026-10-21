@@ -79,14 +79,14 @@
    | 变量 | 值 |
    |------|-----|
    | `NODE_ENV` | `production` |
-   | `JWT_SECRET` | 随机长字符串（`openssl rand -hex 32`） |
+   | `JWT_SECRET` | 至少 32 字符的随机长字符串（`openssl rand -hex 32`），一旦泄露立即轮换 |
    | `TURSO_DATABASE_URL` | 上一步的 `libsql://...` |
    | `TURSO_AUTH_TOKEN` | 上一步生成的 token |
    | `UPLOAD_PROVIDER` | `cloudinary` |
    | `CLOUDINARY_CLOUD_NAME` | Cloudinary Cloud name |
    | `CLOUDINARY_API_KEY` | Cloudinary API Key |
    | `CLOUDINARY_API_SECRET` | Cloudinary API Secret |
-   | `FRONTEND_URL` | 你的 Netlify 域名（逗号分隔可多个，如 `https://xxx.netlify.app,http://localhost:5173`） |
+   | `FRONTEND_URL` | 生产域名必须包含 `https://hiking-china.netlify.app`（逗号分隔可多个） |
 
 5. 部署后验证：
    ```bash
@@ -109,6 +109,7 @@
 3. `netlify.toml` 已内置：
    - `/* → /index.html 200`：SPA 路由回退
    - `/api/* → https://<your-app>.onrender.com/api/:splat`：API 反代（免 CORS）
+   - `/uploads/* → https://<your-app>.onrender.com/uploads/:splat`：兼容历史上传资源
    - 记得把 `netlify.toml` 里的反代目标改成你自己的 Render 域名（或改用方式二）。
 4. 方式二（不用反代）：在 Netlify 环境变量设 `VITE_API_BASE_URL = https://<your-app>.onrender.com`，删除 `netlify.toml` 中 `/api/*` 反代段，并确保后端 `FRONTEND_URL` 包含 Netlify 域名。
 

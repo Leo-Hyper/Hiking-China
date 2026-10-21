@@ -6,6 +6,17 @@ const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 // 生产（Render 免费档无持久磁盘）：cloudinary（上传到 Cloudinary，返回 https 直链）
 const PROVIDER = process.env.UPLOAD_PROVIDER || "local";
 
+if (PROVIDER === "cloudinary") {
+  const required = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length > 0 && process.env.NODE_ENV === "production") {
+    throw new Error(`FATAL: missing Cloudinary configuration: ${missing.join(", ")}`);
+  }
+  if (missing.length > 0) {
+    console.warn(`[upload] missing Cloudinary configuration: ${missing.join(", ")}`);
+  }
+}
+
 function makeUniqueName(originalName) {
   const ext = path.extname(originalName).toLowerCase() || ".jpg";
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`;

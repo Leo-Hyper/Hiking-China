@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Backpack, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { GEAR_ITEMS } from '@client/src/data/hiking-data';
 import type { GearItem } from '@client/src/data/hiking-types';
-import { withBasePath } from '@client/src/utils/base-path';
+import { withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
@@ -118,7 +118,7 @@ const GearPage = () => {
                 <div>
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
                     <Image
-                      src={withBasePath(item.image)}
+                      src={withCardImage(item.image)}
                       alt={item.name}
                       className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                       loading="lazy"

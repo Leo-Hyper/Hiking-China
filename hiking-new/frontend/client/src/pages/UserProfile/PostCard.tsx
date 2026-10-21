@@ -11,6 +11,8 @@ export interface FormattedPost {
   excerpt: string;
   author: string;
   authorId?: number;
+  authorAvatar?: string;
+  commentCount?: number;
   date: string;
   category: string;
   image: string;
@@ -43,7 +45,7 @@ const PostCard = ({ post }: PostCardProps) => {
               <PlayCircle size={12} />
               {post.views}
             </span>
-            <CommentCount postId={post.id} />
+            <CommentCount postId={post.id} count={post.commentCount} />
           </div>
         </div>
 
@@ -61,7 +63,11 @@ const PostCard = ({ post }: PostCardProps) => {
                 onClick={handleAuthorClick}
                 className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-pine-700"
               >
-                <span className="h-4 w-4 shrink-0 rounded-full bg-pine-600" />
+                {post.authorAvatar ? (
+                  <Image src={post.authorAvatar} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="h-4 w-4 shrink-0 rounded-full bg-pine-600" />
+                )}
                 <span className="truncate">{post.author}</span>
               </Link>
             ) : (

@@ -10,10 +10,10 @@ import './index.css';
 
 const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
 
-const ErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
+const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => (
   <div style={{ padding: 48, fontFamily: 'system-ui', textAlign: 'center' }}>
     <h1 style={{ fontSize: 20, marginBottom: 8 }}>页面出错了</h1>
-    <p style={{ color: '#666', marginBottom: 16 }}>{String((error as Error)?.message ?? error)}</p>
+    <p style={{ color: '#666', marginBottom: 16 }}>页面暂时无法加载，请稍后重试。</p>
     <button
       onClick={resetErrorBoundary}
       style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 6, border: '1px solid #ccc', background: '#fff' }}

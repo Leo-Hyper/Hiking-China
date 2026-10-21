@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import {
   getPostById,
   getUserById,
-  incrementPostViews,
   isBookmarked,
   isFollowing,
   listComments,
@@ -14,6 +13,7 @@ import {
 import type { GearExtra, Post, RouteExtra } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
+import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import CommentSection from './CommentSection';
 import RelatedPosts from './RelatedPosts';
 import RouteMap from './RouteMap';
@@ -70,11 +70,11 @@ const PostDetailPage: React.FC = () => {
 
   const { data: postData, loading } = useAsyncData<Post | undefined>(() => getPostById(postId), [postId]);
   const post: Post | undefined = postData ?? undefined;
+  const safeContent = useMemo(() => sanitizeRichText(post?.content), [post?.content]);
 
   // 记录浏览（后端 GET 已自增 views）+ 本地最近浏览
   useEffect(() => {
     if (post) {
-      incrementPostViews(postId);
       recordView(postId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -353,7 +353,7 @@ const PostDetailPage: React.FC = () => {
           {/* 正文 */}
           <div className="max-w-[70ch] mx-auto">
             <div className="prose max-w-none text-[15px] md:text-base leading-[1.9] text-foreground mb-10"
-              dangerouslySetInnerHTML={{ __html: post.content }} />
+              dangerouslySetInnerHTML={{ __html: safeContent }} />
           </div>
 
           {/* 路线地图 */}

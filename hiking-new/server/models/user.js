@@ -2,8 +2,8 @@ const bcrypt = require("bcrypt");
 const { get, run } = require("./db");
 
 async function register(username, email, password) {
-  const saltRounds = 10;
-  const hash = bcrypt.hashSync(password, saltRounds);
+  const saltRounds = 12;
+  const hash = await bcrypt.hash(password, saltRounds);
 
   try {
     const res = await run(
@@ -23,7 +23,7 @@ async function login(email, password) {
   const user = await get("SELECT * FROM users WHERE email = ?", [email]);
   if (!user) throw new Error("邮箱或密码错误");
 
-  const valid = bcrypt.compareSync(password, user.password_hash);
+  const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new Error("邮箱或密码错误");
 
   const { password_hash, ...safeUser } = user;
@@ -67,7 +67,13 @@ async function updateUserProfile(userId, { username, avatar, bio, location, hiki
 // 获取公开用户信息（不含邮箱、密码）
 async function getPublicUserById(id) {
   const row = await get(
-    "SELECT id, username, avatar, bio, location, hikinglevel, gear_prefs, profile_public, created_at FROM users WHERE id = ?",
+    `SELECT u.id, u.username, u.avatar, u.bio, u.location, u.hikinglevel, u.gear_prefs,
+            u.profile_public, u.created_at,
+            (SELECT COUNT(*) FROM followers f WHERE f.following_id = u.id) AS followers_count,
+            (SELECT COUNT(*) FROM followers f WHERE f.follower_id = u.id) AS following_count,
+            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.status = 1) AS post_count
+     FROM users u
+     WHERE u.id = ?`,
     [id]
   );
   return row || null;

@@ -162,8 +162,7 @@ const AuthPage = () => {
                     }
                     type="password"
                     required
-                    minLength={6}
-                    placeholder="至少6个字符"
+                    placeholder="请输入密码"
                     className={INPUT_CLS}
                   />
                 </div>
@@ -221,8 +220,9 @@ const AuthPage = () => {
                     }
                     type="password"
                     required
-                    minLength={6}
-                    placeholder="至少6个字符"
+                    minLength={8}
+                    maxLength={72}
+                    placeholder="8-72个字符"
                     className={INPUT_CLS}
                   />
                 </div>

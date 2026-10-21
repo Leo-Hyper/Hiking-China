@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { listPosts } from '@client/src/data/hiking-store';
 import type { Post } from '@client/src/data/hiking-types';
-import { resolveFirstImage } from '@client/src/utils/base-path';
+import { withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import { AuthorLink, CommentCount } from '@client/src/components/PostStats';
@@ -36,7 +36,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentId }) => {
             <Link key={p.id} to={`/post/${p.id}`} className="group block">
               <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-muted">
                 <Image
-                  src={resolveFirstImage(p.imageUrls)}
+                  src={withCardImage(p.imageUrls[0] || '/img/徒步装备.avif')}
                   alt={p.title}
                   className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                   loading="lazy"
@@ -49,7 +49,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentId }) => {
                     <PlayCircle size={12} />
                     {p.views}
                   </span>
-                  <CommentCount postId={p.id} />
+                  <CommentCount postId={p.id} count={p.commentCount} />
                 </div>
               </div>
               <h4 className="mt-2 line-clamp-2 text-[13px] font-medium leading-snug text-ink transition-colors group-hover:text-pine-700">
@@ -57,7 +57,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentId }) => {
               </h4>
               <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 {p.authorId ? (
-                  <AuthorLink userId={p.authorId} name={author} />
+                  <AuthorLink userId={p.authorId} name={author} avatar={p.authorAvatar} />
                 ) : (
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span className="h-4 w-4 shrink-0 rounded-full bg-muted" />

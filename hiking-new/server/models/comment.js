@@ -16,13 +16,16 @@ async function getAllCommentsByPostId(postId, limit) {
      FROM comments c
      LEFT JOIN users u ON c.user_id = u.id
      WHERE c.post_id = ?
-     ORDER BY c.created_at ASC`,
-    [postId]
+     ORDER BY c.created_at ASC
+     LIMIT ?`,
+    [postId, Math.min(Number(limit) || 500, 500)]
   );
   return rows || [];
 }
 
 async function likeComment(commentId, userId) {
+  const comment = await get("SELECT id FROM comments WHERE id = ?", [commentId]);
+  if (!comment) throw new Error("评论不存在");
   const row = await get(
     "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?",
     [commentId, userId]

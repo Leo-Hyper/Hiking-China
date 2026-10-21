@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
 
@@ -12,29 +13,49 @@ const PORT = process.env.PORT || 3001;
 
 // Render and Netlify terminate TLS/proxying before the Express process.
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
 
 // 中间件
+app.use(compression({ threshold: 1024 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // CORS：支持 FRONTEND_URL 逗号分隔多个域名（如 Netlify 站点 + 本地开发）
-const FRONTEND_ORIGINS = (process.env.FRONTEND_URL || "http://localhost:5173")
+const configuredOrigins = (process.env.FRONTEND_URL || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+const FRONTEND_ORIGINS = [...new Set([
+  "https://hiking-china.netlify.app",
+  "http://localhost:5173",
+  ...configuredOrigins,
+])];
 app.use(cors({ origin: FRONTEND_ORIGINS }));
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "1mb" }));
 
 // 静态文件 — 上传目录（仅本地存储模式；Cloudinary 模式图片由 CDN 托管）
 const { UPLOADS_DIR } = require("./services/upload");
 // Keep legacy /uploads URLs available after switching new uploads to Cloudinary.
-app.use("/uploads", express.static(UPLOADS_DIR));
+app.use("/uploads", express.static(UPLOADS_DIR, { immutable: true, maxAge: "365d" }));
 
 // 速率限制
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
   message: { error: "请求过于频繁，请稍后再试" },
 });
 app.use("/api/", limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: { error: "登录或注册尝试过于频繁，请稍后再试" },
+});
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
 
 // API 路由
 app.use("/api/auth", require("./routes/auth"));

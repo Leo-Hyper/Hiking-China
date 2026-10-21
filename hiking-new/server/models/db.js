@@ -212,10 +212,14 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_followers_following ON followers(following_id)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_posts_status_created ON posts(status, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id)`,
   `CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)`,
+  `CREATE INDEX IF NOT EXISTS idx_events_status_date ON events(status, event_date)`,
+  `CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_event_regs_event ON event_registrations(event_id)`,
 ];
 

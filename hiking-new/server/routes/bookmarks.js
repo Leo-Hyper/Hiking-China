@@ -1,83 +1,50 @@
-﻿const express = require('express');
+const express = require("express");
+const { authMiddleware } = require("../middleware/auth");
+const { toggleBookmark, isBookmarked, listBookmarkedPosts } = require("../models/bookmark");
+const { pageLimit } = require("../utils/validation");
+
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
 
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: '未登录' });
-  }
-  const decoded = verifyToken(authHeader.split(' ')[1]);
-  if (!decoded) return res.status(401).json({ error: 'Token 无效' });
-  req.userId = decoded.id;
-  next();
-}
-
-// POST /api/bookmarks/toggle - 收藏/取消收藏
-router.post('/toggle/:postId', authMiddleware, async (req, res) => {
+router.post("/toggle/:postId", authMiddleware, async (req, res) => {
   try {
-    const { get, run } = require('../models/db');
-    const userId = req.userId;
-    const postId = parseInt(req.params.postId);
-
-    const existing = await get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
-
-    if (existing) {
-      // 取消收藏
-      await run('DELETE FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
-      res.json({ bookmarked: false, message: '已取消收藏' });
-    } else {
-      // 添加收藏
-      await run('INSERT INTO bookmarks (user_id, post_id) VALUES (?, ?)', [userId, postId]);
-      res.json({ bookmarked: true, message: '已收藏' });
+    const postId = Number.parseInt(req.params.postId, 10);
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return res.status(400).json({ error: "帖子 ID 无效" });
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/bookmarks - 我的收藏列表
-router.get('/', authMiddleware, async (req, res) => {
-  try {
-    const { all } = require('../models/db');
-    const userId = req.userId;
-
-    const rows = await all(
-      'SELECT p.*, u.username, b.created_at as bookmarked_at FROM bookmarks b ' +
-      'JOIN posts p ON b.post_id = p.id ' +
-      'LEFT JOIN users u ON p.user_id = u.id ' +
-      'WHERE b.user_id = ? ORDER BY b.created_at DESC',
-      [userId]
-    );
-
-    // normalize
-    const posts = rows.map(row => {
-      let imageUrls = [];
-      try { imageUrls = JSON.parse(row.image_urls || '[]'); } catch(e) {}
-      const tags = (row.tags || '').split(',').filter(Boolean);
-      let extrainfo = {};
-      try { extrainfo = JSON.parse(row.extrainfo || '{}'); } catch(e) {}
-      return { ...row, image_urls: JSON.stringify(imageUrls), tags: tags.join(','), extrainfo };
+    const result = await toggleBookmark(req.userId, postId);
+    res.json({
+      ...result,
+      message: result.bookmarked ? "已收藏" : "已取消收藏",
     });
-
-    res.json({ bookmarks: posts });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    if (error.message === "帖子不存在") {
+      return res.status(404).json({ error: error.message });
+    }
+    console.error("[BOOKMARKS] toggle failed:", error);
+    res.status(500).json({ error: "操作失败" });
   }
 });
 
-// GET /api/bookmarks/check/:postId - 检查是否已收藏
-router.get('/check/:postId', authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const { get } = require('../models/db');
-    const userId = req.userId;
-    const postId = parseInt(req.params.postId);
+    const posts = await listBookmarkedPosts(req.userId, pageLimit(req.query.limit, 50));
+    res.json({ bookmarks: posts });
+  } catch (error) {
+    console.error("[BOOKMARKS] list failed:", error);
+    res.status(500).json({ error: "服务器错误" });
+  }
+});
 
-    const row = await get('SELECT id FROM bookmarks WHERE user_id = ? AND post_id = ?', [userId, postId]);
-
-    res.json({ bookmarked: !!row });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+router.get("/check/:postId", authMiddleware, async (req, res) => {
+  try {
+    const postId = Number.parseInt(req.params.postId, 10);
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return res.status(400).json({ error: "帖子 ID 无效" });
+    }
+    res.json({ bookmarked: await isBookmarked(req.userId, postId) });
+  } catch (error) {
+    console.error("[BOOKMARKS] check failed:", error);
+    res.status(500).json({ error: "操作失败" });
   }
 });
 

@@ -1,17 +1,24 @@
 const express = require("express");
 const router = express.Router();
+const { publicCache } = require("../middleware/public-cache");
 
 // GET /api/search?q=xxx - 搜索帖子
-router.get("/", async (req, res) => {
+router.get("/", publicCache(30000), async (req, res) => {
   const { all } = require("../models/db");
-  const q = req.query.q || "";
+  const q = String(req.query.q || "").trim().slice(0, 100);
 
-  if (!q.trim()) {
+  if (!q) {
     return res.json({ results: [] });
   }
 
   const pattern = "%" + q + "%";
-  const sql = "SELECT id, title, category, tags, content, created_at, user_id FROM posts WHERE title LIKE ? OR tags LIKE ? OR content LIKE ? ORDER BY created_at DESC LIMIT 20";
+  const sql = `
+    SELECT id, title, category, tags, substr(content, 1, 800) AS content, created_at, user_id
+    FROM posts
+    WHERE status = 1 AND (title LIKE ? OR tags LIKE ? OR content LIKE ?)
+    ORDER BY created_at DESC
+    LIMIT 20
+  `;
 
   try {
     const rows = await all(sql, [pattern, pattern, pattern]);
@@ -29,6 +36,7 @@ router.get("/", async (req, res) => {
 
     res.json({ results });
   } catch (err) {
+    console.error("[SEARCH] failed:", err);
     res.status(500).json({ error: "搜索出错" });
   }
 });

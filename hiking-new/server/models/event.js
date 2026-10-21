@@ -1,5 +1,14 @@
 const { all, get, run } = require("./db");
 
+function chinaToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 // 创建活动
 async function createEvent(userId, { title, content, location, location_lat, location_lng, event_date, difficulty, max_participants, image_url, signup_deadline }) {
   const res = await run(
@@ -13,7 +22,15 @@ async function createEvent(userId, { title, content, location, location_lat, loc
 // 获取活动列表
 async function getAllEvents(limit = 50, offset = 0) {
   const rows = await all(
-    `SELECT e.*, u.username,
+    `SELECT e.id, e.user_id, e.title, substr(e.content, 1, 500) AS content,
+      e.location, e.location_lat, e.location_lng, e.event_date, e.difficulty,
+      e.max_participants, e.image_url, e.created_at, e.updated_at, e.signup_deadline,
+      u.username,
+      CASE
+        WHEN e.status = 'active' AND e.event_date <> '' AND e.event_date < date('now', '+8 hours')
+          THEN 'ended'
+        ELSE e.status
+      END AS effective_status,
       (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) AS participant_count
      FROM events e
      LEFT JOIN users u ON e.user_id = u.id
@@ -21,20 +38,25 @@ async function getAllEvents(limit = 50, offset = 0) {
      LIMIT ? OFFSET ?`,
     [limit, offset]
   );
-  return rows || [];
+  return (rows || []).map((row) => ({ ...row, status: row.effective_status, effective_status: undefined }));
 }
 
 // 获取单个活动
 async function getEventById(id) {
   const row = await get(
     `SELECT e.*, u.username,
+      CASE
+        WHEN e.status = 'active' AND e.event_date <> '' AND e.event_date < date('now', '+8 hours')
+          THEN 'ended'
+        ELSE e.status
+      END AS effective_status,
       (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) AS participant_count
      FROM events e
      LEFT JOIN users u ON e.user_id = u.id
      WHERE e.id = ?`,
     [id]
   );
-  return row || null;
+  return row ? { ...row, status: row.effective_status, effective_status: undefined } : null;
 }
 
 // 更新活动
@@ -71,8 +93,15 @@ async function deleteEvent(id, userId) {
 
 // 报名
 async function joinEvent(eventId, userId) {
-  const event = await get("SELECT id, max_participants FROM events WHERE id = ?", [eventId]);
+  const event = await get(
+    "SELECT id, max_participants, event_date, signup_deadline, status FROM events WHERE id = ?",
+    [eventId],
+  );
   if (!event) throw new Error("活动不存在");
+  if (event.status !== "active") throw new Error("活动已结束");
+  const today = chinaToday();
+  if (event.event_date && event.event_date < today) throw new Error("活动已结束");
+  if (event.signup_deadline && event.signup_deadline < today) throw new Error("报名已截止");
   // 原子条件写入：未报名 且（不限人数 或 未满员）才插入
   const res = await run(
     `INSERT INTO event_registrations (event_id, user_id)

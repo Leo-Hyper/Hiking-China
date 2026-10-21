@@ -1,6 +1,6 @@
 # Memory Summary
 **Generated:** 2026-10-21
-**Snapshot:** snapshot-2026-10-21
+**Snapshot:** snapshot-2026-10-21-security-performance
 
 ## Project Summary
 中国户外徒步社区网站（徒步中国）：徒步路线展示、装备指南、活动召集与论坛交流。
@@ -11,7 +11,7 @@
 部署链路：Netlify（前端）→ Render 免费实例（后端）→ Turso（数据库）+ Cloudinary（图片）。
 
 ## Current Status
-**Phase:** Phase 8.3 安全合并工具完成；等待对目标 Turso 执行 merge:check/merge:apply。
+**Phase:** Phase 9 全栈安全、性能与架构加固完成，待部署验证。
 
 ### 已完成（2026-08-23）
 - 后端存储层双模式（本地 SQLite / Turso 远程），统一 `all/get/run` 接口，模型层零签名改动
@@ -27,6 +27,10 @@
 - Render 所连库仍是 seed/API 测试数据；Cloudinary/JWT Secret 已随截图暴露，公开 Git 历史含 SQLite 快照
 - 新增保留线上用户的合并模式，按用户名映射作者并支持业务键去重与关联 ID 重映射
 - 模拟 12 用户/4 活动环境合并通过；构造重复帖/评论/活动后仍稳定为 17 帖/11 评论/4 活动
+- 前后端及工具包依赖审计均清零；JWT、上传、XSS、限流、CORS、隐私与错误响应完成加固
+- 前端 store 和上传/书签/点赞完成领域拆分；生产前端路由懒加载并按 vendor 拆包
+- Hero 视频改为按需；图片生成 WebP 大图/卡片图；API gzip/缓存/摘要列表/N+1 优化完成
+- 实测 CSS 从 576KB 降至 178KB，帖子列表 JSON 从 66.5KB 降至 23.8KB，原图 10MB 级降至约 3.1MB 双尺寸总量
 
 ### 数据结构
 - `users`（含 location/hikinglevel/gear_prefs/profile_public/status）、`posts`（含 extrainfo/status/comment_closed/likes_count）、`comments`（二级扁平嵌套 + reply_to_username + image_url）

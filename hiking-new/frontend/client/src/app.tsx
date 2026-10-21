@@ -1,21 +1,29 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
-import NotFound from './pages/NotFound/NotFound';
-import Home from './pages/Home/Home';
-import RoutesPage from './pages/Routes/RoutesPage';
-import ForumPage from './pages/Forum/ForumPage';
-import GearPage from './pages/Gear/GearPage';
-import EventsPage from './pages/Events/EventsPage';
-import EventDetailPage from './pages/Events/EventDetailPage';
-import PostDetailPage from './pages/PostDetail/PostDetailPage';
-import PublishPostPage from './pages/PublishPost/PublishPostPage';
-import EditPostPage from './pages/EditPost/EditPostPage';
-import PublishEventPage from './pages/PublishEvent/PublishEventPage';
-import AuthPage from './pages/Auth/AuthPage';
-import ProfilePage from './pages/Profile/ProfilePage';
-import UserProfilePage from './pages/UserProfile/UserProfilePage';
 import { useAuth } from './hooks/use-hiking';
+
+const Home = lazy(() => import('./pages/Home/Home'));
+const RoutesPage = lazy(() => import('./pages/Routes/RoutesPage'));
+const ForumPage = lazy(() => import('./pages/Forum/ForumPage'));
+const GearPage = lazy(() => import('./pages/Gear/GearPage'));
+const EventsPage = lazy(() => import('./pages/Events/EventsPage'));
+const EventDetailPage = lazy(() => import('./pages/Events/EventDetailPage'));
+const PostDetailPage = lazy(() => import('./pages/PostDetail/PostDetailPage'));
+const PublishPostPage = lazy(() => import('./pages/PublishPost/PublishPostPage'));
+const EditPostPage = lazy(() => import('./pages/EditPost/EditPostPage'));
+const PublishEventPage = lazy(() => import('./pages/PublishEvent/PublishEventPage'));
+const AuthPage = lazy(() => import('./pages/Auth/AuthPage'));
+const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
+const UserProfilePage = lazy(() => import('./pages/UserProfile/UserProfilePage'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
+
+const PageFallback = () => (
+  <div className="mx-auto max-w-7xl px-4 py-16 md:px-8" aria-label="页面加载中">
+    <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+    <div className="mt-6 aspect-[16/8] animate-pulse rounded-lg bg-muted" />
+  </div>
+);
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
@@ -28,25 +36,27 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 
 const RoutesComponent = () => {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="routes" element={<RoutesPage />} />
-        <Route path="gear" element={<GearPage />} />
-        <Route path="events" element={<EventsPage />} />
-        <Route path="events/:id" element={<EventDetailPage />} />
-        <Route path="forum" element={<ForumPage />} />
-        <Route path="post/:id" element={<PostDetailPage />} />
-        <Route path="profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
-        <Route path="user/:id" element={<UserProfilePage />} />
-      </Route>
-      <Route path="publish" element={<RequireAuth><PublishPostPage /></RequireAuth>} />
-      <Route path="publish-event" element={<RequireAuth><PublishEventPage /></RequireAuth>} />
-      <Route path="post/:id/edit" element={<RequireAuth><EditPostPage /></RequireAuth>} />
-      <Route path="login" element={<AuthPage />} />
-      <Route path="register" element={<AuthPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="routes" element={<RoutesPage />} />
+          <Route path="gear" element={<GearPage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="events/:id" element={<EventDetailPage />} />
+          <Route path="forum" element={<ForumPage />} />
+          <Route path="post/:id" element={<PostDetailPage />} />
+          <Route path="profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="user/:id" element={<UserProfilePage />} />
+        </Route>
+        <Route path="publish" element={<RequireAuth><PublishPostPage /></RequireAuth>} />
+        <Route path="publish-event" element={<RequireAuth><PublishEventPage /></RequireAuth>} />
+        <Route path="post/:id/edit" element={<RequireAuth><EditPostPage /></RequireAuth>} />
+        <Route path="login" element={<AuthPage />} />
+        <Route path="register" element={<AuthPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 

@@ -13,6 +13,9 @@ router.post("/toggle/:userId", authMiddleware, async (req, res) => {
     const result = await toggleFollow(req.userId, targetId);
     res.json(result);
   } catch (err) {
+    if (err.message === "用户不存在") {
+      return res.status(404).json({ error: err.message });
+    }
     console.error("[FOLLOW] toggle error:", err);
     res.status(500).json({ error: "操作失败" });
   }

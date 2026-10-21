@@ -2,6 +2,8 @@ const { get, run } = require("./db");
 
 // 切换关注状态（关注/取关）
 async function toggleFollow(followerId, followingId) {
+  const target = await get("SELECT id FROM users WHERE id = ?", [followingId]);
+  if (!target) throw new Error("用户不存在");
   const row = await get(
     "SELECT * FROM followers WHERE follower_id = ? AND following_id = ?",
     [followerId, followingId]

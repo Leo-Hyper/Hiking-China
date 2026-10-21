@@ -5,6 +5,7 @@ import { POST_CATEGORIES } from '@client/src/data/hiking-data';
 import type { Post, PostExtraInfo } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
+import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import RichTextEditor from '@client/src/components/RichTextEditor';
 import MapPicker from '@client/src/components/MapPicker';
 import ImageUrlPicker from '@client/src/pages/PostDetail/ImageUrlPicker';
@@ -70,9 +71,11 @@ const EditPostPage: React.FC = () => {
     return form.tagsStr.split(/[,，]/).map((t: string) => t.trim()).filter(Boolean);
   }, [form.tagsStr]);
 
-  const previewHtml: string = form.content
-    ? form.content.replace(/\n/g, '<br>')
-    : '<p class="text-muted-foreground">暂无内容</p>';
+  const previewHtml: string = useMemo(() => sanitizeRichText(
+    form.content
+      ? form.content.replace(/\n/g, '<br>')
+      : '<p class="text-muted-foreground">暂无内容</p>',
+  ), [form.content]);
 
   // 帖子数据就绪后填充表单
   useEffect(() => {
