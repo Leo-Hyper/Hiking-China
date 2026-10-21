@@ -73,3 +73,8 @@
 **Context:** 旧 Vue 目录不再部署，但 npm audit 的高危漏洞仍影响仓库安全评分和维护判断。
 **Lesson:** 被替换的前端应明确退出活跃依赖链，保留源码即可；否则会持续制造安全噪声和构建分叉。
 **Tags:** architecture, dependencies, security
+
+### 2026-10-21 — 本地原生依赖不能进入云运行启动链
+**Context:** sqlite3 6 在 Windows 正常，在 Render Node 24 上因 GLIBC 2.38 不匹配导致部署启动失败。
+**Lesson:** 云生产不用的原生模块必须懒加载或放在独立工具包，不能在顶层 require。
+**Tags:** render, sqlite3, glibc, native-module

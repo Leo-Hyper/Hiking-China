@@ -1,4 +1,3 @@
-const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const fs = require("fs");
 
@@ -26,6 +25,8 @@ function getRawDb() {
     return remoteDb;
   }
   if (!localDb) {
+    // Production uses Turso. Load the native SQLite binding only for local development/migration.
+    const sqlite3 = require("sqlite3").verbose();
     localDb = new sqlite3.Database(DB_PATH, function (err) {
       if (err) console.error("DB connect error:", err.message);
     });

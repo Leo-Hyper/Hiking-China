@@ -101,3 +101,9 @@
 **Decision:** 根 `hiking-new` 包只保留图片优化工具与 Sharp；旧 Vue 源码保留在仓库中供历史参考，但不再安装或构建其依赖。
 **Rationale:** 消除非生产依赖的供应链风险，避免双前端构建链分叉。
 **状态：** ✓ 根工具包审计 0
+
+### 2026-10-21 — sqlite3 仅本地模式加载
+**Context:** Render 手动部署 e9eec3e 后启动失败，sqlite3 6 的 Linux 原生绑定要求 GLIBC 2.38；生产实际只使用 Turso。
+**Decision:** `models/db.js` 仅在本地 SQLite 分支内 `require("sqlite3")`，远程 Turso 启动不再加载原生模块。
+**Rationale:** 消除运行环境 ABI/GLIBC 耦合，同时保留本地迁移能力。
+**状态：** ✓ 远程模块加载测试确认 sqlite3 未进入 require.cache
