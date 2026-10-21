@@ -452,7 +452,10 @@ function validateMergeTarget(remoteCounts) {
 }
 
 function buildMergeStatements(schemas, mergePlan, includeTestPosts) {
-  const statements = MERGE_DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
+  const statements = MERGE_DELETE_ORDER.map((table) => ({
+    sql: `DELETE FROM "${table}"`,
+    args: [],
+  }));
   for (const table of MERGE_INSERT_ORDER) {
     const columns = schemas[table];
     mergePlan.rowsByTable[table].forEach((row) => {
@@ -485,7 +488,10 @@ async function writeBackup(backupDir, remote, schemas, kind = "preimport") {
 
 async function restoreBackup(remote, filename) {
   const backup = JSON.parse(await fs.promises.readFile(filename, "utf8"));
-  const statements = DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
+  const statements = DELETE_ORDER.map((table) => ({
+    sql: `DELETE FROM "${table}"`,
+    args: [],
+  }));
   for (const table of INSERT_ORDER) {
     const rows = backup.tables?.[table];
     if (!Array.isArray(rows)) throw new Error(`Backup is missing table: ${table}`);
@@ -589,7 +595,10 @@ async function main() {
     if (options.mergeContent) {
       statements = buildMergeStatements(schemas, mergePlan, options.includeTestPosts);
     } else {
-      statements = DELETE_ORDER.map((table) => ({ sql: `DELETE FROM "${table}"` }));
+      statements = DELETE_ORDER.map((table) => ({
+        sql: `DELETE FROM "${table}"`,
+        args: [],
+      }));
       for (const table of INSERT_ORDER) {
         const columns = schemas[table];
         importData.rowsByTable[table].forEach((row) => statements.push(makeInsertStatement(table, columns, row)));
@@ -615,6 +624,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`[migrate] ${error.message}`);
+  console.error(`[migrate] ${error.stack || error.message}`);
   process.exitCode = 1;
 });

@@ -58,3 +58,8 @@
 **Context:** Render 环境变量截图暴露 Cloudinary API Secret 和 JWT_SECRET；公开仓库又包含 SQLite 用户表。
 **Lesson:** 环境变量面板、数据库快照和终端输出在分享前必须脱敏；Secret 一旦进入截图或聊天即视为泄露并立即轮换。
 **Tags:** security, secrets, incident-response
+
+### 2026-10-21 — libsql HTTP batch 的语句必须显式提供 args
+**Context:** 合并模式在本地 file: 模拟库通过，但真实 Turso 在 batch 阶段报 `Cannot convert undefined or null to object`。
+**Lesson:** `@libsql/client` HTTP batch 会把非数组 args 当作对象遍历；无参数 SQL 也必须传 `args: []`，不能省略字段。
+**Tags:** libsql, turso, batch, migration
