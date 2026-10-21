@@ -69,7 +69,7 @@ const Layout = () => {
                 }`}
               >
                 <Image
-                  src="/spark/app/app_17cbgaq6auz/runtime/api/v1/storage/object/bucket_aadkqpc7cfabu_static/static%2Faadkqqkmybuao_ve_miaoda"
+                  src={withBasePath('/img/logo.png')}
                   alt=""
                   className="w-full h-full object-contain"
                 />

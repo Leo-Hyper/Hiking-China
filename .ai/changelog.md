@@ -17,6 +17,7 @@
 - 帖子详情聚合作者头像/评论数；新增受保护编辑读取接口；最近浏览和公开用户统计不再重复请求。
 - 公共 API 增加 Netlify CDN 60 秒边缘缓存提示，减少 Render 冷启动回源。
 - 修复 Render 中 sqlite3 原生库 GLIBC 2.38 不兼容：Turso 模式懒加载 SQLite，并将 sqlite3 设为 optionalDependency。
+- 修复导航栏仍引用妙搭临时 `/spark/...` 资源导致的线上破图；简化图片组件为原生懒加载封装。
 - 路由懒加载与 vendor 拆包；Hero 视频按需；图片生成 WebP 大图/卡片图。
 - 前后端与工具包依赖审计均为 0。
 

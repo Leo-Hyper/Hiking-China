@@ -33,7 +33,6 @@ export function withBasePath(path: string): string {
   if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
     return path;
   }
-  if (path.startsWith('/spark/')) return path;
   const optimizedPath = optimizedImagePath(path);
   if (optimizedPath.startsWith('/')) return `${BASE_PATH}${optimizedPath}`;
   return `${BASE_PATH}/${optimizedPath}`;
