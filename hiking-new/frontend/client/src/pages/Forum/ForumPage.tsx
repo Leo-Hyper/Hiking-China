@@ -31,6 +31,13 @@ const ForumPage = () => {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
   const isLoggedIn: boolean = getCurrentUser() !== null;
+  const queryParam: string = searchParams.get('q') ?? '';
+
+  useEffect(() => {
+    setSearchQuery(queryParam);
+    setDebouncedSearch(queryParam);
+    setVisibleCount(PAGE_LIMIT);
+  }, [queryParam]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
