@@ -1,4 +1,5 @@
 const configuredBasePath = process.env.CLIENT_BASE_PATH || '';
+const configuredApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '';
 
 // Netlify commonly uses "/" for a root deployment, but "//img/x.png" becomes a protocol-relative URL.
 export const BASE_PATH: string = configuredBasePath === '/' ? '' : configuredBasePath;
@@ -32,6 +33,9 @@ export function withBasePath(path: string): string {
   if (!path) return path;
   if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
     return path;
+  }
+  if (configuredApiBase && path.startsWith('/uploads/')) {
+    return `${configuredApiBase}${path}`;
   }
   const optimizedPath = optimizedImagePath(path);
   if (optimizedPath.startsWith('/')) return `${BASE_PATH}${optimizedPath}`;

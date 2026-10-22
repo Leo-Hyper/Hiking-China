@@ -5,4 +5,4 @@ Disallow: /profile
 Disallow: /publish
 Disallow: /publish-event
 
-Sitemap: https://hiking-china.netlify.app/sitemap.xml
+Sitemap: https://hiking-china-api-sg.onrender.com/sitemap.xml

@@ -7,6 +7,7 @@ const r = (p: string) => path.resolve(process.cwd(), p);
 
 export default defineConfig({
   root: '.',
+  base: process.env.CLIENT_BASE_PATH || '/',
   publicDir: 'client/public',
   plugins: [react(), tailwindcss()],
   resolve: {
