@@ -267,8 +267,51 @@ export function setAdminCommentStatus(commentId: number, status: number, reason 
   return http.put<{ message: string }>(`/api/admin/comments/${commentId}/status`, { status, reason });
 }
 
-export function listAdminUsers(): Promise<{ users: Record<string, unknown>[] }> {
-  return http.get<{ users: Record<string, unknown>[] }>('/api/admin/users');
+export interface AdminUserListParams {
+  q?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function listAdminUsers(
+  params: AdminUserListParams = {},
+): Promise<{ users: Record<string, unknown>[]; total: number; page: number; pageSize: number }> {
+  const qs = new URLSearchParams();
+  if (params.q) qs.set('q', params.q);
+  if (params.role) qs.set('role', params.role);
+  if (params.status) qs.set('status', params.status);
+  if (params.page) qs.set('page', String(params.page));
+  if (params.pageSize) qs.set('pageSize', String(params.pageSize));
+  const query = qs.toString();
+  return http.get<{ users: Record<string, unknown>[]; total: number; page: number; pageSize: number }>(
+    `/api/admin/users${query ? `?${query}` : ''}`,
+  );
+}
+
+export function getAdminUser(userId: number): Promise<{ user: Record<string, unknown> }> {
+  return http.get<{ user: Record<string, unknown> }>(`/api/admin/users/${userId}`);
+}
+
+export function createAdminUser(input: Record<string, unknown>): Promise<{ message: string; user: Record<string, unknown> }> {
+  return http.post<{ message: string; user: Record<string, unknown> }>('/api/admin/users', input);
+}
+
+export function updateAdminUser(userId: number, patch: Record<string, unknown>): Promise<{ message: string; user: Record<string, unknown> }> {
+  return http.put<{ message: string; user: Record<string, unknown> }>(`/api/admin/users/${userId}`, patch);
+}
+
+export function forceLogoutAdminUser(userId: number): Promise<{ message: string }> {
+  return http.post<{ message: string }>(`/api/admin/users/${userId}/force-logout`);
+}
+
+export function sendAdminUserPasswordReset(userId: number): Promise<{ message: string }> {
+  return http.post<{ message: string }>(`/api/admin/users/${userId}/send-reset`);
+}
+
+export function deleteAdminUser(userId: number, mode: 'soft' | 'anonymize' = 'soft'): Promise<{ message: string }> {
+  return http.delete<{ message: string }>(`/api/admin/users/${userId}`, { mode });
 }
 
 export function setAdminUserAccountStatus(

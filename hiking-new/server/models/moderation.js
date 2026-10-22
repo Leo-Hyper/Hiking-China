@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const { all, get, run } = require("./db");
 
 const TARGET_TYPES = new Set(["post", "comment", "user", "event"]);
@@ -196,12 +197,213 @@ async function setCommentStatus({ commentId, status, moderatorId, reason = "", r
   return { status: nextStatus };
 }
 
-async function listAdminUsers({ limit = 100, offset = 0 } = {}) {
-  return all(
-    `SELECT id, username, email, role, account_status, email_verified, created_at
-     FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-    [Math.min(Number(limit) || 100, 200), Math.max(Number(offset) || 0, 0)]
+const ADMIN_USER_SELECT = `
+  id, username, email, avatar, bio, location, hikinglevel, gear_prefs,
+  profile_public, role, account_status, email_verified, created_at, updated_at
+`;
+
+async function listAdminUsers({ q = "", role = "", status = "", page = 1, pageSize = 20 } = {}) {
+  const safePage = Math.max(Number(page) || 1, 1);
+  const safePageSize = Math.min(Math.max(Number(pageSize) || 20, 1), 100);
+  const where = [];
+  const params = [];
+  const query = String(q || "").trim();
+  if (query) {
+    where.push("(username LIKE ? OR email LIKE ?)");
+    params.push(`%${query}%`, `%${query}%`);
+  }
+  if (["user", "moderator", "admin"].includes(role)) {
+    where.push("role = ?");
+    params.push(role);
+  }
+  if (["active", "suspended", "pending_deletion", "deleted"].includes(status)) {
+    where.push("account_status = ?");
+    params.push(status);
+  }
+  const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const [users, totalRow] = await Promise.all([
+    all(
+      `SELECT ${ADMIN_USER_SELECT} FROM users ${clause}
+       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, safePageSize, (safePage - 1) * safePageSize]
+    ),
+    get(`SELECT COUNT(*) AS count FROM users ${clause}`, params),
+  ]);
+  return {
+    users,
+    total: Number(totalRow?.count || 0),
+    page: safePage,
+    pageSize: safePageSize,
+  };
+}
+
+async function getAdminUserDetail(userId) {
+  const user = await get(`SELECT ${ADMIN_USER_SELECT} FROM users WHERE id = ?`, [userId]);
+  if (!user) return null;
+  const [postCount, commentCount, eventCount, followersCount, followingCount] = await Promise.all([
+    get("SELECT COUNT(*) AS count FROM posts WHERE user_id = ? AND status != 2", [userId]),
+    get("SELECT COUNT(*) AS count FROM comments WHERE user_id = ? AND status = 1", [userId]),
+    get("SELECT COUNT(*) AS count FROM events WHERE user_id = ? AND status != 'deleted'", [userId]),
+    get("SELECT COUNT(*) AS count FROM followers WHERE following_id = ?", [userId]),
+    get("SELECT COUNT(*) AS count FROM followers WHERE follower_id = ?", [userId]),
+  ]);
+  return {
+    ...user,
+    stats: {
+      posts: Number(postCount?.count || 0),
+      comments: Number(commentCount?.count || 0),
+      events: Number(eventCount?.count || 0),
+      followers: Number(followersCount?.count || 0),
+      following: Number(followingCount?.count || 0),
+    },
+  };
+}
+
+async function getAdminUserRecord(userId) {
+  return get("SELECT id, username, email, role, account_status FROM users WHERE id = ?", [userId]);
+}
+
+async function countActiveAdmins() {
+  const row = await get("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' AND account_status = 'active'");
+  return Number(row?.count || 0);
+}
+
+async function assertSafeUserMutation({ targetId, actorId, nextRole, nextStatus }) {
+  const target = await getAdminUserRecord(targetId);
+  if (!target) throw new Error("用户不存在");
+
+  if (Number(targetId) === Number(actorId)) {
+    if (nextStatus && nextStatus !== "active") throw new Error("不能停用当前管理员账号");
+    if (nextRole && nextRole !== "admin") throw new Error("不能降级当前管理员账号");
+  }
+
+  const isRemovingAdmin =
+    String(target.role) === "admin"
+    && ((nextRole && nextRole !== "admin") || (nextStatus && nextStatus !== "active"));
+  if (isRemovingAdmin && (await countActiveAdmins()) <= 1) {
+    throw new Error("不能操作最后一个管理员");
+  }
+}
+
+async function createAdminUser({ username, email, password, role = "user", emailVerified = 0, actorId, req = null }) {
+  const normalizedUsername = String(username || "").trim();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedRole = String(role || "user");
+  if (!normalizedUsername || !normalizedEmail || !password) throw new Error("用户名、邮箱和密码不能为空");
+  if (String(password).length < 8 || String(password).length > 72) throw new Error("密码需为8-72个字符");
+  if (!["user", "moderator", "admin"].includes(normalizedRole)) throw new Error("用户角色无效");
+
+  const hash = await bcrypt.hash(String(password), 12);
+  try {
+    const result = await run(
+      `INSERT INTO users
+       (username, email, password_hash, role, email_verified, account_status)
+       VALUES (?, ?, ?, ?, ?, 'active')`,
+      [normalizedUsername, normalizedEmail, hash, normalizedRole, Number(emailVerified) === 1 ? 1 : 0]
+    );
+    const user = await getAdminUserDetail(result.lastInsertRowid);
+    await writeAuditLog({
+      actorId,
+      action: "user_create",
+      targetType: "user",
+      targetId: result.lastInsertRowid,
+      metadata: { username: normalizedUsername, email: normalizedEmail, role: normalizedRole },
+      req,
+    });
+    return user;
+  } catch (error) {
+    if (/UNIQUE|unique/.test(error.message || "")) throw new Error("用户名或邮箱已存在");
+    throw error;
+  }
+}
+
+async function updateAdminUser({ userId, patch, actorId, req = null }) {
+  patch = { ...patch };
+  if (patch.username !== undefined) patch.username = String(patch.username).trim();
+  if (patch.email !== undefined) patch.email = String(patch.email).trim().toLowerCase();
+  const fields = [];
+  const params = [];
+  const metadata = {};
+  const allowed = [
+    "username", "email", "avatar", "bio", "location", "hikinglevel",
+    "gear_prefs", "profile_public", "role", "account_status", "email_verified",
+  ];
+
+  const nextRole = patch.role !== undefined ? String(patch.role) : undefined;
+  const nextStatus = patch.account_status !== undefined ? String(patch.account_status) : undefined;
+  if (nextRole && !["user", "moderator", "admin"].includes(nextRole)) throw new Error("用户角色无效");
+  if (nextStatus && !["active", "suspended", "pending_deletion", "deleted"].includes(nextStatus)) {
+    throw new Error("账号状态无效");
+  }
+  await assertSafeUserMutation({ targetId: userId, actorId, nextRole, nextStatus });
+
+  for (const key of allowed) {
+    if (patch[key] === undefined) continue;
+    fields.push(`${key} = ?`);
+    params.push(key === "gear_prefs" && typeof patch[key] !== "string" ? JSON.stringify(patch[key]) : patch[key]);
+    metadata[key] = patch[key];
+  }
+  if (!fields.length) throw new Error("没有需要更新的字段");
+
+  // Identity and permission changes invalidate existing sessions; profile-only edits do not.
+  if (["email", "role", "account_status", "email_verified"].some((key) => patch[key] !== undefined)) {
+    fields.push("auth_version = auth_version + 1");
+  }
+  fields.push("updated_at = CURRENT_TIMESTAMP");
+  params.push(userId);
+  try {
+    const result = await run(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, params);
+    if (Number(result.changes) !== 1) throw new Error("用户不存在");
+    await writeAuditLog({
+      actorId,
+      action: "user_update",
+      targetType: "user",
+      targetId: userId,
+      metadata,
+      req,
+    });
+    return getAdminUserDetail(userId);
+  } catch (error) {
+    if (/UNIQUE|unique/.test(error.message || "")) throw new Error("用户名或邮箱已存在");
+    throw error;
+  }
+}
+
+async function forceLogoutUser({ userId, actorId, req = null }) {
+  const result = await run(
+    "UPDATE users SET auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [userId]
   );
+  if (Number(result.changes) !== 1) throw new Error("用户不存在");
+  await writeAuditLog({
+    actorId,
+    action: "user_force_logout",
+    targetType: "user",
+    targetId: userId,
+    req,
+  });
+  return { ok: true };
+}
+
+async function deleteAdminUser({ userId, mode = "soft", actorId, req = null }) {
+  const target = await getAdminUserRecord(userId);
+  if (!target) throw new Error("用户不存在");
+  await assertSafeUserMutation({ targetId: userId, actorId, nextStatus: "deleted" });
+  if (mode === "anonymize") {
+    const { anonymizeAccount } = require("./user");
+    await anonymizeAccount(userId);
+  } else {
+    await run("UPDATE users SET account_status = 'deleted', auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [userId]);
+  }
+  await writeAuditLog({
+    actorId,
+    action: mode === "anonymize" ? "user_anonymize" : "user_soft_delete",
+    targetType: "user",
+    targetId: userId,
+    metadata: { mode, username: target.username },
+    req,
+  });
+  return { mode };
 }
 
 async function setUserAccountStatus({ userId, status, moderatorId, reason = "", req = null }) {
@@ -300,6 +502,11 @@ module.exports = {
   listAdminComments,
   setCommentStatus,
   listAdminUsers,
+  getAdminUserDetail,
+  createAdminUser,
+  updateAdminUser,
+  forceLogoutUser,
+  deleteAdminUser,
   setUserAccountStatus,
   setUserRole,
   listAdminEvents,

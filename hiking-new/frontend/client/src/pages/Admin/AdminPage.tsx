@@ -13,6 +13,7 @@ import {
 import * as api from '@client/src/api';
 import { useAuth } from '@client/src/hooks/use-hiking';
 import { toast } from 'sonner';
+import AdminUsersPanel from './AdminUsersPanel';
 
 type AdminTab = 'summary' | 'reports' | 'posts' | 'comments' | 'users' | 'events' | 'audit' | 'flags';
 type Row = Record<string, unknown>;
@@ -75,8 +76,7 @@ const AdminPage = () => {
         const data = await api.listAdminComments();
         setRows(data.comments || []);
       } else if (tab === 'users') {
-        const data = await api.listAdminUsers();
-        setRows(data.users || []);
+        setRows([]);
       } else if (tab === 'events') {
         const data = await api.listAdminEvents();
         setRows(data.events || []);
@@ -139,7 +139,7 @@ const AdminPage = () => {
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = item.key === tab;
-          const visible = item.key !== 'audit' && item.key !== 'flags' ? true : user.role === 'admin';
+          const visible = ['audit', 'flags', 'users'].includes(item.key) ? user.role === 'admin' : true;
           if (!visible) return null;
           return (
             <Link
@@ -238,36 +238,7 @@ const AdminPage = () => {
       )}
 
       {!loading && !error && tab === 'users' && (
-        <AdminTable
-          rows={rows}
-          columns={['ID', '用户名', '邮箱', '角色', '账号状态', '验证', '操作']}
-          render={(row) => (
-            <>
-              <span className="font-data">#{text(row.id)}</span>
-              <span>{text(row.username)}</span>
-              <span>{text(row.email)}</span>
-              <span>{text(row.role)}</span>
-              <StatusBadge value={text(row.account_status)} />
-              <span>{number(row.email_verified) === 1 ? '已验证' : '未验证'}</span>
-              <span className="flex gap-2">
-                <button className="action-link" onClick={() => runAction(() => api.setAdminUserAccountStatus(number(row.id), text(row.account_status) === 'active' ? 'suspended' : 'active'), '账号状态已更新')}>
-                  {text(row.account_status) === 'active' ? '暂停' : '恢复'}
-                </button>
-                {user.role === 'admin' && (
-                  <select
-                    value={text(row.role)}
-                    onChange={(event) => runAction(() => api.setAdminUserRole(number(row.id), event.target.value as 'user' | 'moderator' | 'admin'), '用户角色已更新')}
-                    className="rounded border border-border bg-card px-1.5 py-1 text-xs"
-                  >
-                    <option value="user">user</option>
-                    <option value="moderator">moderator</option>
-                    <option value="admin">admin</option>
-                  </select>
-                )}
-              </span>
-            </>
-          )}
-        />
+        <AdminUsersPanel currentUserId={Number(user.id)} />
       )}
 
       {!loading && !error && tab === 'events' && (

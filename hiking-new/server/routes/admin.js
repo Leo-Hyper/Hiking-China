@@ -12,6 +12,11 @@ const {
   listAdminComments,
   setCommentStatus,
   listAdminUsers,
+  getAdminUserDetail,
+  createAdminUser,
+  updateAdminUser,
+  forceLogoutUser,
+  deleteAdminUser,
   setUserAccountStatus,
   setUserRole,
   listAdminEvents,
@@ -19,6 +24,31 @@ const {
   listFeatureFlags,
   setFeatureFlag,
 } = require("../models/moderation");
+const { createAuthToken } = require("../models/auth-token");
+const { sendMail, passwordResetEmail } = require("../services/mailer");
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[\p{L}\p{N}_-]{2,20}$/u;
+
+function validateAdminUserFields(fields) {
+  if (fields.username !== undefined) {
+    const username = String(fields.username).trim();
+    if (!USERNAME_PATTERN.test(username)) return "用户名需为2-20位文字、数字、下划线或短横线";
+  }
+  if (fields.email !== undefined) {
+    const email = String(fields.email).trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(email) || email.length > 254) return "邮箱格式不正确";
+  }
+  if (fields.bio !== undefined && String(fields.bio).length > 300) return "个人简介不能超过300字";
+  if (fields.location !== undefined && String(fields.location).length > 80) return "所在地不能超过80字";
+  if (fields.hikinglevel !== undefined && ![1, 2, 3].includes(Number(fields.hikinglevel))) {
+    return "徒步等级无效";
+  }
+  if (fields.gear_prefs !== undefined && (!Array.isArray(fields.gear_prefs) || fields.gear_prefs.length > 12)) {
+    return "装备偏好最多12项";
+  }
+  return "";
+}
 
 router.use(authMiddleware, requireRole("moderator", "admin"));
 
@@ -107,12 +137,123 @@ router.put("/comments/:id/status", async (req, res) => {
   }
 });
 
-router.get("/users", requireRole("admin"), async (_req, res) => {
+router.get("/users", requireRole("admin"), async (req, res) => {
   try {
-    res.json({ users: await listAdminUsers() });
+    res.json(await listAdminUsers({
+      q: req.query.q,
+      role: req.query.role,
+      status: req.query.status,
+      page: req.query.page,
+      pageSize: req.query.pageSize,
+    }));
   } catch (error) {
     console.error("[ADMIN] users failed:", error);
     res.status(500).json({ error: "用户列表加载失败" });
+  }
+});
+
+router.get("/users/:id", requireRole("admin"), async (req, res) => {
+  try {
+    const user = await getAdminUserDetail(Number(req.params.id));
+    if (!user) return res.status(404).json({ error: "用户不存在" });
+    res.json({ user });
+  } catch (error) {
+    console.error("[ADMIN] user detail failed:", error);
+    res.status(500).json({ error: "用户详情加载失败" });
+  }
+});
+
+router.post("/users", requireRole("admin"), async (req, res) => {
+  try {
+    const { username, email, password, role, email_verified } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "用户名、邮箱和密码不能为空" });
+    }
+    const fieldError = validateAdminUserFields({ username, email });
+    if (fieldError) return res.status(400).json({ error: fieldError });
+    const user = await createAdminUser({
+      username,
+      email,
+      password,
+      role,
+      emailVerified: email_verified,
+      actorId: req.userId,
+      req,
+    });
+    res.status(201).json({ message: "用户已创建", user });
+  } catch (error) {
+    const known = /不能为空|已存在|无效|密码需/.test(error.message || "");
+    res.status(known ? 400 : 500).json({ error: known ? error.message : "用户创建失败" });
+  }
+});
+
+router.put("/users/:id", requireRole("admin"), async (req, res) => {
+  try {
+    const patch = {};
+    for (const key of [
+      "username", "email", "avatar", "bio", "location", "hikinglevel",
+      "gear_prefs", "profile_public", "role", "account_status", "email_verified",
+    ]) {
+      if (req.body[key] !== undefined) patch[key] = req.body[key];
+    }
+    const fieldError = validateAdminUserFields(patch);
+    if (fieldError) return res.status(400).json({ error: fieldError });
+    const user = await updateAdminUser({
+      userId: Number(req.params.id),
+      patch,
+      actorId: req.userId,
+      req,
+    });
+    res.json({ message: "用户资料已更新", user });
+  } catch (error) {
+    const known = /不存在|不能|无效|已存在|没有需要/.test(error.message || "");
+    res.status(known ? 400 : 500).json({ error: known ? error.message : "用户资料更新失败" });
+  }
+});
+
+router.post("/users/:id/force-logout", requireRole("admin"), async (req, res) => {
+  try {
+    const result = await forceLogoutUser({
+      userId: Number(req.params.id),
+      actorId: req.userId,
+      req,
+    });
+    res.json({ message: "已强制该用户下线", result });
+  } catch (error) {
+    const known = /不存在/.test(error.message || "");
+    res.status(known ? 404 : 500).json({ error: known ? error.message : "强制下线失败" });
+  }
+});
+
+router.post("/users/:id/send-reset", requireRole("admin"), async (req, res) => {
+  try {
+    const user = await getAdminUserDetail(Number(req.params.id));
+    if (!user) return res.status(404).json({ error: "用户不存在" });
+    if (String(user.account_status) !== "active") {
+      return res.status(400).json({ error: "只有正常状态账号可以发送重置邮件" });
+    }
+    const { token } = await createAuthToken(user.id, "password_reset", 30);
+    await sendMail({ to: user.email, ...passwordResetEmail(token) });
+    res.json({ message: "密码重置邮件已发送" });
+  } catch (error) {
+    console.error("[ADMIN] send reset failed:", error);
+    res.status(500).json({ error: error.message || "密码重置邮件发送失败" });
+  }
+});
+
+router.delete("/users/:id", requireRole("admin"), async (req, res) => {
+  try {
+    const mode = req.body.mode === "anonymize" ? "anonymize" : "soft";
+    const result = await deleteAdminUser({
+      userId: Number(req.params.id),
+      mode,
+      actorId: req.userId,
+      req,
+    });
+    res.json({ message: mode === "anonymize" ? "用户已匿名化" : "用户已软删除", result });
+  } catch (error) {
+    const known = /不存在|不能|最后/.test(error.message || "");
+    res.status(known ? 400 : 500).json({ error: known ? error.message : "用户删除失败" });
   }
 });
 
