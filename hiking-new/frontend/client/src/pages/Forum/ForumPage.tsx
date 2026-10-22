@@ -37,7 +37,7 @@ const ForumPage = () => {
     return () => window.clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: filteredData, loading } = useAsyncData<Post[]>(
+  const { data: filteredData, loading, error, reload } = useAsyncData<Post[]>(
     () =>
       listPosts({
         category: activeCategory || undefined,
@@ -198,6 +198,21 @@ const ForumPage = () => {
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-pine-200 border-t-pine-700"></div>
             <p className="mt-4 text-muted-foreground">加载中...</p>
           </div>
+        ) : error ? (
+          <EmptyState
+            icon={MessagesSquare}
+            title="帖子加载失败"
+            description={error}
+            action={
+              <button
+                type="button"
+                onClick={reload}
+                className="inline-flex items-center rounded-lg bg-pine-700 px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-pine-800"
+              >
+                重新加载
+              </button>
+            }
+          />
         ) : posts.length > 0 ? (
           /* 帖子列表 */
           <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card px-3 md:px-4">

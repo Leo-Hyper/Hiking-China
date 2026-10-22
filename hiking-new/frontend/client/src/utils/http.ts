@@ -14,7 +14,7 @@ export class ApiError extends Error {
 const API_BASE: string = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '';
 const GET_CACHE_TTL = 2 * 60 * 1000;
 const GET_CACHE_MAX_AGE = 10 * 60 * 1000;
-const GET_CACHE_PREFIX = 'hiking_get_cache:';
+const GET_CACHE_PREFIX = 'hiking_get_cache:v2:';
 
 interface GetCacheEntry<T = unknown> {
   data: T;
@@ -63,6 +63,24 @@ function writeGetCache<T>(path: string, data: T): void {
   } catch {
     // In-memory cache still avoids repeated requests in this tab.
   }
+}
+
+function shouldCacheGetResponse(path: string, data: unknown): boolean {
+  const payload = data as {
+    posts?: unknown;
+    events?: unknown;
+    comments?: unknown;
+  };
+  if (path.startsWith('/api/posts') && Array.isArray(payload?.posts) && payload.posts.length === 0) {
+    return false;
+  }
+  if (path.startsWith('/api/events') && Array.isArray(payload?.events) && payload.events.length === 0) {
+    return false;
+  }
+  if (path.startsWith('/api/comments') && Array.isArray(payload?.comments) && payload.comments.length === 0) {
+    return false;
+  }
+  return true;
 }
 
 export function invalidateGetCache(prefix = ''): void {
@@ -181,7 +199,9 @@ async function cachedGet<T>(path: string): Promise<T> {
   if (cached) {
     if (Date.now() - cached.savedAt >= GET_CACHE_TTL && !inFlightGets.has(path)) {
       const revalidate = request<T>(path)
-        .then((data) => writeGetCache(path, data))
+        .then((data) => {
+          if (shouldCacheGetResponse(path, data)) writeGetCache(path, data);
+        })
         .catch(() => {})
         .finally(() => inFlightGets.delete(path));
       inFlightGets.set(path, revalidate);
@@ -194,7 +214,7 @@ async function cachedGet<T>(path: string): Promise<T> {
 
   const promise = request<T>(path)
     .then((data) => {
-      writeGetCache(path, data);
+      if (shouldCacheGetResponse(path, data)) writeGetCache(path, data);
       return data;
     })
     .finally(() => {
