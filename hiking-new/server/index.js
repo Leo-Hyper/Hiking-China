@@ -6,14 +6,18 @@ const rateLimit = require("express-rate-limit");
 const path = require("path");
 
 // 数据库初始化
-const { initDb } = require("./models/db");
+const { initDb, get } = require("./models/db");
+const { requestContext } = require("./middleware/request-context");
+const { initObservability, captureException } = require("./services/observability");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+initObservability();
 
 // Render and Netlify terminate TLS/proxying before the Express process.
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
+app.use(requestContext);
 
 // 中间件
 app.use(compression({ threshold: 1024 }));
@@ -26,6 +30,9 @@ const configuredOrigins = (process.env.FRONTEND_URL || "")
 const FRONTEND_ORIGINS = [...new Set([
   "https://hiking-china.netlify.app",
   "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
   ...configuredOrigins,
 ])];
 app.use(cors({ origin: FRONTEND_ORIGINS }));
@@ -57,6 +64,18 @@ const authLimiter = rateLimit({
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 
+const accountActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "操作过于频繁，请稍后再试" },
+});
+app.use("/api/auth/forgot-password", accountActionLimiter);
+app.use("/api/auth/reset-password", accountActionLimiter);
+app.use("/api/auth/send-verification", accountActionLimiter);
+app.use("/api/auth/verify-email", accountActionLimiter);
+
 // API 路由
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/posts", require("./routes/posts"));
@@ -66,10 +85,28 @@ app.use("/api/upload", require("./routes/upload"));
 app.use("/api/follow", require("./routes/follow"));
 app.use("/api/bookmarks", require("./routes/bookmarks"));
 app.use("/api/events", require("./routes/events"));
+app.use("/api/reports", require("./routes/reports"));
+app.use("/api/admin", require("./routes/admin"));
+app.use(require("./routes/sitemap"));
 
 // 健康检查
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/api/health", async (req, res) => {
+  let database = "ok";
+  try {
+    await get("SELECT 1 AS ok");
+  } catch (error) {
+    database = "error";
+    captureException(error, { requestId: req.requestId, check: "database" });
+  }
+  const healthy = database === "ok";
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? "ok" : "degraded",
+    timestamp: new Date().toISOString(),
+    database,
+    version: require("./package.json").version,
+    commit: process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || "dev",
+    environment: process.env.NODE_ENV || "development",
+  });
 });
 
 // 开发环境：允许前端跨域访问
@@ -79,6 +116,19 @@ if (process.env.NODE_ENV !== "production") {
     res.sendFile(path.join(__dirname, "../dist/index.html"));
   });
 }
+
+app.use((error, req, res, next) => {
+  captureException(error, { requestId: req.requestId, path: req.originalUrl });
+  console.error(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    level: "error",
+    request_id: req.requestId,
+    message: error?.message || "unknown error",
+    stack: process.env.NODE_ENV === "production" ? undefined : error?.stack,
+  }));
+  if (res.headersSent) return next(error);
+  res.status(500).json({ error: "服务器错误", request_id: req.requestId });
+});
 
 initDb()
   .then(() => {

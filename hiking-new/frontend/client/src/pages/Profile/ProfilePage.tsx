@@ -7,6 +7,7 @@ import {
   getUserStats,
   listBookmarkedPosts,
   listMyPosts,
+  sendVerificationEmail,
 } from '@client/src/data/hiking-store';
 import type { Post, UserStats } from '@client/src/data/hiking-types';
 import MyPostsTab from './MyPostsTab';
@@ -33,6 +34,7 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('posts');
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
+  const [sendingVerification, setSendingVerification] = useState(false);
 
   const { data: myPostsData, reload: reloadPosts } = useAsyncData<Post[]>(
     () => (user ? listMyPosts() : Promise.resolve([])),
@@ -78,6 +80,18 @@ const ProfilePage = () => {
     }
   };
 
+  const resendVerification = async (): Promise<void> => {
+    setSendingVerification(true);
+    try {
+      await sendVerificationEmail();
+      toast.success('验证邮件已发送');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '验证邮件发送失败');
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
   const handleModalBackdropClick = (e: MouseEvent<HTMLDivElement>): void => {
     if (e.target === e.currentTarget) setDeleteTarget(null);
   };
@@ -110,6 +124,19 @@ const ProfilePage = () => {
                 {user.location && <span>{user.location}</span>}
                 <span className="font-data">TRAIL CHINA MEMBER</span>
               </div>
+              {!user.emailVerified && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-ember-200 bg-ember-50 px-3 py-2 text-xs text-ember-800">
+                  <span>邮箱尚未验证，暂时不能发帖、评论或报名活动。</span>
+                  <button
+                    type="button"
+                    onClick={resendVerification}
+                    disabled={sendingVerification}
+                    className="font-semibold underline decoration-ember-400 underline-offset-2 disabled:opacity-50"
+                  >
+                    {sendingVerification ? '发送中...' : '重新发送'}
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setActiveTab('profile')}

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authMiddleware } = require("../middleware/auth");
+const { authMiddleware, requireVerifiedEmail } = require("../middleware/auth");
 const { createComment, getAllCommentsByPostId, likeComment, isCommentLiked, updateComment, deleteComment } = require("../models/comment");
 const { get } = require("../models/db");
 const { clearPublicCache } = require("../middleware/public-cache");
@@ -58,7 +58,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /api/comments - 创建评论
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
   try {
     const post_id = Number.parseInt(req.body.post_id, 10);
     const content = String(req.body.content || "").trim();

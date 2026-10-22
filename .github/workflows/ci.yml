@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hiking-new/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hiking-new/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run type:check
+      - run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hiking-new/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hiking-new/server/package-lock.json
+      - run: npm ci --omit=optional
+      - run: node --check index.js
+      - run: node --check routes/auth.js
+      - run: node --check routes/admin.js
+      - run: node --check models/db.js
+      - run: npm audit --omit=dev

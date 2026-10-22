@@ -59,3 +59,26 @@ export async function updateProfile(
   notify();
   return user;
 }
+
+export async function sendVerificationEmail(): Promise<void> {
+  await api.sendVerification();
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+  await api.verifyEmail(token);
+  const current = getCurrentUser();
+  if (current) {
+    saveSessionUser({ ...current, emailVerified: true });
+    notify();
+  }
+}
+
+export async function requestPasswordReset(email: string): Promise<string> {
+  const data = await api.forgotPassword(email);
+  return data.message;
+}
+
+export async function resetPassword(token: string, password: string): Promise<string> {
+  const data = await api.resetPassword(token, password);
+  return data.message;
+}

@@ -7,10 +7,10 @@ async function register(username, email, password) {
 
   try {
     const res = await run(
-      "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+      "INSERT INTO users (username, email, password_hash, email_verified, role, account_status) VALUES (?, ?, ?, 0, 'user', 'active')",
       [username, email, hash]
     );
-    return { id: res.lastInsertRowid, username, email };
+    return { id: res.lastInsertRowid, username, email, email_verified: 0, role: 'user', auth_version: 0 };
   } catch (err) {
     if (err.message.includes("UNIQUE") || err.message.includes("unique")) {
       throw new Error("用户名或邮箱已存在");
@@ -25,6 +25,9 @@ async function login(email, password) {
 
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new Error("邮箱或密码错误");
+  if (String(user.account_status || "active") !== "active") {
+    throw new Error("账号已被暂停，请联系管理员");
+  }
 
   const { password_hash, ...safeUser } = user;
   return safeUser;
@@ -32,10 +35,40 @@ async function login(email, password) {
 
 async function getUserById(id) {
   const user = await get(
-    "SELECT id, username, email, avatar, bio, location, hikinglevel, gear_prefs, profile_public, status, created_at FROM users WHERE id = ?",
+    `SELECT id, username, email, avatar, bio, location, hikinglevel, gear_prefs,
+            profile_public, role, email_verified, account_status, created_at
+     FROM users WHERE id = ?`,
     [id]
   );
   return user || null;
+}
+
+async function getUserAuthState(id) {
+  const user = await get(
+    "SELECT id, role, account_status, email_verified, auth_version FROM users WHERE id = ?",
+    [id]
+  );
+  return user || null;
+}
+
+async function getUserByEmail(email) {
+  return get("SELECT * FROM users WHERE email = ?", [email]) || null;
+}
+
+async function markEmailVerified(userId) {
+  const result = await run(
+    "UPDATE users SET email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [userId]
+  );
+  return { changes: Number(result.changes) };
+}
+
+async function setUserPassword(userId, passwordHash) {
+  const result = await run(
+    "UPDATE users SET password_hash = ?, auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [passwordHash, userId]
+  );
+  return { changes: Number(result.changes) };
 }
 
 // 更新个人资料
@@ -79,4 +112,14 @@ async function getPublicUserById(id) {
   return row || null;
 }
 
-module.exports = { register, login, getUserById, updateUserProfile, getPublicUserById };
+module.exports = {
+  register,
+  login,
+  getUserById,
+  getUserAuthState,
+  getUserByEmail,
+  markEmailVerified,
+  setUserPassword,
+  updateUserProfile,
+  getPublicUserById,
+};

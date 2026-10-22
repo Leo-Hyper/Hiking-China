@@ -15,6 +15,7 @@ import { useAsyncData } from '@client/src/hooks/use-hiking';
 import type { Post, RouteItem } from '@client/src/data/hiking-types';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
+import Seo from '@client/src/components/Seo';
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -45,6 +46,22 @@ const Home = () => {
 
   return (
     <div>
+      <Seo
+        title="徒步中国 · 山径手册"
+        description="发现中国徒步路线、装备指南、活动召集与山野故事。"
+        path="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: '徒步中国',
+          url: window.location.origin,
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: `${window.location.origin}/forum?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+          },
+        }}
+      />
       <HeroSection />
 
       {/* 精选帖子 */}

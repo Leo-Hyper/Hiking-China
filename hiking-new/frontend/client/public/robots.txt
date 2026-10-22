@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /publish
+Disallow: /publish-event
+
+Sitemap: https://hiking-china.netlify.app/sitemap.xml

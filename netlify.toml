@@ -19,6 +19,11 @@
   status = 200
 
 [[redirects]]
+  from = "/sitemap.xml"
+  to = "https://hiking-china-api-sg.onrender.com/sitemap.xml"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

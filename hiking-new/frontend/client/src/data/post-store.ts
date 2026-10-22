@@ -40,6 +40,18 @@ export async function getPostForEdit(id: number): Promise<Post | undefined> {
   }
 }
 
+export async function isPostLiked(postId: number): Promise<boolean> {
+  const data = await api.checkPostLike(postId);
+  return Boolean(data.liked);
+}
+
+export async function togglePostLike(postId: number): Promise<boolean> {
+  const data = await api.togglePostLike(postId);
+  invalidateGetCache(`/api/posts/${postId}`);
+  invalidateGetCache('/api/posts');
+  return Boolean(data.liked);
+}
+
 export async function listMyPosts(): Promise<Post[]> {
   const data = await api.listMyPosts();
   return (data.posts || []).map((post: Record<string, unknown>) => ({ ...mapPost(post), isUserPost: true }));

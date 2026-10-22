@@ -1,12 +1,41 @@
 ﻿const express = require("express");
 const router = express.Router();
-const { register, login, getUserById, updateUserProfile, getPublicUserById } = require("../models/user");
+const bcrypt = require("bcrypt");
+const {
+  register,
+  login,
+  getUserById,
+  getUserByEmail,
+  markEmailVerified,
+  setUserPassword,
+  updateUserProfile,
+  getPublicUserById,
+} = require("../models/user");
 const { authMiddleware, generateToken } = require("../middleware/auth");
 const { publicCache, clearPublicCache } = require("../middleware/public-cache");
 const { safeImageUrl } = require("../utils/validation");
+const { createAuthToken, consumeAuthToken } = require("../models/auth-token");
+const { sendMail, verificationEmail, passwordResetEmail } = require("../services/mailer");
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^[\p{L}\p{N}_-]{2,20}$/u;
+
+async function sendVerificationEmail(user) {
+  const { token } = await createAuthToken(user.id, "email_verify", 24 * 60);
+  return sendMail({ to: user.email, ...verificationEmail(token) });
+}
+
+function publicAuthUser(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    bio: user.bio,
+    role: user.role || "user",
+    email_verified: Number(user.email_verified || 0),
+  };
+}
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -30,11 +59,19 @@ router.post("/register", async (req, res) => {
 
     const user = await register(username, email, password);
     const token = generateToken(user);
+    let verificationEmailSent = true;
+    try {
+      await sendVerificationEmail(user);
+    } catch (mailError) {
+      verificationEmailSent = false;
+      console.error("[AUTH] verification email failed:", mailError);
+    }
 
     res.status(201).json({
       message: "注册成功",
       token,
-      user: { id: user.id, username: user.username, email: user.email },
+      user: publicAuthUser(user),
+      verification_email_sent: verificationEmailSent,
     });
   } catch (err) {
     if (err.message === "用户名或邮箱已存在") {
@@ -61,11 +98,14 @@ router.post("/login", async (req, res) => {
     res.json({
       message: "登录成功",
       token,
-      user: { id: user.id, username: user.username, email: user.email, avatar: user.avatar, bio: user.bio },
+      user: publicAuthUser(user),
     });
   } catch (err) {
     if (err.message === "邮箱或密码错误") {
       return res.status(401).json({ error: err.message });
+    }
+    if (err.message.includes("账号已被暂停")) {
+      return res.status(403).json({ error: err.message });
     }
     console.error("[AUTH] login failed:", err);
     res.status(500).json({ error: "登录失败" });
@@ -173,6 +213,85 @@ router.get("/users/:id", publicCache(30000), async (req, res) => {
 // POST /api/auth/logout
 router.post("/logout", (req, res) => {
   res.json({ message: "已登出" });
+});
+
+// POST /api/auth/send-verification
+router.post("/send-verification", authMiddleware, async (req, res) => {
+  try {
+    const user = await getUserById(req.userId);
+    if (!user) return res.status(404).json({ error: "用户不存在" });
+    if (Number(user.email_verified) === 1) {
+      return res.json({ message: "邮箱已验证", email_verified: 1 });
+    }
+
+    await sendVerificationEmail(user);
+    res.json({ message: "验证邮件已发送", email_verified: 0 });
+  } catch (err) {
+    console.error("[AUTH] send verification failed:", err);
+    res.status(500).json({ error: err.message || "验证邮件发送失败" });
+  }
+});
+
+// POST /api/auth/verify-email
+router.post("/verify-email", async (req, res) => {
+  try {
+    const token = String(req.body.token || "").trim();
+    if (!token) return res.status(400).json({ error: "验证链接无效" });
+
+    const consumed = await consumeAuthToken(token, "email_verify");
+    if (!consumed) return res.status(400).json({ error: "验证链接已失效或已使用" });
+
+    await markEmailVerified(consumed.userId);
+    clearPublicCache();
+    res.json({ message: "邮箱验证成功", email_verified: 1 });
+  } catch (err) {
+    console.error("[AUTH] verify email failed:", err);
+    res.status(500).json({ error: "邮箱验证失败" });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(email)) {
+      return res.status(400).json({ error: "邮箱格式不正确" });
+    }
+
+    const user = await getUserByEmail(email);
+    if (user && String(user.account_status || "active") === "active") {
+      const { token } = await createAuthToken(user.id, "password_reset", 30);
+      await sendMail({ to: user.email, ...passwordResetEmail(token) });
+    }
+
+    // Do not reveal whether an email address exists.
+    res.json({ message: "如果该邮箱已注册，重置邮件会很快发送" });
+  } catch (err) {
+    console.error("[AUTH] forgot password failed:", err);
+    res.status(500).json({ error: "重置邮件发送失败" });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const token = String(req.body.token || "").trim();
+    const password = String(req.body.password || "");
+    if (!token) return res.status(400).json({ error: "重置链接无效" });
+    if (password.length < 8 || password.length > 72) {
+      return res.status(400).json({ error: "密码需为8-72个字符" });
+    }
+
+    const consumed = await consumeAuthToken(token, "password_reset");
+    if (!consumed) return res.status(400).json({ error: "重置链接已失效或已使用" });
+
+    const hash = await bcrypt.hash(password, 12);
+    await setUserPassword(consumed.userId, hash);
+    res.json({ message: "密码已重置，请重新登录" });
+  } catch (err) {
+    console.error("[AUTH] reset password failed:", err);
+    res.status(500).json({ error: "密码重置失败" });
+  }
 });
 
 module.exports = router;

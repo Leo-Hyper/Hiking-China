@@ -4,6 +4,7 @@ import type { Post } from '@client/src/data/hiking-types';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
+import { SITE_CONTACT } from '@client/src/data/site-config';
 import TopoBackground from './visual/TopoBackground';
 
 const EXPLORE_LINKS: { path: string; label: string }[] = [
@@ -13,7 +14,14 @@ const EXPLORE_LINKS: { path: string; label: string }[] = [
   { path: '/forum', label: '徒步论坛' },
 ];
 
-const CONTACT_LINES: string[] = ['contact@hikingchina.com', '400-123-4567', '北京市朝阳区'];
+const CONTACT_LINES: string[] = [SITE_CONTACT.email, SITE_CONTACT.phone, SITE_CONTACT.address];
+const LEGAL_LINKS: { path: string; label: string }[] = [
+  { path: '/privacy', label: '隐私政策' },
+  { path: '/terms', label: '用户协议' },
+  { path: '/community-guidelines', label: '社区规范' },
+  { path: '/copyright', label: '版权投诉' },
+  { path: '/contact', label: '联系我们' },
+];
 
 const Footer = () => {
   const { data: popularRoutes, loading } = useAsyncData<Post[]>(() => listPosts({ limit: 4 }), []);
@@ -87,8 +95,18 @@ const Footer = () => {
         </div>
 
         <div className="flex flex-row items-center justify-between gap-3 border-t border-pine-900 pt-4 text-[10px] text-pine-500 md:pt-6 md:text-xs">
-          <p>© 2026 徒步中国 · 山野有灵，行路有心</p>
-          <p className="font-data tracking-wider">TRAIL CHINA · FIELD GUIDE</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p>© 2026 徒步中国 · 山野有灵，行路有心</p>
+            <p className="font-data tracking-wider">TRAIL CHINA · FIELD GUIDE</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+            {LEGAL_LINKS.map((link) => (
+              <Link key={link.path} to={link.path} className="transition-colors hover:text-pine-50">
+                {link.label}
+              </Link>
+            ))}
+            {SITE_CONTACT.icp && <span>{SITE_CONTACT.icp}</span>}
+          </div>
         </div>
       </div>
     </footer>

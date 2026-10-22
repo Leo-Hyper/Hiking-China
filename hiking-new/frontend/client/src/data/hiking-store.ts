@@ -5,19 +5,25 @@ export {
   getCurrentUser,
   loginUser,
   logoutUser,
+  requestPasswordReset,
+  resetPassword,
   registerUser,
+  sendVerificationEmail,
   updateProfile,
+  verifyEmail,
 } from './session-store';
 export {
   createPost,
   deletePost,
   getPostById,
   getPostForEdit,
+  isPostLiked,
   listMyPosts,
   listPosts,
   listRecentViewPosts,
   listUserPosts,
   recordView,
+  togglePostLike,
   updatePost,
 } from './post-store';
 export type { ListPostsOptions } from './post-store';

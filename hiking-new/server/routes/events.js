@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authMiddleware } = require("../middleware/auth");
+const { authMiddleware, requireVerifiedEmail } = require("../middleware/auth");
 const {
   createEvent, getAllEvents, getEventById,
   updateEvent, deleteEvent, joinEvent, leaveEvent, checkJoined, getJoinedEventIds
@@ -78,7 +78,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/events - 创建活动（需登录）
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
   try {
     const title = String(req.body.title || "").trim();
     const content = sanitizeRichText(req.body.content);
@@ -138,7 +138,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 });
 
 // POST /api/events/:id/join - 报名（需登录）
-router.post("/:id/join", authMiddleware, async (req, res) => {
+router.post("/:id/join", authMiddleware, requireVerifiedEmail, async (req, res) => {
   try {
     await joinEvent(Number.parseInt(req.params.id, 10), req.userId);
     clearPublicCache();

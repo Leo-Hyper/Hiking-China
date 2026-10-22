@@ -20,8 +20,13 @@ const PublishPostPage = lazy(() => import('./pages/PublishPost/PublishPostPage')
 const EditPostPage = lazy(() => import('./pages/EditPost/EditPostPage'));
 const PublishEventPage = lazy(() => import('./pages/PublishEvent/PublishEventPage'));
 const AuthPage = lazy(() => import('./pages/Auth/AuthPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/Auth/VerifyEmailPage'));
 const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('./pages/UserProfile/UserProfilePage'));
+const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
+const LegalPage = lazy(() => import('./pages/Legal/LegalPage'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 const PageFallback = () => (
@@ -67,12 +72,22 @@ const RoutesComponent = () => {
           <Route path="post/:id" element={<PostDetailPage />} />
           <Route path="profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="user/:id" element={<UserProfilePage />} />
+          <Route path="admin/*" element={<AdminPage />} />
+          <Route path="privacy" element={<LegalPage />} />
+          <Route path="terms" element={<LegalPage />} />
+          <Route path="community-guidelines" element={<LegalPage />} />
+          <Route path="disclaimer" element={<LegalPage />} />
+          <Route path="copyright" element={<LegalPage />} />
+          <Route path="contact" element={<LegalPage />} />
         </Route>
         <Route path="publish" element={<RequireAuth><PublishPostPage /></RequireAuth>} />
         <Route path="publish-event" element={<RequireAuth><PublishEventPage /></RequireAuth>} />
         <Route path="post/:id/edit" element={<RequireAuth><EditPostPage /></RequireAuth>} />
         <Route path="login" element={<AuthPage />} />
         <Route path="register" element={<AuthPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

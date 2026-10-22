@@ -15,7 +15,7 @@ async function getAllCommentsByPostId(postId, limit) {
             c.content, c.likes, c.image_url, c.created_at, u.username, u.avatar
      FROM comments c
      LEFT JOIN users u ON c.user_id = u.id
-     WHERE c.post_id = ?
+     WHERE c.post_id = ? AND c.status = 1
      ORDER BY c.created_at ASC
      LIMIT ?`,
     [postId, Math.min(Number(limit) || 500, 500)]
@@ -24,7 +24,7 @@ async function getAllCommentsByPostId(postId, limit) {
 }
 
 async function likeComment(commentId, userId) {
-  const comment = await get("SELECT id FROM comments WHERE id = ?", [commentId]);
+  const comment = await get("SELECT id FROM comments WHERE id = ? AND status = 1", [commentId]);
   if (!comment) throw new Error("评论不存在");
   const row = await get(
     "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?",
@@ -48,7 +48,7 @@ async function isCommentLiked(commentId, userId) {
 
 async function updateComment(id, userId, { content }) {
   const res = await run(
-    "UPDATE comments SET content = ? WHERE id = ? AND user_id = ?",
+    "UPDATE comments SET content = ? WHERE id = ? AND user_id = ? AND status = 1",
     [content, id, userId]
   );
   if (res.changes === 0) throw new Error("评论不存在或无权编辑");
@@ -57,18 +57,13 @@ async function updateComment(id, userId, { content }) {
 
 async function deleteComment(id, userId) {
   // 先获取评论信息
-  const row = await get("SELECT user_id FROM comments WHERE id = ?", [id]);
+  const row = await get("SELECT user_id FROM comments WHERE id = ? AND status = 1", [id]);
   if (!row) throw new Error("评论不存在");
   if (row.user_id !== userId) throw new Error("无权删除");
 
-  // 删除子回复的点赞记录
-  await run("DELETE FROM comment_likes WHERE comment_id IN (SELECT id FROM comments WHERE parent_id = ?)", [id]);
-  // 删除子回复
-  await run("DELETE FROM comments WHERE parent_id = ?", [id]);
-  // 删除评论的点赞记录
-  await run("DELETE FROM comment_likes WHERE comment_id = ?", [id]);
-  // 删除评论本身
-  await run("DELETE FROM comments WHERE id = ?", [id]);
+  // Soft-delete the comment and its replies so moderation can restore them if needed.
+  await run("UPDATE comments SET status = 2 WHERE parent_id = ?", [id]);
+  await run("UPDATE comments SET status = 2 WHERE id = ?", [id]);
   return { id };
 }
 

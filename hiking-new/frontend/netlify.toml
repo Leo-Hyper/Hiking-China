@@ -22,6 +22,11 @@
   to = "https://hiking-china-api-sg.onrender.com/uploads/:splat"
   status = 200
 
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "https://hiking-china-api-sg.onrender.com/sitemap.xml"
+  status = 200
+
 # SPA 路由回退
 [[redirects]]
   from = "/*"

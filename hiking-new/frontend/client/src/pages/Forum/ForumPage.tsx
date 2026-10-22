@@ -8,6 +8,7 @@ import { useAsyncData } from '@client/src/hooks/use-hiking';
 import { Input } from '@client/src/components/ui/input';
 import ForumPostRow from './ForumPostRow';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import Seo from '@client/src/components/Seo';
 
 const PAGE_LIMIT: number = 20;
 
@@ -96,6 +97,11 @@ const ForumPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <Seo
+        title="徒步论坛"
+        description="分享路线攻略、装备经验、活动记录和山野故事。"
+        path="/forum"
+      />
       {/* 页头 */}
       <div className="mb-8 md:mb-12">
         <p className="text-kicker uppercase text-ember-600">Forum · Trail Talk</p>

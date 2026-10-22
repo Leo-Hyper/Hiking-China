@@ -15,6 +15,7 @@ import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import { formatEventDate, getDisplaySignupCount, isEventEnded } from './EventCard';
+import Seo from '@client/src/components/Seo';
 
 interface InfoCell {
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -135,6 +136,21 @@ const EventDetailPage = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-40 pt-10 md:pb-16 md:pt-16 lg:px-8">
+      <Seo
+        title={event.title}
+        description={`${formatEventDate(event.eventDate)} · ${event.location} · ${event.difficulty}`}
+        path={`/events/${event.id}`}
+        type="article"
+        image={event.imageUrl}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Event',
+          name: event.title,
+          startDate: event.eventDate,
+          location: { '@type': 'Place', name: event.location },
+          description: event.content.replace(/<[^>]+>/g, ' ').slice(0, 200),
+        }}
+      />
       <Link
         to="/events"
         className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-ink group"

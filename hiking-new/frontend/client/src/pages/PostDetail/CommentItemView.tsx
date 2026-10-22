@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import { Heart } from 'lucide-react';
+import ReportButton from '@client/src/components/ReportButton';
 
 const REPLY_LIMIT: number = 2;
 
@@ -248,6 +249,7 @@ const CommentItemView: React.FC<CommentItemViewProps> = ({ comment, postId, onCh
               <span className="font-data tabular-nums">{likeCount}</span>
             </button>
             <button onClick={toggleReply} className="hover:text-pine-700 transition-colors">回复</button>
+            <ReportButton targetType="comment" targetId={comment.id} label="" className="!min-h-0 !px-1 !py-0 text-xs" />
             {isCommentAuthor && (
               <>
                 <button onClick={() => { setEditing(true); setEditContent(comment.content); }}

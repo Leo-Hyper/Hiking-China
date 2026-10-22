@@ -6,9 +6,11 @@ import { createPortal } from 'react-dom';
 
 import RoutesComponent from './app';
 import { Toaster } from '@client/src/components/ui/sonner';
+import { captureFrontendException, initFrontendObservability } from '@client/src/utils/observability';
 import './index.css';
 
 const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
+initFrontendObservability();
 
 const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => (
   <div style={{ padding: 48, fontFamily: 'system-ui', textAlign: 'center' }}>
@@ -26,7 +28,10 @@ const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => (
 const MainApp = () => {
   return (
     <BrowserRouter basename={CLIENT_BASE_PATH}>
-      <ErrorBoundary fallbackRender={ErrorFallback}>
+      <ErrorBoundary
+        fallbackRender={ErrorFallback}
+        onError={(error, info) => captureFrontendException(error, { componentStack: info.componentStack })}
+      >
         <RoutesComponent />
         {createPortal(<Toaster />, document.body)}
       </ErrorBoundary>

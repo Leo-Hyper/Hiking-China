@@ -4,7 +4,9 @@ const fs = require("fs");
 const DATA_DIR = path.join(__dirname, "../../data");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const DB_PATH = path.join(DATA_DIR, "hikingchina.db");
+const DB_PATH = process.env.LOCAL_DB_PATH
+  ? path.resolve(process.env.LOCAL_DB_PATH)
+  : path.join(DATA_DIR, "hikingchina.db");
 
 // 生产环境（Render 免费档无持久磁盘）：设置 TURSO_DATABASE_URL + TURSO_AUTH_TOKEN 走远程 libsql
 // 本地开发：不设置则直接读写 data/hikingchina.db 文件，与现有数据零迁移
@@ -88,6 +90,10 @@ const SCHEMA_STATEMENTS = [
   `ALTER TABLE users ADD COLUMN gear_prefs TEXT DEFAULT '[]'`,
   `ALTER TABLE users ADD COLUMN profile_public INTEGER DEFAULT 1`,
   `ALTER TABLE users ADD COLUMN status INTEGER DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`,
+  `ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 1`,
+  `ALTER TABLE users ADD COLUMN auth_version INTEGER DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN account_status TEXT DEFAULT 'active'`,
 
   // Posts
   `CREATE TABLE IF NOT EXISTS posts (
@@ -122,6 +128,77 @@ const SCHEMA_STATEMENTS = [
   `ALTER TABLE comments ADD COLUMN reply_to_user_id INTEGER`,
   `ALTER TABLE comments ADD COLUMN reply_to_username TEXT`,
   `ALTER TABLE comments ADD COLUMN image_url TEXT`,
+  `ALTER TABLE comments ADD COLUMN status INTEGER DEFAULT 1`,
+
+  // Auth tokens
+  `CREATE TABLE IF NOT EXISTS auth_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+
+  // Moderation
+  `CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_id INTEGER NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    detail TEXT DEFAULT '',
+    status TEXT DEFAULT 'open',
+    resolved_by INTEGER,
+    resolved_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL)`,
+  `CREATE TABLE IF NOT EXISTS moderation_actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    moderator_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id INTEGER NOT NULL,
+    reason TEXT DEFAULT '',
+    metadata TEXT DEFAULT '{}',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (moderator_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER,
+    action TEXT NOT NULL,
+    target_type TEXT DEFAULT '',
+    target_id INTEGER,
+    metadata TEXT DEFAULT '{}',
+    ip TEXT DEFAULT '',
+    user_agent TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL)`,
+  `CREATE TABLE IF NOT EXISTS feature_flags (
+    key TEXT PRIMARY KEY,
+    enabled INTEGER DEFAULT 0,
+    description TEXT DEFAULT '',
+    updated_by INTEGER,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL)`,
+
+  // Notifications are created in P1, but the schema is additive and safe to ship with P0.
+  `CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    actor_id INTEGER,
+    entity_type TEXT DEFAULT '',
+    entity_id INTEGER,
+    title TEXT NOT NULL,
+    body TEXT DEFAULT '',
+    link TEXT DEFAULT '',
+    read_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL)`,
 
   // Comment Likes
   `CREATE TABLE IF NOT EXISTS comment_likes (
@@ -222,6 +299,18 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_comments_post_created ON comments(post_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_event_regs_event ON event_registrations(event_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_type ON auth_tokens(user_id, type)`,
+  `CREATE INDEX IF NOT EXISTS idx_reports_status_created ON reports(status, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`,
+];
+
+const DEFAULT_FEATURE_FLAGS = [
+  ["admin_console", 1, "管理后台和举报处理"],
+  ["email_verification", 1, "新用户邮箱验证"],
+  ["notifications", 0, "站内通知"],
+  ["analytics", 0, "运营分析"],
+  ["recommendations", 0, "个性化推荐"],
 ];
 
 async function initDb() {
@@ -234,6 +323,14 @@ async function initDb() {
         console.error("[DB] schema statement failed:", err.message);
       }
     }
+  }
+  for (const [key, enabled, description] of DEFAULT_FEATURE_FLAGS) {
+    await run(
+      `INSERT INTO feature_flags (key, enabled, description)
+       VALUES (?, ?, ?)
+       ON CONFLICT(key) DO NOTHING`,
+      [key, enabled, description]
+    );
   }
   const row = await get("SELECT COUNT(*) as cnt FROM search_index");
   if (!row || Number(row.cnt) === 0) {

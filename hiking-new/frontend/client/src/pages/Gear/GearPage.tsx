@@ -7,6 +7,7 @@ import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import Seo from '@client/src/components/Seo';
 
 const PAGE_SIZE = 4;
 
@@ -84,6 +85,11 @@ const GearPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <Seo
+        title="装备指南"
+        description="按季节、预算、重量和路线类型整理徒步装备清单。"
+        path="/gear"
+      />
       {/* 页头 */}
       <div className="mb-8 md:mb-12">
         <p className="text-kicker uppercase text-ember-600">Gear · Field Kit</p>

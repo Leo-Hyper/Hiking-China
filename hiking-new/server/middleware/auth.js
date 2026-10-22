@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getUserAuthState } = require('../models/user');
 
 // 生产环境必须显式配置 JWT_SECRET，缺失即启动失败（fail-loud），避免使用硬编码默认值上线
 if (process.env.NODE_ENV === 'production') {
@@ -15,7 +16,12 @@ const AUDIENCE = 'hiking-china-web';
 
 function generateToken(user) {
   return jwt.sign(
-    { sub: String(user.id), username: user.username },
+    {
+      sub: String(user.id),
+      username: user.username,
+      role: user.role || 'user',
+      auth_version: Number(user.auth_version || 0),
+    },
     SECRET,
     {
       algorithm: 'HS256',
@@ -41,7 +47,7 @@ function verifyToken(token) {
   }
 }
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: '未登录' });
@@ -51,9 +57,57 @@ function authMiddleware(req, res, next) {
   if (!decoded) {
     return res.status(401).json({ error: 'Token 已过期，请重新登录' });
   }
-  req.user = decoded;
-  req.userId = decoded.id;
+
+  try {
+    const state = await getUserAuthState(decoded.id);
+    if (!state || String(state.account_status || 'active') === 'deleted') {
+      return res.status(401).json({ error: '账号不存在，请重新登录' });
+    }
+    if (String(state.account_status || 'active') !== 'active') {
+      return res.status(403).json({ error: '账号已被暂停，请联系管理员' });
+    }
+    if (Number(decoded.auth_version || 0) !== Number(state.auth_version || 0)) {
+      return res.status(401).json({ error: '登录状态已失效，请重新登录' });
+    }
+
+    req.user = {
+      ...decoded,
+      role: state.role || 'user',
+      email_verified: Number(state.email_verified) === 1,
+    };
+    req.userId = decoded.id;
+    next();
+  } catch (error) {
+    console.error('[AUTH] state check failed:', error);
+    return res.status(500).json({ error: '登录状态校验失败' });
+  }
+}
+
+function requireVerifiedEmail(req, res, next) {
+  if (!req.user?.email_verified) {
+    return res.status(403).json({
+      error: '请先验证邮箱后再操作',
+      code: 'EMAIL_NOT_VERIFIED',
+    });
+  }
   next();
 }
 
-module.exports = { generateToken, verifyToken, authMiddleware, SECRET };
+function requireRole(...roles) {
+  const allowed = new Set(roles);
+  return (req, res, next) => {
+    if (!req.user || !allowed.has(req.user.role)) {
+      return res.status(403).json({ error: '无权执行此操作' });
+    }
+    next();
+  };
+}
+
+module.exports = {
+  generateToken,
+  verifyToken,
+  authMiddleware,
+  requireVerifiedEmail,
+  requireRole,
+  SECRET,
+};

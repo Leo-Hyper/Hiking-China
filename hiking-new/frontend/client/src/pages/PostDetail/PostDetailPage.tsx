@@ -4,9 +4,11 @@ import {
   getPostById,
   isBookmarked,
   isFollowing,
+  isPostLiked,
   recordView,
   toggleBookmark,
   toggleFollow,
+  togglePostLike,
 } from '@client/src/data/hiking-store';
 import type { GearExtra, Post, RouteExtra } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
@@ -18,6 +20,8 @@ import RouteMap from './RouteMap';
 import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
+import ReportButton from '@client/src/components/ReportButton';
+import Seo from '@client/src/components/Seo';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import {
@@ -117,12 +121,49 @@ const PostDetailPage: React.FC = () => {
   const authorAvatar = post?.authorAvatar;
   const commentsCount = post?.commentCount ?? 0;
 
-  // 点赞（本地状态，源码语义）
-  const toggleLike = (): void => {
-    if (!isLoggedIn) { toast('请先登录'); return; }
-    const nextLiked: boolean = !isLiked;
+  useEffect(() => {
+    if (!post) return;
+    setLikeCount(post.likesCount || 0);
+  }, [post]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !post) {
+      setIsLiked(false);
+      return;
+    }
+    let cancelled = false;
+    isPostLiked(post.id)
+      .then((liked: boolean) => {
+        if (!cancelled) setIsLiked(liked);
+      })
+      .catch(() => {
+        if (!cancelled) setIsLiked(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [post, isLoggedIn]);
+
+  const toggleLike = async (): Promise<void> => {
+    if (!isLoggedIn || !post) {
+      toast('请先登录');
+      return;
+    }
+
+    const previousLiked: boolean = isLiked;
+    const previousCount: number = likeCount;
+    const nextLiked: boolean = !previousLiked;
     setIsLiked(nextLiked);
-    setLikeCount((c: number) => c + (nextLiked ? 1 : -1));
+    setLikeCount((count: number) => Math.max(0, count + (nextLiked ? 1 : -1)));
+
+    try {
+      const savedLiked: boolean = await togglePostLike(post.id);
+      setIsLiked(savedLiked);
+    } catch (error) {
+      setIsLiked(previousLiked);
+      setLikeCount(previousCount);
+      toast(error instanceof Error ? error.message : '点赞失败，请重试');
+    }
   };
 
   // 收藏
@@ -217,6 +258,21 @@ const PostDetailPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 lg:px-8 py-16">
+      <Seo
+        title={post?.title || '帖子详情'}
+        description={post ? post.content.replace(/<[^>]+>/g, ' ').slice(0, 160) : '徒步中国社区帖子'}
+        path={`/post/${postId}`}
+        type="article"
+        image={coverImage || undefined}
+        jsonLd={post ? {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: post.title,
+          datePublished: post.createdAt,
+          author: { '@type': 'Person', name: post.authorName },
+          image: coverImage || undefined,
+        } : undefined}
+      />
       <Link to="/forum" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-ink transition-colors mb-8 group">
         <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
         返回论坛
@@ -352,6 +408,7 @@ const PostDetailPage: React.FC = () => {
               <Share2 size={18} />
               <span className="text-sm font-medium">分享</span>
             </button>
+            <ReportButton targetType="post" targetId={postId} />
             {isAuthor && (
               <Link to={`/post/${postId}/edit`} className="flex min-h-11 items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors md:min-h-0 text-muted-foreground">
                 <Pencil size={18} />

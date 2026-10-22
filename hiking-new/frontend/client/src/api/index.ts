@@ -8,6 +8,7 @@ export interface AuthResponse {
   message: string;
   token: string;
   user: Record<string, unknown>;
+  verification_email_sent?: boolean;
 }
 
 export function register(input: { username: string; email: string; password: string }): Promise<AuthResponse> {
@@ -20,6 +21,22 @@ export function login(input: { email: string; password: string }): Promise<AuthR
 
 export function getMe(): Promise<{ user: Record<string, unknown> }> {
   return http.get<{ user: Record<string, unknown> }>('/api/auth/me');
+}
+
+export function sendVerification(): Promise<{ message: string; email_verified: number }> {
+  return http.post<{ message: string; email_verified: number }>('/api/auth/send-verification');
+}
+
+export function verifyEmail(token: string): Promise<{ message: string; email_verified: number }> {
+  return http.post<{ message: string; email_verified: number }>('/api/auth/verify-email', { token });
+}
+
+export function forgotPassword(email: string): Promise<{ message: string }> {
+  return http.post<{ message: string }>('/api/auth/forgot-password', { email });
+}
+
+export function resetPassword(token: string, password: string): Promise<{ message: string }> {
+  return http.post<{ message: string }>('/api/auth/reset-password', { token, password });
 }
 
 export function updateProfile(patch: Record<string, unknown>): Promise<{ message: string; user: Record<string, unknown> }> {
@@ -199,4 +216,88 @@ export function search(q: string): Promise<{ results: SearchResult[] }> {
 // ---------- upload ----------
 export function upload(files: File[]): Promise<{ urls: string[]; message: string }> {
   return http.upload<{ urls: string[]; message: string }>('/api/upload', files);
+}
+
+// ---------- moderation / admin ----------
+export function createReport(input: {
+  target_type: 'post' | 'comment' | 'user' | 'event';
+  target_id: number;
+  reason: '广告' | '辱骂' | '违法' | '隐私' | '其他';
+  detail?: string;
+}): Promise<{ message: string; reportId: number }> {
+  return http.post<{ message: string; reportId: number }>('/api/reports', input);
+}
+
+export function getAdminSummary(): Promise<{ summary: Record<string, number> }> {
+  return http.get<{ summary: Record<string, number> }>('/api/admin/summary');
+}
+
+export function listAdminReports(status = 'open'): Promise<{ reports: Record<string, unknown>[] }> {
+  return http.get<{ reports: Record<string, unknown>[] }>(`/api/admin/reports?status=${encodeURIComponent(status)}`);
+}
+
+export function resolveAdminReport(
+  reportId: number,
+  input: { status: 'resolved' | 'dismissed'; reason?: string },
+): Promise<{ message: string }> {
+  return http.post<{ message: string }>(`/api/admin/reports/${reportId}/resolve`, input);
+}
+
+export function listAdminPosts(): Promise<{ posts: Record<string, unknown>[] }> {
+  return http.get<{ posts: Record<string, unknown>[] }>('/api/admin/posts');
+}
+
+export function setAdminPostStatus(postId: number, status: number, reason = ''): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/posts/${postId}/status`, { status, reason });
+}
+
+export function listAdminComments(): Promise<{ comments: Record<string, unknown>[] }> {
+  return http.get<{ comments: Record<string, unknown>[] }>('/api/admin/comments');
+}
+
+export function setAdminCommentStatus(commentId: number, status: number, reason = ''): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/comments/${commentId}/status`, { status, reason });
+}
+
+export function listAdminUsers(): Promise<{ users: Record<string, unknown>[] }> {
+  return http.get<{ users: Record<string, unknown>[] }>('/api/admin/users');
+}
+
+export function setAdminUserAccountStatus(
+  userId: number,
+  status: 'active' | 'suspended' | 'deleted',
+  reason = '',
+): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/users/${userId}/account-status`, { status, reason });
+}
+
+export function setAdminUserRole(
+  userId: number,
+  role: 'user' | 'moderator' | 'admin',
+): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/users/${userId}/role`, { role });
+}
+
+export function listAdminEvents(): Promise<{ events: Record<string, unknown>[] }> {
+  return http.get<{ events: Record<string, unknown>[] }>('/api/admin/events');
+}
+
+export function setAdminEventStatus(
+  eventId: number,
+  status: 'active' | 'hidden' | 'deleted',
+  reason = '',
+): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/events/${eventId}/status`, { status, reason });
+}
+
+export function listAdminAuditLogs(): Promise<{ logs: Record<string, unknown>[] }> {
+  return http.get<{ logs: Record<string, unknown>[] }>('/api/admin/audit-logs');
+}
+
+export function listAdminFeatureFlags(): Promise<{ flags: Record<string, unknown>[] }> {
+  return http.get<{ flags: Record<string, unknown>[] }>('/api/admin/feature-flags');
+}
+
+export function setAdminFeatureFlag(key: string, enabled: boolean): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/feature-flags/${encodeURIComponent(key)}`, { enabled });
 }

@@ -6,6 +6,7 @@ import type { RouteItem } from '@client/src/data/hiking-types';
 import RouteCard from '@client/src/components/RouteCard';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import Seo from '@client/src/components/Seo';
 
 const REGION_ORDER: string[] = ['四川', '云南', '西藏', '新疆', '安徽', '湖南'];
 
@@ -176,6 +177,11 @@ const RoutesPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <Seo
+        title="徒步路线"
+        description="按地区、难度和距离探索中国经典徒步路线。"
+        path="/routes"
+      />
       {/* 页头 */}
       <div className="mb-8 md:mb-12">
         <p className="text-kicker uppercase text-ember-600">Routes · Trail Map</p>

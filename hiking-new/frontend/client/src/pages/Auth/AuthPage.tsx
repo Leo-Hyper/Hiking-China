@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { loginUser, registerUser } from '@client/src/data/hiking-store';
+import {
+  loginUser,
+  registerUser,
+  sendVerificationEmail,
+} from '@client/src/data/hiking-store';
 import { withBasePath } from '@client/src/utils/base-path';
 import TopoBackground from '@client/src/components/visual/TopoBackground';
 import { Image } from '@client/src/components/ui/image';
@@ -30,6 +34,8 @@ const AuthPage = () => {
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
+  const [sendingVerification, setSendingVerification] = useState<boolean>(false);
   const [form, setForm] = useState<AuthFormState>({ username: '', email: '', password: '' });
 
   const goBackOrHome = (): void => {
@@ -41,8 +47,13 @@ const AuthPage = () => {
   const handleLogin = async (): Promise<void> => {
     setLoading(true);
     setErrorMsg('');
+    setSuccessMsg('');
     try {
-      await loginUser(form.email, form.password);
+      const user = await loginUser(form.email, form.password);
+      if (!user.emailVerified) {
+        setSuccessMsg('登录成功。请先完成邮箱验证后再发帖、评论或报名活动。');
+        return;
+      }
       goBackOrHome();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '登录失败，请重试');
@@ -54,13 +65,27 @@ const AuthPage = () => {
   const handleRegister = async (): Promise<void> => {
     setLoading(true);
     setErrorMsg('');
+    setSuccessMsg('');
     try {
       await registerUser(form.username, form.email, form.password);
-      goBackOrHome();
+      setSuccessMsg('注册成功。验证邮件已发送，请查收后再发帖、评论或报名活动。');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '注册失败，请重试');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendVerification = async (): Promise<void> => {
+    setSendingVerification(true);
+    setErrorMsg('');
+    try {
+      await sendVerificationEmail();
+      setSuccessMsg('验证邮件已重新发送，请查收。');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : '验证邮件发送失败');
+    } finally {
+      setSendingVerification(false);
     }
   };
 
@@ -166,6 +191,27 @@ const AuthPage = () => {
                     className={INPUT_CLS}
                   />
                 </div>
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-pine-700 transition-colors hover:text-pine-800"
+                  >
+                    忘记密码？
+                  </Link>
+                </div>
+                {successMsg && (
+                  <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                    <p>{successMsg}</p>
+                    <button
+                      type="button"
+                      onClick={resendVerification}
+                      disabled={sendingVerification}
+                      className="mt-2 font-semibold underline decoration-pine-400 underline-offset-2 disabled:opacity-50"
+                    >
+                      {sendingVerification ? '发送中...' : '重新发送验证邮件'}
+                    </button>
+                  </div>
+                )}
                 {errorMsg && <p className="text-xs text-destructive mt-1.5">{errorMsg}</p>}
                 <button
                   type="submit"
@@ -226,6 +272,19 @@ const AuthPage = () => {
                     className={INPUT_CLS}
                   />
                 </div>
+                {successMsg && (
+                  <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                    <p>{successMsg}</p>
+                    <button
+                      type="button"
+                      onClick={resendVerification}
+                      disabled={sendingVerification}
+                      className="mt-2 font-semibold underline decoration-pine-400 underline-offset-2 disabled:opacity-50"
+                    >
+                      {sendingVerification ? '发送中...' : '重新发送验证邮件'}
+                    </button>
+                  </div>
+                )}
                 {errorMsg && <p className="text-xs text-destructive mt-1.5">{errorMsg}</p>}
                 <button
                   type="submit"

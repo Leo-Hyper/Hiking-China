@@ -8,6 +8,8 @@ export interface HikingUser {
   hikinglevel: number;
   gearPrefs: string[];
   profilePublic: boolean;
+  role?: 'user' | 'moderator' | 'admin';
+  emailVerified?: boolean;
   createdAt: string;
   postCount?: number;
   followersCount?: number;
@@ -53,6 +55,7 @@ export interface Post {
   authorName: string;
   authorAvatar?: string;
   commentCount?: number;
+  likesCount?: number;
   views: number;
   status: number;
   createdAt: string;

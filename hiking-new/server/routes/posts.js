@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authMiddleware } = require("../middleware/auth");
+const { authMiddleware, requireVerifiedEmail } = require("../middleware/auth");
 const {
   createPost,
   deletePost,
@@ -136,7 +136,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
 });
 
 // POST /api/posts - 创建帖子（需登录）
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
   try {
     const title = String(req.body.title || "").trim();
     const content = sanitizeRichText(req.body.content);

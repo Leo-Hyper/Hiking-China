@@ -12,6 +12,7 @@ import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import EventCard, { isEventEnded } from './EventCard';
 import { toast } from 'sonner';
+import Seo from '@client/src/components/Seo';
 
 type EventFilterKey = 'status' | 'difficulty' | 'location' | 'sort';
 
@@ -206,6 +207,11 @@ const EventsPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <Seo
+        title="活动召集"
+        description="发现徒步活动、结伴同行和线下山野聚会。"
+        path="/events"
+      />
       {/* 页头 */}
       <div className="mb-8 md:mb-12">
         <p className="text-kicker uppercase text-ember-600">Events · Trail Meetups</p>
