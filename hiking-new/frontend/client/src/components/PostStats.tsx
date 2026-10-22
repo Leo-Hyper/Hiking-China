@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
 import { getUserById, listComments } from '@client/src/data/hiking-store';
-import { resolveImageUrl } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 
 // 异步评论数：不阻塞卡片主渲染，加载完成后就地更新
 export function CommentCount({ postId, count: providedCount, className = '' }: { postId: number; count?: number; className?: string }) {
@@ -59,15 +58,12 @@ export function AuthorLink({ userId, name, avatar: providedAvatar }: { userId: n
       onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
       className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-pine-700"
     >
-      {avatar ? (
-        <Image
-          src={resolveImageUrl(avatar)}
-          alt=""
-          className="h-4 w-4 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <span className="h-4 w-4 shrink-0 rounded-full bg-pine-600" />
-      )}
+      <UserAvatar
+        src={avatar}
+        name={name}
+        className="h-4 w-4"
+        fallbackClassName="text-[8px]"
+      />
       <span className="truncate">{name}</span>
     </Link>
   );

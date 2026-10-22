@@ -13,6 +13,8 @@ interface CommentSectionProps {
   postId: number;
 }
 
+export type CommentSortMode = 'hot' | 'latest';
+
 const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   const { isLoggedIn, user } = useAuth();
   const { data: commentsData, loading, reload } = useAsyncData<HikingComment[]>(
@@ -20,11 +22,20 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     [postId]
   );
   const comments: HikingComment[] = commentsData ?? [];
+  const [sortMode, setSortMode] = useState<CommentSortMode>('latest');
 
   const totalCommentCount: number = useMemo(
     () => comments.reduce((n: number, c: HikingComment) => n + 1 + (c.replies ? c.replies.length : 0), 0),
     [comments]
   );
+  const sortedComments: HikingComment[] = useMemo(() => {
+    const next: HikingComment[] = [...comments];
+    next.sort((a: HikingComment, b: HikingComment) => {
+      if (sortMode === 'hot') return (b.likes || 0) - (a.likes || 0);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return next;
+  }, [comments, sortMode]);
 
   const [newComment, setNewComment] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -47,9 +58,31 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
 
   return (
     <div className="mt-12">
-      <h3 className="font-display text-h3 text-ink mb-6">
-        评论 <span className="font-data tabular-nums text-base text-pine-900/70 md:text-muted-foreground">{totalCommentCount}</span>
-      </h3>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="font-display text-h3 text-ink">
+          评论 <span className="font-data tabular-nums text-base text-pine-900/70 md:text-muted-foreground">{totalCommentCount}</span>
+        </h3>
+        <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
+          <button
+            type="button"
+            onClick={() => setSortMode('latest')}
+            className={sortMode === 'latest'
+              ? 'rounded-full bg-pine-700 px-3 py-1.5 text-xs font-semibold text-paper'
+              : 'rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-ink'}
+          >
+            最新
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortMode('hot')}
+            className={sortMode === 'hot'
+              ? 'rounded-full bg-pine-700 px-3 py-1.5 text-xs font-semibold text-paper'
+              : 'rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-ink'}
+          >
+            最热
+          </button>
+        </div>
+      </div>
 
       {isLoggedIn ? (
         <div className="flex gap-3 mb-10">
@@ -91,8 +124,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
       )}
 
       <div className="divide-y divide-border">
-        {comments.map((c: HikingComment) => (
-          <CommentItemView key={c.id} comment={c} postId={postId} onChanged={reload} />
+        {sortedComments.map((c: HikingComment) => (
+          <CommentItemView key={c.id} comment={c} postId={postId} onChanged={reload} sortMode={sortMode} />
         ))}
       </div>
 

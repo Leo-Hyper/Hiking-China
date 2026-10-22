@@ -8,6 +8,7 @@ import {
 } from '@client/src/data/hiking-store';
 import type { HikingEvent } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
+import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import EventCard, { isEventEnded } from './EventCard';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ interface EventFilters {
 }
 
 const DEFAULT_FILTERS: EventFilters = { status: '', difficulty: '', location: '', sort: 'overall' };
+const PAGE_SIZE = 3;
 
 interface FilterOption {
   value: string;
@@ -62,6 +64,7 @@ const EventsPage = () => {
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS);
   const [openKey, setOpenKey] = useState<EventFilterKey | null>(null);
   const [tab, setTab] = useState<EventTab>('all');
+  const [page, setPage] = useState<number>(1);
 
   // 一次拉取当前用户已报名的活动，避免每个卡片各发一个请求
   useEffect(() => {
@@ -154,6 +157,8 @@ const EventsPage = () => {
         : filteredEvents,
     [filteredEvents, tab, signedUpMap]
   );
+  const pageCount: number = Math.max(1, Math.ceil(visibleEvents.length / PAGE_SIZE));
+  const pagedEvents: HikingEvent[] = visibleEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const hasActive: boolean =
     filters.status !== '' || filters.difficulty !== '' || filters.location !== '' || filters.sort !== 'overall';
@@ -169,11 +174,18 @@ const EventsPage = () => {
   const selectOption = (key: EventFilterKey, value: string): void => {
     setFilters((prev: EventFilters) => ({ ...prev, [key]: value }));
     setOpenKey(null);
+    setPage(1);
   };
 
   const resetFilters = (): void => {
     setFilters(DEFAULT_FILTERS);
     setOpenKey(null);
+    setPage(1);
+  };
+
+  const selectTab = (next: EventTab): void => {
+    setTab(next);
+    setPage(1);
   };
 
   const handleSignup = async (event: HikingEvent): Promise<void> => {
@@ -266,10 +278,10 @@ const EventsPage = () => {
 
       {/* 分段切换 */}
       <div className="flex items-center gap-2 pt-6 md:pt-10">
-        <button onClick={() => setTab('all')} className={tabClass(tab === 'all')}>
+        <button onClick={() => selectTab('all')} className={tabClass(tab === 'all')}>
           全部活动
         </button>
-        <button onClick={() => setTab('mine')} className={tabClass(tab === 'mine')}>
+        <button onClick={() => selectTab('mine')} className={tabClass(tab === 'mine')}>
           我的报名
         </button>
       </div>
@@ -290,7 +302,7 @@ const EventsPage = () => {
               description="去全部活动里看看，找到感兴趣的路线"
               action={
                 <button
-                  onClick={() => setTab('all')}
+                    onClick={() => selectTab('all')}
                   className="inline-flex items-center rounded-lg bg-pine-700 px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-pine-800"
                 >
                   浏览全部活动
@@ -321,7 +333,7 @@ const EventsPage = () => {
               }
             />
           ))}
-        {visibleEvents.map((event: HikingEvent) => (
+        {pagedEvents.map((event: HikingEvent) => (
           <EventCard
             key={event.id}
             event={event}
@@ -329,6 +341,12 @@ const EventsPage = () => {
             onSignup={handleSignup}
           />
         ))}
+        <ListPagination
+          page={page}
+          pageCount={pageCount}
+          total={visibleEvents.length}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown, Map as MapIcon, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { ROUTES_LIST } from '@client/src/data/hiking-data';
 import type { RouteItem } from '@client/src/data/hiking-types';
 import RouteCard from '@client/src/components/RouteCard';
+import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import { withCardImage } from '@client/src/utils/base-path';
+import { Image } from '@client/src/components/ui/image';
 
 const REGION_ORDER: string[] = ['四川', '云南', '西藏', '新疆', '安徽', '湖南'];
 
@@ -15,6 +19,7 @@ const REGIONS: string[] = [
 ];
 
 const DIFFICULTIES: string[] = ['初级', '中级', '高级'];
+const PAGE_SIZE = 6;
 
 type FilterKey = 'sort' | 'region' | 'difficulty' | 'distance';
 
@@ -80,6 +85,7 @@ const optionChipClass = (active: boolean): string =>
 const RoutesPage = () => {
   const [filters, setFilters] = useState<RouteFilters>(DEFAULT_FILTERS);
   const [openKey, setOpenKey] = useState<FilterKey | null>(null);
+  const [page, setPage] = useState<number>(1);
 
   const filteredRoutes: RouteItem[] = useMemo(() => {
     const list: RouteItem[] = ROUTES_LIST.filter((r: RouteItem) => {
@@ -96,6 +102,11 @@ const RoutesPage = () => {
     return list;
   }, [filters]);
 
+  const featuredRoute: RouteItem | undefined = filteredRoutes[0];
+  const remainingRoutes: RouteItem[] = filteredRoutes.slice(1);
+  const pageCount: number = Math.max(1, Math.ceil(remainingRoutes.length / PAGE_SIZE));
+  const pagedRoutes: RouteItem[] = remainingRoutes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const hasActive: boolean =
     filters.region !== '' || filters.difficulty !== '' || filters.distance !== '' || filters.sort !== 'recommend';
 
@@ -110,11 +121,13 @@ const RoutesPage = () => {
   const selectOption = (key: FilterKey, value: string): void => {
     setFilters((prev: RouteFilters) => ({ ...prev, [key]: value }));
     setOpenKey(null);
+    setPage(1);
   };
 
   const resetFilters = (): void => {
     setFilters(DEFAULT_FILTERS);
     setOpenKey(null);
+    setPage(1);
   };
 
   const openGroup = FILTER_GROUPS.find((g) => g.key === openKey);
@@ -207,11 +220,51 @@ const RoutesPage = () => {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-            {filteredRoutes.map((route: RouteItem) => (
-              <RouteCard key={route.id} routeData={route} />
-            ))}
-          </div>
+          <>
+            {featuredRoute && (
+              <Link
+                to={featuredRoute.postId ? `/post/${featuredRoute.postId}` : '/routes'}
+                className="group relative mb-5 block min-h-[300px] overflow-hidden rounded-xl md:min-h-[340px]"
+              >
+                <Image
+                  src={withCardImage(featuredRoute.image)}
+                  alt={featuredRoute.name}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
+                  loading="eager"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-ink/75 via-ink/35 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5 text-paper md:p-8">
+                  <span className="mb-3 inline-flex rounded-full bg-ember-500 px-2.5 py-1 text-[10px] font-semibold">
+                    本周推荐
+                  </span>
+                  <h2 className="font-display text-xl md:text-3xl">{featuredRoute.name}</h2>
+                  <p className="mt-2 max-w-xl text-xs leading-relaxed text-paper/80 md:text-sm">
+                    {featuredRoute.description}
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 font-data text-[11px] text-paper/85 md:text-xs">
+                    <span>{featuredRoute.region}</span>
+                    <span>{featuredRoute.difficulty}</span>
+                    <span>{featuredRoute.distance}km</span>
+                    <span>{featuredRoute.duration}</span>
+                    <span>评分 {featuredRoute.rating}</span>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+              {pagedRoutes.map((route: RouteItem) => (
+                <RouteCard key={route.id} routeData={route} />
+              ))}
+            </div>
+
+            <ListPagination
+              page={page}
+              pageCount={pageCount}
+              total={filteredRoutes.length}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </div>
     </div>

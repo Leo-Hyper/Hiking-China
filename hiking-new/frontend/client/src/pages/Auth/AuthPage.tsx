@@ -72,7 +72,7 @@ const AuthPage = () => {
         <Link to="/" className="relative flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-1 ring-white/25">
             <Image
-              src={withBasePath('/img/logo.png')}
+              src={withBasePath('/favicon-hiking.svg')}
               alt=""
               className="w-full h-full object-contain"
             />

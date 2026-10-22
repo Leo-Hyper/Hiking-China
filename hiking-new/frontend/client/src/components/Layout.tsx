@@ -7,6 +7,7 @@ import SearchOverlay from './SearchOverlay';
 import { useAuth } from '@client/src/hooks/use-hiking';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,30 +53,30 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-paper text-ink pb-[calc(4rem_+_env(safe-area-inset-bottom))] md:pb-0">
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
           isTransparent
-            ? 'border-b border-transparent max-md:bg-paper max-md:border-border max-md:shadow-2xs'
-            : 'nav-paper shadow-2xs'
+            ? 'border-b border-transparent max-md:border-border/70 max-md:bg-paper/95 max-md:shadow-sm md:bg-transparent'
+            : 'nav-paper bg-paper/95 shadow-sm'
         }`}
       >
         <nav className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-11 md:h-20">
-            <Link to="/" className="flex items-center gap-3">
+          <div className="flex items-center justify-between h-12 md:h-[76px]">
+            <Link to="/" className="flex items-center gap-3 group">
               <div
-                className={`w-7 h-7 md:w-10 md:h-10 rounded-full overflow-hidden transition-colors duration-300 ${
+                className={`w-8 h-8 md:w-11 md:h-11 rounded-full overflow-hidden transition-all duration-300 ${
                   isTransparent
-                    ? 'bg-white/15 ring-1 ring-white/25 max-md:bg-paper max-md:ring-border'
-                    : 'bg-paper shadow-2xs ring-1 ring-border'
+                    ? 'bg-white/90 ring-1 ring-white/40 shadow-md shadow-ink/10 max-md:bg-paper max-md:ring-border'
+                    : 'bg-paper shadow-sm ring-1 ring-border'
                 }`}
               >
                 <Image
-                  src={withBasePath('/img/logo.png')}
-                  alt=""
-                  className="w-full h-full object-contain"
+                  src={withBasePath('/favicon-hiking.svg')}
+                  alt="徒步中国"
+                  className="w-full h-full object-contain p-0.5"
                 />
               </div>
               <span
-                className={`font-display text-base md:text-lg font-bold tracking-tight transition-colors duration-300 ${
+                className={`font-display text-[17px] md:text-[19px] font-bold tracking-[0.01em] transition-colors duration-300 ${
                   isTransparent ? 'text-white max-md:text-ink' : 'text-ink'
                 }`}
               >
@@ -86,24 +87,30 @@ const Layout = () => {
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-1">
+            <div
+              className={`hidden md:flex items-center rounded-full border p-1 ${
+                isTransparent
+                  ? 'border-white/15 bg-white/10'
+                  : 'border-border/80 bg-white/55 shadow-2xs'
+              }`}
+            >
               {NAV_ITEMS.map((item: { path: string; label: string }) => {
                 const isActive: boolean = location.pathname === item.path;
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors ${
+                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] transition-all duration-300 ${
                       isActive
                         ? isTransparent
-                          ? 'font-semibold text-white'
-                          : 'font-semibold text-ink'
+                          ? 'bg-white/15 font-semibold text-white shadow-sm'
+                          : 'bg-pine-50 font-semibold text-pine-800 shadow-2xs'
                         : isTransparent
-                          ? 'font-medium text-white/70 hover:text-white'
-                          : 'font-medium text-muted-foreground hover:text-ink'
+                          ? 'font-medium text-white/70 hover:bg-white/10 hover:text-white'
+                          : 'font-medium text-muted-foreground hover:bg-white/80 hover:text-ink'
                     }`}
                   >
-                    {isActive && <span className="h-1.5 w-1.5 rounded-full bg-ember-500 dot-pop" />}
+                    {isActive && <span className="h-1 w-1 rounded-full bg-ember-500 dot-pop" />}
                     {item.label}
                   </Link>
                 );
@@ -113,10 +120,10 @@ const Layout = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSearchOpen(true)}
-                className={`grid h-9 w-9 md:h-10 md:w-10 place-items-center rounded-lg border max-md:border-0 transition-colors ${
+                className={`grid h-9 w-9 md:h-10 md:w-10 place-items-center rounded-full border max-md:border-0 transition-all duration-300 ${
                   isTransparent
-                    ? 'border-white/30 text-white hover:bg-white/10 max-md:text-muted-foreground'
-                    : 'border-border text-muted-foreground hover:border-pine-300 hover:text-ink'
+                    ? 'border-white/25 bg-white/10 text-white hover:bg-white/15 max-md:bg-transparent max-md:text-muted-foreground'
+                    : 'border-border bg-white/70 text-muted-foreground hover:border-pine-300 hover:text-ink'
                 }`}
                 title="搜索 (Ctrl+K)"
               >
@@ -153,26 +160,21 @@ const Layout = () => {
                     title="个人中心"
                     className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full"
                   >
-                    <span className="flex h-7 w-7 md:h-10 md:w-10 items-center justify-center overflow-hidden rounded-full bg-pine-700 text-xs md:text-sm font-semibold text-paper ring-1 ring-pine-800/40 transition-colors hover:bg-pine-800">
-                      {user?.avatar ? (
-                        <Image
-                          src={withBasePath(user.avatar)}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        '我'
-                      )}
-                    </span>
+                    <UserAvatar
+                      src={user?.avatar}
+                      name={user?.username}
+                      className="h-7 w-7 md:h-10 md:w-10 ring-1 ring-pine-800/30 transition-opacity hover:opacity-90"
+                      fallbackClassName="text-xs md:text-sm"
+                    />
                   </Link>
                 </>
               ) : (
                 <Link
                   to="/login"
-                  className={`inline-flex min-h-9 md:min-h-0 items-center rounded-lg border px-3 text-xs md:text-sm font-medium transition-colors md:px-4 md:py-2.5 ${
+                  className={`inline-flex min-h-9 md:min-h-0 items-center rounded-full border px-4 text-xs md:text-sm font-semibold transition-all duration-300 md:px-5 md:py-2.5 ${
                     isTransparent
-                      ? 'border-white/40 text-white hover:bg-white/10 max-md:border-border max-md:text-ink'
-                      : 'border-border text-ink hover:border-pine-300'
+                      ? 'border-white/55 bg-paper text-ink shadow-md shadow-ink/10 hover:bg-white max-md:border-border'
+                      : 'border-pine-700 bg-pine-700 text-paper hover:border-pine-800 hover:bg-pine-800'
                   }`}
                 >
                   登录

@@ -5,7 +5,44 @@ import type { GearItem } from '@client/src/data/hiking-types';
 import { withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import TrailTag from '@client/src/components/visual/TrailTag';
+import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
+
+const PAGE_SIZE = 4;
+
+const GEAR_GUIDES: {
+  title: string;
+  routeType: string;
+  season: string;
+  budget: string;
+  weight: string;
+  items: string[];
+}[] = [
+  {
+    title: '周末轻装',
+    routeType: '10-20km · 1天',
+    season: '春秋',
+    budget: '轻预算',
+    weight: '5-7kg',
+    items: ['轻量背包', '防滑徒步鞋', '防风外层', '1.5L 水具'],
+  },
+  {
+    title: '三天两夜',
+    routeType: '2-3天 · 住宿补给',
+    season: '三季',
+    budget: '均衡',
+    weight: '9-12kg',
+    items: ['38-50L 背包', '睡眠系统', '炊具', '头灯与急救包'],
+  },
+  {
+    title: '高海拔雪线',
+    routeType: '雪山 · 长线',
+    season: '冬季',
+    budget: '安全优先',
+    weight: '12kg+',
+    items: ['保暖分层', '雪镜与冰爪', '卫星通信', '备用电源'],
+  },
+];
 
 const optionChipClass = (active: boolean): string =>
   `flex h-9 items-center justify-center rounded-lg text-[13px] transition-colors ${
@@ -17,6 +54,7 @@ const optionChipClass = (active: boolean): string =>
 const GearPage = () => {
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
 
   const gearCategories: string[] = useMemo(
     () => Array.from(new Set(GEAR_ITEMS.map((item: GearItem) => item.category))),
@@ -35,10 +73,13 @@ const GearPage = () => {
         : GEAR_ITEMS,
     [activeCategory]
   );
+  const pageCount: number = Math.max(1, Math.ceil(gearItems.length / PAGE_SIZE));
+  const pagedGearItems: GearItem[] = gearItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const selectCategory = (value: string): void => {
     setActiveCategory(value);
     setPanelOpen(false);
+    setPage(1);
   };
 
   return (
@@ -49,6 +90,30 @@ const GearPage = () => {
         <h1 className="mt-2 font-display text-xl md:text-h1 text-ink">装备指南</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">专业的徒步装备推荐与评测，助你轻装上阵</p>
       </div>
+
+      <section className="mb-6 grid gap-3 md:grid-cols-3">
+        {GEAR_GUIDES.map((guide) => (
+          <article key={guide.title} className="rounded-xl border border-border bg-card p-5 shadow-2xs">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-display text-base text-ink">{guide.title}</h2>
+              <TrailTag tone="pine">{guide.weight}</TrailTag>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{guide.routeType}</p>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              <TrailTag tone="neutral">{guide.season}</TrailTag>
+              <TrailTag tone="neutral">{guide.budget}</TrailTag>
+            </div>
+            <ul className="mt-4 space-y-1.5 text-xs text-muted-foreground">
+              {guide.items.map((item: string) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="h-1 w-1 rounded-full bg-pine-500" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </section>
 
       {/* 筛选栏：吸顶单行触发器 + 下挂选项面板 */}
       <div className="sticky top-11 z-30 -mx-6 bg-paper/95 px-6 backdrop-blur md:top-20 md:mx-0 md:bg-transparent md:px-0 md:backdrop-blur-none">
@@ -113,7 +178,7 @@ const GearPage = () => {
           <EmptyState icon={Backpack} title="暂无装备" description="该分类下还没有装备内容" />
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-            {gearItems.map((item: GearItem) => (
+            {pagedGearItems.map((item: GearItem) => (
               <div key={item.id} className="group @container">
                 <div>
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
@@ -140,6 +205,12 @@ const GearPage = () => {
             ))}
           </div>
         )}
+        <ListPagination
+          page={page}
+          pageCount={pageCount}
+          total={gearItems.length}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

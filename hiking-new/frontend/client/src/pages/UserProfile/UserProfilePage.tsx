@@ -6,7 +6,7 @@ import { stripHtml, withBasePath, withCardImage } from '@client/src/utils/base-p
 import PostCard from './PostCard';
 import type { FormattedPost } from './PostCard';
 import FollowButton from './FollowButton';
-import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import EmptyState from '@client/src/components/visual/EmptyState';
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
@@ -103,17 +103,12 @@ const UserProfilePage = () => {
         {/* 用户信息卡片 */}
         <div className="mb-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <div className="flex flex-col items-center text-center">
-            {profileUser.avatar ? (
-              <Image
-                src={withBasePath(profileUser.avatar)}
-                className="w-24 h-24 rounded-full object-cover ring-2 ring-pine-200 mb-4"
-                alt=""
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-pine-700 text-paper flex items-center justify-center font-bold text-2xl md:text-4xl mb-4">
-                {profileUser.username?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-            )}
+            <UserAvatar
+              src={profileUser.avatar}
+              name={profileUser.username}
+              className="w-24 h-24 ring-2 ring-pine-200 mb-4"
+              fallbackClassName="text-2xl md:text-4xl"
+            />
 
             <h1 className="font-display text-lg md:text-h2 text-ink mb-1">{profileUser.username}</h1>
             {profileLevel && (

@@ -17,6 +17,7 @@ import RelatedPosts from './RelatedPosts';
 import RouteMap from './RouteMap';
 import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import {
@@ -255,17 +256,12 @@ const PostDetailPage: React.FC = () => {
                 {post.title}
               </h1>
               <div className="flex items-center gap-3 flex-wrap">
-                {authorAvatar ? (
-                  <Image
-                    src={resolveImageUrl(authorAvatar)}
-                    alt={post.authorName || ''}
-                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <span className="w-9 h-9 rounded-full bg-pine-600 text-paper flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                    {post.authorName?.charAt(0)?.toUpperCase() || '?'}
-                  </span>
-                )}
+                <UserAvatar
+                  src={authorAvatar}
+                  name={post.authorName}
+                  className="w-9 h-9"
+                  fallbackClassName="text-sm"
+                />
                 {post.authorId ? (
                   <Link to={`/user/${post.authorId}`} className="text-sm font-medium text-ink hover:text-pine-700 transition-colors">
                     {post.authorName}

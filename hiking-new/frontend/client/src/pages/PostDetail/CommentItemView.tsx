@@ -15,6 +15,7 @@ import CommentReplyItem from './CommentReplyItem';
 import CommentModals from './CommentModals';
 import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import { Heart } from 'lucide-react';
 
 const REPLY_LIMIT: number = 2;
@@ -26,9 +27,10 @@ interface CommentItemViewProps {
   comment: HikingComment;
   postId: number;
   onChanged: () => void;
+  sortMode: 'hot' | 'latest';
 }
 
-const CommentItemView: React.FC<CommentItemViewProps> = ({ comment, postId, onChanged }) => {
+const CommentItemView: React.FC<CommentItemViewProps> = ({ comment, postId, onChanged, sortMode }) => {
   const { isLoggedIn, user } = useAuth();
   const isCommentAuthor: boolean = !!user && comment.userId === user.id;
   const isTopLevel: boolean = !comment.parentId;
@@ -50,9 +52,17 @@ const CommentItemView: React.FC<CommentItemViewProps> = ({ comment, postId, onCh
   const replyTextareaRef: React.RefObject<HTMLTextAreaElement | null> = useRef<HTMLTextAreaElement | null>(null);
 
   const replies: HikingComment[] = comment.replies || [];
+  const sortedReplies: HikingComment[] = useMemo(() => {
+    const next: HikingComment[] = [...replies];
+    next.sort((a: HikingComment, b: HikingComment) => {
+      if (sortMode === 'hot') return (b.likes || 0) - (a.likes || 0);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return next;
+  }, [replies, sortMode]);
   const visibleReplies: HikingComment[] = useMemo(
-    () => (expanded ? replies : replies.slice(0, REPLY_LIMIT)),
-    [replies, expanded]
+    () => (expanded ? sortedReplies : sortedReplies.slice(0, REPLY_LIMIT)),
+    [sortedReplies, expanded]
   );
 
   const placeholderText: string = replyTarget
@@ -171,16 +181,19 @@ const CommentItemView: React.FC<CommentItemViewProps> = ({ comment, postId, onCh
       <div className="flex gap-3">
         {comment.userId ? (
           <Link to={`/user/${comment.userId}`} className="flex-shrink-0">
-            {comment.avatar ? (
-              <Image src={resolveImageUrl(comment.avatar)} className="w-9 h-9 rounded-full object-cover" alt="" />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-pine-600 text-paper flex items-center justify-center font-semibold text-sm">
-                {comment.username?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-            )}
+            <UserAvatar
+              src={comment.avatar}
+              name={comment.username}
+              className="w-9 h-9"
+              fallbackClassName="text-sm"
+            />
           </Link>
         ) : (
-          <div className="w-9 h-9 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-sm flex-shrink-0">?</div>
+          <UserAvatar
+            name={comment.username}
+            className="w-9 h-9 bg-muted text-muted-foreground"
+            fallbackClassName="text-sm"
+          />
         )}
 
         <div className="flex-1 min-w-0">

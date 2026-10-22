@@ -6,6 +6,7 @@ import { useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
 import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import { Heart } from 'lucide-react';
 
 const formatShortDate = (dateStr: string): string => {
@@ -80,16 +81,19 @@ const CommentReplyItem: React.FC<CommentReplyItemProps> = ({ reply, onReply, onC
     <div className="flex gap-2.5">
       {reply.userId ? (
         <Link to={`/user/${reply.userId}`} className="flex-shrink-0">
-          {reply.avatar ? (
-            <Image src={resolveImageUrl(reply.avatar)} className="w-7 h-7 rounded-full object-cover" alt="" />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-pine-600 text-paper flex items-center justify-center font-semibold text-xs">
-              {reply.username?.charAt(0)?.toUpperCase() || '?'}
-            </div>
-          )}
+          <UserAvatar
+            src={reply.avatar}
+            name={reply.username}
+            className="w-7 h-7"
+            fallbackClassName="text-xs"
+          />
         </Link>
       ) : (
-        <div className="w-7 h-7 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-xs flex-shrink-0">?</div>
+        <UserAvatar
+          name={reply.username}
+          className="w-7 h-7 bg-muted text-muted-foreground"
+          fallbackClassName="text-xs"
+        />
       )}
 
       <div className="flex-1 min-w-0">

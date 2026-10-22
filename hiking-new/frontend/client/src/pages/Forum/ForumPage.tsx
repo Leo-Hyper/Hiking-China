@@ -6,7 +6,7 @@ import { POST_CATEGORIES } from '@client/src/data/hiking-data';
 import type { Post } from '@client/src/data/hiking-types';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
 import { Input } from '@client/src/components/ui/input';
-import PostCard from '@client/src/components/PostCard';
+import ForumPostRow from './ForumPostRow';
 import EmptyState from '@client/src/components/visual/EmptyState';
 
 const PAGE_LIMIT: number = 20;
@@ -26,6 +26,7 @@ const ForumPage = () => {
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') ?? '');
   const [debouncedSearch, setDebouncedSearch] = useState<string>(() => searchParams.get('q') ?? '');
+  const [sortMode, setSortMode] = useState<'latest' | 'popular'>('latest');
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_LIMIT);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
@@ -47,7 +48,18 @@ const ForumPage = () => {
   );
 
   const filteredPosts: Post[] = filteredData ?? [];
-  const posts: Post[] = useMemo(() => filteredPosts.slice(0, visibleCount), [filteredPosts, visibleCount]);
+  const sortedPosts: Post[] = useMemo(() => {
+    const next: Post[] = [...filteredPosts];
+    next.sort((a: Post, b: Post) => {
+      if (sortMode === 'popular') {
+        const score = (post: Post): number => post.views + (post.commentCount || 0) * 6;
+        return score(b) - score(a);
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return next;
+  }, [filteredPosts, sortMode]);
+  const posts: Post[] = useMemo(() => sortedPosts.slice(0, visibleCount), [sortedPosts, visibleCount]);
   const hasMore: boolean = filteredPosts.length > visibleCount;
 
   const selectCategory = (cat: string): void => {
@@ -82,6 +94,27 @@ const ForumPage = () => {
         <p className="text-kicker uppercase text-ember-600">Forum · Trail Talk</p>
         <h1 className="mt-2 font-display text-xl md:text-h1 text-ink">徒步论坛</h1>
         <p className="mt-3 text-muted-foreground">与徒步爱好者们分享经验、交流心得</p>
+      </div>
+
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSortMode('latest')}
+          className={sortMode === 'latest'
+            ? 'rounded-full bg-pine-700 px-4 py-2 text-xs font-semibold text-paper'
+            : 'rounded-full bg-muted/60 px-4 py-2 text-xs text-muted-foreground hover:text-ink'}
+        >
+          最新讨论
+        </button>
+        <button
+          type="button"
+          onClick={() => setSortMode('popular')}
+          className={sortMode === 'popular'
+            ? 'rounded-full bg-pine-700 px-4 py-2 text-xs font-semibold text-paper'
+            : 'rounded-full bg-muted/60 px-4 py-2 text-xs text-muted-foreground hover:text-ink'}
+        >
+          热门讨论
+        </button>
       </div>
 
       {/* 筛选栏：吸顶单行——分类触发器 + 内联搜索 */}
@@ -167,9 +200,9 @@ const ForumPage = () => {
           </div>
         ) : posts.length > 0 ? (
           /* 帖子列表 */
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-1">
+          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card px-3 md:px-4">
             {posts.map((post: Post) => (
-              <PostCard key={post.id} post={post} />
+              <ForumPostRow key={post.id} post={post} />
             ))}
           </div>
         ) : (

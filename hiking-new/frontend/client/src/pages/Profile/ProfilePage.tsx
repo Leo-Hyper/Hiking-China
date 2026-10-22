@@ -9,13 +9,12 @@ import {
   listMyPosts,
 } from '@client/src/data/hiking-store';
 import type { Post, UserStats } from '@client/src/data/hiking-types';
-import { withBasePath } from '@client/src/utils/base-path';
 import MyPostsTab from './MyPostsTab';
 import BookmarksTab from './BookmarksTab';
 import RecentViewsTab from './RecentViewsTab';
 import ProfileEditForm from './ProfileEditForm';
 import { toast } from 'sonner';
-import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 
 type ProfileTabKey = 'posts' | 'recent' | 'bookmarks' | 'profile';
 
@@ -89,17 +88,12 @@ const ProfilePage = () => {
         {/* 头部 */}
         <div className="text-center mb-10">
           <div className="relative inline-block mb-4">
-            {user.avatar ? (
-              <Image
-                src={withBasePath(user.avatar)}
-                className="w-20 h-20 rounded-full object-cover ring-2 ring-pine-200"
-                alt=""
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-pine-700 text-paper flex items-center justify-center font-bold text-xl md:text-3xl">
-                {user.username?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-            )}
+            <UserAvatar
+              src={user.avatar}
+              name={user.username}
+              className="w-20 h-20 ring-2 ring-pine-200"
+              fallbackClassName="text-xl md:text-3xl"
+            />
           </div>
           <h1 className="font-display text-lg md:text-h2 text-ink">{user.username}</h1>
           {profileLevel && (

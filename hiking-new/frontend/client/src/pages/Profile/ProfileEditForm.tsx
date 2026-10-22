@@ -5,8 +5,7 @@ import { Camera, Loader2 } from 'lucide-react';
 import { logoutUser, updateProfile } from '@client/src/data/hiking-store';
 import { uploadAvatarImage } from '@client/src/data/avatar-service';
 import type { HikingUser } from '@client/src/data/hiking-types';
-import { withBasePath } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import { UserAvatar } from '@client/src/components/ui/user-avatar';
 
 interface ProfileEditFormProps {
   user: HikingUser;
@@ -136,13 +135,12 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
             className="group relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-pine-200 transition-colors hover:ring-pine-400 focus:outline-none focus:ring-pine-500"
             title="更换头像"
           >
-            {editingAvatar ? (
-              <Image src={withBasePath(editingAvatar)} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <div className="w-full h-full bg-pine-700 text-paper flex items-center justify-center font-bold text-xl md:text-3xl">
-                {user.username?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-            )}
+            <UserAvatar
+              src={editingAvatar}
+              name={user.username}
+              className="w-full h-full"
+              fallbackClassName="text-xl md:text-3xl"
+            />
             <span
               className={`absolute inset-0 flex items-center justify-center gap-1 bg-ink/55 text-paper text-[10px] font-medium transition-opacity ${
                 uploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
