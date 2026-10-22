@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Map as MapIcon, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, Map as MapIcon, RotateCcw, SlidersHorizontal, Users } from 'lucide-react';
 import { ROUTES_LIST } from '@client/src/data/hiking-data';
 import type { RouteItem } from '@client/src/data/hiking-types';
 import RouteCard from '@client/src/components/RouteCard';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
-import TrailTag from '@client/src/components/visual/TrailTag';
-import { withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
 
 const REGION_ORDER: string[] = ['四川', '云南', '西藏', '新疆', '安徽', '湖南'];
 
@@ -103,10 +100,11 @@ const RoutesPage = () => {
     return list;
   }, [filters]);
 
-  const comparisonRoutes: RouteItem[] = filteredRoutes.slice(0, 3);
-  const remainingRoutes: RouteItem[] = filteredRoutes.slice(3);
-  const pageCount: number = Math.max(1, Math.ceil(remainingRoutes.length / PAGE_SIZE));
-  const pagedRoutes: RouteItem[] = remainingRoutes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const comparisonRoutes: RouteItem[] = filteredRoutes.slice(0, 2);
+  const easierRoute: RouteItem | undefined = comparisonRoutes[1] || comparisonRoutes[0];
+  const scenicRoute: RouteItem | undefined = comparisonRoutes[0] || comparisonRoutes[1];
+  const pageCount: number = Math.max(1, Math.ceil(filteredRoutes.length / PAGE_SIZE));
+  const pagedRoutes: RouteItem[] = filteredRoutes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const hasActive: boolean =
     filters.region !== '' || filters.difficulty !== '' || filters.distance !== '' || filters.sort !== 'recommend';
@@ -222,54 +220,51 @@ const RoutesPage = () => {
           />
         ) : (
           <>
-            {comparisonRoutes.length > 0 && (
-              <section className="mb-6">
-                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                  <div>
-                    <p className="text-kicker uppercase text-ember-600">Compare Routes</p>
-                    <h2 className="font-display text-lg text-ink md:text-xl">同维度看三条路线</h2>
+            {easierRoute && scenicRoute && (
+              <section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-2xs">
+                  <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                    <h2 className="font-display text-lg text-ink">路线对比建议</h2>
+                    <span className="text-sm font-semibold text-pine-700">加入对比</span>
                   </div>
-                  <span className="font-data text-[11px] text-muted-foreground">
-                    距离 · 耗时 · 评分
-                  </span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3">
-                  {comparisonRoutes.map((route: RouteItem) => (
-                    <Link
-                      key={route.id}
-                      to={route.postId ? `/post/${route.postId}` : '/routes'}
-                      className="group grid grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-card shadow-2xs transition-all hover:-translate-y-0.5 hover:border-pine-300 hover:shadow-md"
-                    >
-                      <div className="min-h-[150px] overflow-hidden bg-muted">
-                        <Image
-                          src={withCardImage(route.image)}
-                          alt={route.name}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                          loading="lazy"
-                        />
+                  <div className="divide-y divide-border">
+                    <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
+                      <span className="grid h-11 w-11 place-items-center rounded-full bg-pine-50 font-data text-sm font-bold text-pine-700">A</span>
+                      <div className="min-w-0">
+                        <strong className="text-sm text-ink">体能门槛：{easierRoute.name}更温和</strong>
+                        <p className="mt-1 text-xs text-muted-foreground">累计爬升低约 280m</p>
                       </div>
-                      <div className="min-w-0 p-4">
-                        <TrailTag tone={route.difficulty === '高级' ? 'ember' : 'pine'}>
-                          {route.difficulty}
-                        </TrailTag>
-                        <h3 className="mt-2 line-clamp-2 font-display text-base leading-snug text-ink">
-                          {route.name}
-                        </h3>
-                        <div className="mt-3 grid grid-cols-3 gap-1.5 font-data text-[10px] text-muted-foreground">
-                          <span>{route.distance}km</span>
-                          <span>{route.duration}</span>
-                          <span>{route.rating}</span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                          <span>{route.region}</span>
-                          <span className="text-pine-700 transition-transform group-hover:translate-x-0.5">
-                            查看 →
-                          </span>
-                        </div>
+                      <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] text-muted-foreground">推荐</span>
+                    </div>
+                    <div className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
+                      <span className="grid h-11 w-11 place-items-center rounded-full bg-pine-50 font-data text-sm font-bold text-pine-700">B</span>
+                      <div className="min-w-0">
+                        <strong className="text-sm text-ink">景观完整度：{scenicRoute.name}更高</strong>
+                        <p className="mt-1 text-xs text-muted-foreground">雪山、草甸、日照金山</p>
                       </div>
-                    </Link>
-                  ))}
+                      <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] text-muted-foreground">高分</span>
+                    </div>
+                  </div>
                 </div>
+
+                <aside className="flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-2xs">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-ember-600">
+                      <Users size={16} />
+                      近期结伴
+                    </p>
+                    <h3 className="mt-4 font-display text-xl text-ink">已有 6 人寻找同行者</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      按日期、路线和集合地点匹配，减少私聊确认成本。
+                    </p>
+                  </div>
+                  <Link
+                    to="/forum?q=结伴"
+                    className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-pine-700 px-5 text-sm font-semibold text-paper transition-colors hover:bg-pine-800"
+                  >
+                    查看结伴
+                  </Link>
+                </aside>
               </section>
             )}
 
