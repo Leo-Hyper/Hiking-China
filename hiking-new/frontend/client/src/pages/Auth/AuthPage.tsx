@@ -70,9 +70,9 @@ const AuthPage = () => {
       <div className="relative hidden overflow-hidden bg-pine-950 md:flex md:flex-col md:justify-between md:px-12 md:py-10 lg:px-16">
         <TopoBackground className="text-pine-800/70" />
         <Link to="/" className="relative flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-1 ring-white/25">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-paper ring-1 ring-white/30">
             <Image
-              src={withBasePath('/favicon.svg')}
+              src={withBasePath('/img/logo-original.webp')}
               alt=""
               className="w-full h-full object-contain"
             />

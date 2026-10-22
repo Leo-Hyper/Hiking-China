@@ -70,7 +70,7 @@ const Layout = () => {
                 }`}
               >
                 <Image
-                  src={withBasePath('/favicon.svg')}
+                  src={withBasePath('/img/logo-original.webp')}
                   alt="徒步中国"
                   className="w-full h-full object-contain p-0.5"
                 />

@@ -26,9 +26,9 @@ const Footer = () => {
         <div className="grid grid-cols-2 gap-x-6 gap-y-6 mb-8 md:grid-cols-12 md:gap-x-8 md:gap-y-12 md:mb-14">
           <div className="col-span-1 md:col-span-5">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-pine-900 ring-1 ring-pine-700">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-paper ring-1 ring-pine-700/40">
                 <Image
-                  src={withBasePath('/favicon.svg')}
+                  src={withBasePath('/img/logo-original.webp')}
                   alt="徒步中国"
                   className="w-full h-full object-contain p-0.5"
                 />
