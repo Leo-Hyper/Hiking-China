@@ -201,6 +201,32 @@ const SCHEMA_STATEMENTS = [
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL)`,
 
+  // Direct messaging
+  `CREATE TABLE IF NOT EXISTS conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT DEFAULT 'direct',
+    title TEXT DEFAULT '',
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS conversation_members (
+    conversation_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_read_at TEXT,
+    PRIMARY KEY (conversation_id, user_id),
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL,
+    sender_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE)`,
+
   // Comment Likes
   `CREATE TABLE IF NOT EXISTS comment_likes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -304,6 +330,8 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_reports_status_created ON reports(status, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_conversation_members_user ON conversation_members(user_id, conversation_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at DESC)`,
 ];
 
 const DEFAULT_FEATURE_FLAGS = [

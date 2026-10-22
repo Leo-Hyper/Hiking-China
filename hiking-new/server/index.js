@@ -88,6 +88,8 @@ app.use("/api/events", require("./routes/events"));
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/feed", require("./routes/feed"));
+app.use("/api/messages", require("./routes/messages"));
 app.use(require("./routes/sitemap"));
 
 // 健康检查

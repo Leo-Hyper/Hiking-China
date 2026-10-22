@@ -322,3 +322,28 @@ export function markNotificationRead(notificationId: number): Promise<{ message:
 export function markAllNotificationsRead(): Promise<{ message: string }> {
   return http.put<{ message: string }>('/api/notifications/read-all');
 }
+
+// ---------- feed / messages ----------
+export function getPersonalizedFeed(): Promise<{ posts: Record<string, unknown>[] }> {
+  return http.get<{ posts: Record<string, unknown>[] }>('/api/feed');
+}
+
+export function listConversations(): Promise<{ conversations: Record<string, unknown>[] }> {
+  return http.get<{ conversations: Record<string, unknown>[] }>('/api/messages/conversations');
+}
+
+export function createConversation(userId: number): Promise<{ id: number; created: boolean }> {
+  return http.post<{ id: number; created: boolean }>('/api/messages/conversations', { user_id: userId });
+}
+
+export function listMessages(conversationId: number): Promise<{ messages: Record<string, unknown>[] }> {
+  return http.get<{ messages: Record<string, unknown>[] }>(`/api/messages/conversations/${conversationId}`);
+}
+
+export function sendMessage(conversationId: number, content: string): Promise<{ id: number }> {
+  return http.post<{ id: number }>(`/api/messages/conversations/${conversationId}/messages`, { content });
+}
+
+export function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {
+  return http.put<{ ok: boolean }>(`/api/messages/conversations/${conversationId}/read`);
+}

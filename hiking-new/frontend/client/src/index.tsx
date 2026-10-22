@@ -14,6 +14,12 @@ const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
 initFrontendObservability();
 initAnalytics();
 
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => (
   <div style={{ padding: 48, fontFamily: 'system-ui', textAlign: 'center' }}>
     <h1 style={{ fontSize: 20, marginBottom: 8 }}>页面出错了</h1>

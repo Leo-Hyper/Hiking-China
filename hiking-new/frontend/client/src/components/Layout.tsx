@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronDown, FileText, Plus, Search } from 'lucide-react';
+import { CalendarDays, ChevronDown, FileText, MessageCircle, Plus, Search } from 'lucide-react';
 import Footer from './Footer';
 import MobileTabBar from './MobileTabBar';
 import SearchOverlay from './SearchOverlay';
@@ -18,6 +18,7 @@ import {
 
 const NAV_ITEMS: { path: string; label: string }[] = [
   { path: '/', label: '首页' },
+  { path: '/feed', label: '动态' },
   { path: '/routes', label: '路线' },
   { path: '/gear', label: '装备' },
   { path: '/events', label: '活动' },
@@ -136,6 +137,15 @@ const Layout = () => {
                 <Search size={17} strokeWidth={2} />
               </button>
               <NotificationBell />
+              {isLoggedIn && (
+                <Link
+                  to="/messages"
+                  title="私信"
+                  className="grid h-9 w-9 place-items-center rounded-full border border-border bg-white/70 text-muted-foreground transition-colors hover:border-pine-300 hover:text-ink md:h-10 md:w-10"
+                >
+                  <MessageCircle size={17} />
+                </Link>
+              )}
 
               {isLoggedIn ? (
                 <>

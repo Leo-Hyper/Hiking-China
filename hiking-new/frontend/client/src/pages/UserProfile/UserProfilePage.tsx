@@ -8,6 +8,7 @@ import type { FormattedPost } from './PostCard';
 import FollowButton from './FollowButton';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import { MessageCircle } from 'lucide-react';
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
 const LEVEL_CLASSES: string[] = ['', 'bg-pine-500', 'bg-mist-500', 'bg-ember-500'];
@@ -143,6 +144,15 @@ const UserProfilePage = () => {
                   className="rounded-lg border border-border bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300"
                 >
                   编辑资料
+                </Link>
+              )}
+              {!isSelf && isLoggedIn && (
+                <Link
+                  to={`/messages?to=${profileUser.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300"
+                >
+                  <MessageCircle size={15} />
+                  私信
                 </Link>
               )}
             </div>
