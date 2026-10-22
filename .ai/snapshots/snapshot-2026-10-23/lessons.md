@@ -58,3 +58,23 @@
 **Context:** Render 环境变量截图暴露 Cloudinary API Secret 和 JWT_SECRET；公开仓库又包含 SQLite 用户表。
 **Lesson:** 环境变量面板、数据库快照和终端输出在分享前必须脱敏；Secret 一旦进入截图或聊天即视为泄露并立即轮换。
 **Tags:** security, secrets, incident-response
+
+### 2026-10-21 — libsql HTTP batch 的语句必须显式提供 args
+**Context:** 合并模式在本地 file: 模拟库通过，但真实 Turso 在 batch 阶段报 `Cannot convert undefined or null to object`。
+**Lesson:** `@libsql/client` HTTP batch 会把非数组 args 当作对象遍历；无参数 SQL 也必须传 `args: []`，不能省略字段。
+**Tags:** libsql, turso, batch, migration
+
+### 2026-10-21 — 卡片级请求会放大延迟
+**Context:** 帖子卡每张单独请求评论数和作者信息，列表页可产生几十个额外 API 请求。
+**Lesson:** 列表响应应直接携带轻量聚合字段；详情再按需加载，避免把组件解耦变成网络 N+1。
+**Tags:** performance, n+1, api-design
+
+### 2026-10-21 — 非生产遗留依赖也要退出依赖图
+**Context:** 旧 Vue 目录不再部署，但 npm audit 的高危漏洞仍影响仓库安全评分和维护判断。
+**Lesson:** 被替换的前端应明确退出活跃依赖链，保留源码即可；否则会持续制造安全噪声和构建分叉。
+**Tags:** architecture, dependencies, security
+
+### 2026-10-21 — 本地原生依赖不能进入云运行启动链
+**Context:** sqlite3 6 在 Windows 正常，在 Render Node 24 上因 GLIBC 2.38 不匹配导致部署启动失败。
+**Lesson:** 云生产不用的原生模块必须懒加载或放在独立工具包，不能在顶层 require。
+**Tags:** render, sqlite3, glibc, native-module
