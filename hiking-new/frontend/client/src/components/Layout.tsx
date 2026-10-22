@@ -18,7 +18,6 @@ import {
 
 const NAV_ITEMS: { path: string; label: string }[] = [
   { path: '/', label: '首页' },
-  { path: '/feed', label: '动态' },
   { path: '/routes', label: '路线' },
   { path: '/gear', label: '装备' },
   { path: '/events', label: '活动' },

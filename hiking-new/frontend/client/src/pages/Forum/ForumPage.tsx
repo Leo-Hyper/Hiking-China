@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, MessagesSquare, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getCurrentUser, listPosts } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
+import * as api from '@client/src/api';
+import { mapPost } from '@client/src/data/mappers';
 import type { Post } from '@client/src/data/hiking-types';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
 import { Input } from '@client/src/components/ui/input';
@@ -22,17 +24,18 @@ const optionChipClass = (active: boolean): string =>
   }`;
 
 const ForumPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isLoggedIn: boolean = getCurrentUser() !== null;
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') ?? '');
   const [debouncedSearch, setDebouncedSearch] = useState<string>(() => searchParams.get('q') ?? '');
-  const [sortMode, setSortMode] = useState<'latest' | 'popular'>('latest');
+  const [viewMode, setViewMode] = useState<'latest' | 'popular' | 'following'>('latest');
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_LIMIT);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
-  const isLoggedIn: boolean = getCurrentUser() !== null;
   const queryParam: string = searchParams.get('q') ?? '';
+  const tabParam: string = searchParams.get('tab') ?? '';
 
   useEffect(() => {
     setSearchQuery(queryParam);
@@ -45,28 +48,47 @@ const ForumPage = () => {
     return () => window.clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (tabParam === 'following' && isLoggedIn) {
+      setViewMode('following');
+    } else if (!isLoggedIn || tabParam !== 'following') {
+      setViewMode((current) => (current === 'following' ? 'latest' : current));
+    }
+  }, [tabParam, isLoggedIn]);
+
   const { data: filteredData, loading, error, reload } = useAsyncData<Post[]>(
-    () =>
-      listPosts({
-        category: activeCategory || undefined,
-        q: debouncedSearch || undefined,
-      }),
-    [activeCategory, debouncedSearch],
+    () => viewMode === 'following'
+      ? api.getPersonalizedFeed().then((result) => (result.posts || []).map(mapPost))
+      : listPosts({
+          category: activeCategory || undefined,
+          q: debouncedSearch || undefined,
+        }),
+    [activeCategory, debouncedSearch, viewMode],
     { keepPreviousData: true },
   );
 
-  const filteredPosts: Post[] = filteredData ?? [];
+  const filteredPosts: Post[] = useMemo(() => {
+    const base: Post[] = filteredData ?? [];
+    if (viewMode !== 'following') return base;
+    const query = debouncedSearch.trim().toLowerCase();
+    return base.filter((post: Post) => {
+      if (activeCategory && post.category !== activeCategory) return false;
+      if (!query) return true;
+      return [post.title, post.content, post.tags.join(' ')].join(' ').toLowerCase().includes(query);
+    });
+  }, [filteredData, viewMode, activeCategory, debouncedSearch]);
   const sortedPosts: Post[] = useMemo(() => {
     const next: Post[] = [...filteredPosts];
+    if (viewMode === 'following') return next;
     next.sort((a: Post, b: Post) => {
-      if (sortMode === 'popular') {
+      if (viewMode === 'popular') {
         const score = (post: Post): number => post.views + (post.commentCount || 0) * 6;
         return score(b) - score(a);
       }
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     return next;
-  }, [filteredPosts, sortMode]);
+  }, [filteredPosts, viewMode]);
   const posts: Post[] = useMemo(() => sortedPosts.slice(0, visibleCount), [sortedPosts, visibleCount]);
   const hasMore: boolean = filteredPosts.length > visibleCount;
 
@@ -87,6 +109,15 @@ const ForumPage = () => {
     setSearchQuery('');
     setDebouncedSearch('');
     setVisibleCount(PAGE_LIMIT);
+  };
+
+  const selectView = (next: 'latest' | 'popular' | 'following'): void => {
+    setViewMode(next);
+    setVisibleCount(PAGE_LIMIT);
+    const params = new URLSearchParams(searchParams);
+    if (next === 'following') params.set('tab', 'following');
+    else params.delete('tab');
+    setSearchParams(params, { replace: true });
   };
 
   const loadMore = (): void => {
@@ -110,10 +141,21 @@ const ForumPage = () => {
       </div>
 
       <div className="mb-4 flex items-center gap-2">
+        {isLoggedIn && (
+          <button
+            type="button"
+            onClick={() => selectView('following')}
+            className={viewMode === 'following'
+              ? 'rounded-full bg-pine-700 px-4 py-2 text-xs font-semibold text-paper'
+              : 'rounded-full bg-muted/60 px-4 py-2 text-xs text-muted-foreground hover:text-ink'}
+          >
+            关注动态
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => setSortMode('latest')}
-          className={sortMode === 'latest'
+          onClick={() => selectView('latest')}
+          className={viewMode === 'latest'
             ? 'rounded-full bg-pine-700 px-4 py-2 text-xs font-semibold text-paper'
             : 'rounded-full bg-muted/60 px-4 py-2 text-xs text-muted-foreground hover:text-ink'}
         >
@@ -121,14 +163,19 @@ const ForumPage = () => {
         </button>
         <button
           type="button"
-          onClick={() => setSortMode('popular')}
-          className={sortMode === 'popular'
+          onClick={() => selectView('popular')}
+          className={viewMode === 'popular'
             ? 'rounded-full bg-pine-700 px-4 py-2 text-xs font-semibold text-paper'
             : 'rounded-full bg-muted/60 px-4 py-2 text-xs text-muted-foreground hover:text-ink'}
         >
           热门讨论
         </button>
       </div>
+      {viewMode === 'following' && (
+        <p className="mb-4 rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-2.5 text-xs leading-relaxed text-pine-800">
+          关注动态优先展示你关注的作者；关注较少时，会补充社区热门内容。
+        </p>
+      )}
 
       {/* 筛选栏：吸顶单行——分类触发器 + 内联搜索 */}
       <div className="sticky top-11 z-30 -mx-6 bg-paper/95 px-6 backdrop-blur md:top-20 md:mx-0 md:bg-transparent md:px-0 md:backdrop-blur-none">
@@ -281,19 +328,30 @@ const ForumPage = () => {
           <EmptyState
             icon={MessagesSquare}
             title={
-              activeCategory
+              viewMode === 'following'
+                ? '还没有关注动态'
+                : activeCategory
                 ? '该分类下暂无帖子'
                 : searchQuery
                   ? `没有找到与 '${searchQuery}' 相关的帖子`
                   : '还没有帖子'
             }
             description={
-              activeCategory || searchQuery
+              viewMode === 'following'
+                ? '关注一些作者后，他们的最新内容会优先出现在这里'
+                : activeCategory || searchQuery
                 ? '试试换个关键词或分类'
                 : '成为第一个分享山野故事的人'
             }
             action={
-              isLoggedIn ? (
+              viewMode === 'following' ? (
+                <Link
+                  to="/forum"
+                  className="inline-flex items-center rounded-lg bg-pine-700 px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-pine-800"
+                >
+                  浏览全部讨论
+                </Link>
+              ) : isLoggedIn ? (
                 <Link
                   to="/publish"
                   className="inline-flex items-center rounded-lg bg-pine-700 px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-pine-800"

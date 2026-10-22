@@ -27,7 +27,6 @@ const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('./pages/UserProfile/UserProfilePage'));
 const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage'));
-const FeedPage = lazy(() => import('./pages/Feed/FeedPage'));
 const MessagesPage = lazy(() => import('./pages/Messages/MessagesPage'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
@@ -81,7 +80,7 @@ const RoutesComponent = () => {
           <Route path="disclaimer" element={<LegalPage />} />
           <Route path="copyright" element={<LegalPage />} />
           <Route path="contact" element={<LegalPage />} />
-          <Route path="feed" element={<FeedPage />} />
+          <Route path="feed" element={<Navigate to="/forum?tab=following" replace />} />
           <Route path="messages" element={<MessagesPage />} />
         </Route>
         <Route path="publish" element={<RequireAuth><PublishPostPage /></RequireAuth>} />

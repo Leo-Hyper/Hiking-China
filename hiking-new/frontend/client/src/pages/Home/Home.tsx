@@ -9,9 +9,11 @@ import CtaBackgroundCarousel from '@client/src/pages/Home/CtaBackgroundCarousel'
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import CountUpNumber from '@client/src/components/visual/CountUpNumber';
+import * as api from '@client/src/api';
 import { HOME_ROUTES } from '@client/src/data/hiking-data';
 import { listPosts } from '@client/src/data/hiking-store';
-import { useAsyncData } from '@client/src/hooks/use-hiking';
+import { mapPost } from '@client/src/data/mappers';
+import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import type { Post, RouteItem } from '@client/src/data/hiking-types';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
@@ -28,8 +30,16 @@ const sectionReveal = {
 
 const Home = () => {
   const prefersReduced: boolean = useReducedMotion() ?? false;
+  const { isLoggedIn } = useAuth();
   const { data: postsData, loading } = useAsyncData<Post[]>(() => listPosts({ limit: 5 }), []);
+  const { data: feedData, loading: feedLoading } = useAsyncData<Post[]>(
+    () => isLoggedIn
+      ? api.getPersonalizedFeed().then((result) => (result.posts || []).slice(0, 3).map(mapPost))
+      : Promise.resolve([]),
+    [isLoggedIn],
+  );
   const posts: Post[] = loading ? [] : postsData ?? [];
+  const feedPosts: Post[] = feedLoading ? [] : feedData ?? [];
   const routes: RouteItem[] = HOME_ROUTES;
   const featured: RouteItem | undefined = routes[0];
   const restRoutes: RouteItem[] = routes.slice(1);
@@ -119,10 +129,44 @@ const Home = () => {
         )}
       </motion.section>
 
+      {/* 登录用户关注动态摘要 */}
+      {isLoggedIn && (
+        <motion.section {...sectionReveal} className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-20">
+          <SectionHeader
+            index="02"
+            kicker="Following"
+            title="关注动态"
+            className="mb-6 md:mb-12"
+            action={
+              <Link
+                to="/forum?tab=following"
+                className="group inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-pine-700 transition-colors hover:text-pine-800"
+              >
+                查看全部
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            }
+          />
+          {feedLoading ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:block md:space-y-5">
+              {[0, 1, 2].map((item) => <div key={item} className="h-32 animate-pulse rounded-lg bg-muted md:h-40" />)}
+            </div>
+          ) : feedPosts.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:block md:space-y-5">
+              {feedPosts.map((post) => <PostCard key={post.id} post={post} />)}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border bg-card/60 px-5 py-8 text-center text-sm text-muted-foreground">
+              关注一些作者后，他们的最新内容会出现在这里。
+            </p>
+          )}
+        </motion.section>
+      )}
+
       {/* 热门路线：主从布局 */}
       <motion.section {...sectionReveal} className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-20">
         <SectionHeader
-          index="02"
+          index={isLoggedIn ? '03' : '02'}
           kicker="Routes"
           title="热门路线"
           className="mb-6 md:mb-12"
