@@ -7,10 +7,12 @@ import { createPortal } from 'react-dom';
 import RoutesComponent from './app';
 import { Toaster } from '@client/src/components/ui/sonner';
 import { captureFrontendException, initFrontendObservability } from '@client/src/utils/observability';
+import { initAnalytics } from '@client/src/utils/analytics';
 import './index.css';
 
 const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
 initFrontendObservability();
+initAnalytics();
 
 const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => (
   <div style={{ padding: 48, fontFamily: 'system-ui', textAlign: 'center' }}>

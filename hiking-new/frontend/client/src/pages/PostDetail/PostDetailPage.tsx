@@ -22,6 +22,7 @@ import { Image } from '@client/src/components/ui/image';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import ReportButton from '@client/src/components/ReportButton';
 import Seo from '@client/src/components/Seo';
+import { trackEvent } from '@client/src/utils/analytics';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import {
@@ -159,6 +160,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const savedLiked: boolean = await togglePostLike(post.id);
       setIsLiked(savedLiked);
+      trackEvent('post_like', { post_id: post.id, liked: savedLiked });
     } catch (error) {
       setIsLiked(previousLiked);
       setLikeCount(previousCount);
@@ -172,6 +174,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const next: boolean = await toggleBookmark(postId);
       setFavorited(next);
+      trackEvent('post_bookmark', { post_id: postId, bookmarked: next });
     } catch (e) {
       toast((e as Error).message || '请先登录');
     }
@@ -197,6 +200,7 @@ const PostDetailPage: React.FC = () => {
 
   // 分享
   const sharePost = (): void => {
+    trackEvent('post_share', { post_id: postId });
     const url: string = new URL(`/post/${postId}`, window.location.origin).toString();
     if (navigator.share) {
       navigator.share({ title: post?.title, url }).catch(() => copyLink(url));

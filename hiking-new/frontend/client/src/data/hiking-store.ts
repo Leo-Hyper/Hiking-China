@@ -6,6 +6,8 @@ export {
   loginUser,
   logoutUser,
   requestPasswordReset,
+  requestAccountDeletion,
+  cancelAccountDeletion,
   resetPassword,
   registerUser,
   sendVerificationEmail,

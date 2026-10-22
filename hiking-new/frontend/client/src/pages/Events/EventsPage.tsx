@@ -13,6 +13,7 @@ import EmptyState from '@client/src/components/visual/EmptyState';
 import EventCard, { isEventEnded } from './EventCard';
 import { toast } from 'sonner';
 import Seo from '@client/src/components/Seo';
+import { trackEvent } from '@client/src/utils/analytics';
 
 type EventFilterKey = 'status' | 'difficulty' | 'location' | 'sort';
 
@@ -197,6 +198,7 @@ const EventsPage = () => {
     try {
       const next: boolean = await toggleEventSignup(event.id);
       setSignedUpMap((prev: Record<number, boolean>) => ({ ...prev, [event.id]: next }));
+      trackEvent('event_signup_toggle', { event_id: event.id, signed_up: next });
       toast.success(next ? '报名成功' : '已取消报名');
     } catch (err) {
       toast(err instanceof Error ? err.message : '操作失败，请重试');

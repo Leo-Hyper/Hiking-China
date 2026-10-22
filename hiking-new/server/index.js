@@ -87,6 +87,7 @@ app.use("/api/bookmarks", require("./routes/bookmarks"));
 app.use("/api/events", require("./routes/events"));
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/notifications", require("./routes/notifications"));
 app.use(require("./routes/sitemap"));
 
 // 健康检查

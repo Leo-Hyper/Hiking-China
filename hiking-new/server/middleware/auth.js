@@ -63,7 +63,7 @@ async function authMiddleware(req, res, next) {
     if (!state || String(state.account_status || 'active') === 'deleted') {
       return res.status(401).json({ error: '账号不存在，请重新登录' });
     }
-    if (String(state.account_status || 'active') !== 'active') {
+    if (!['active', 'pending_deletion'].includes(String(state.account_status || 'active'))) {
       return res.status(403).json({ error: '账号已被暂停，请联系管理员' });
     }
     if (Number(decoded.auth_version || 0) !== Number(state.auth_version || 0)) {

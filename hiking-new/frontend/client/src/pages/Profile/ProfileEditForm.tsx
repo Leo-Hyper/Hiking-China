@@ -2,7 +2,12 @@ import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Loader2 } from 'lucide-react';
-import { logoutUser, updateProfile } from '@client/src/data/hiking-store';
+import {
+  cancelAccountDeletion,
+  logoutUser,
+  requestAccountDeletion,
+  updateProfile,
+} from '@client/src/data/hiking-store';
 import { uploadAvatarImage } from '@client/src/data/avatar-service';
 import type { HikingUser } from '@client/src/data/hiking-types';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
@@ -45,6 +50,10 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
   const [saving, setSaving] = useState<boolean>(false);
   const [saveMsg, setSaveMsg] = useState<string>('');
   const [saveError, setSaveError] = useState<boolean>(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteMessage, setDeleteMessage] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const toggleGear = (gear: string): void => {
     setEditingGear((prev: string[]) =>
@@ -113,6 +122,35 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
   const handleLogout = (): void => {
     logoutUser();
     navigate('/login');
+  };
+
+  const requestDeletion = async (): Promise<void> => {
+    if (!user.email) {
+      setDeleteMessage('当前账号缺少邮箱，无法自助注销');
+      return;
+    }
+    setDeleteLoading(true);
+    setDeleteMessage('');
+    try {
+      setDeleteMessage(await requestAccountDeletion(user.email, deletePassword));
+      setDeletePassword('');
+    } catch (err) {
+      setDeleteMessage(err instanceof Error ? err.message : '注销申请失败');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const cancelDeletion = async (): Promise<void> => {
+    setDeleteLoading(true);
+    setDeleteMessage('');
+    try {
+      setDeleteMessage(await cancelAccountDeletion());
+    } catch (err) {
+      setDeleteMessage(err instanceof Error ? err.message : '撤销失败');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   return (
@@ -277,6 +315,46 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
           <button onClick={handleLogout} className="block text-xs font-medium text-destructive transition-colors hover:opacity-80">
             退出登录
           </button>
+          <button
+            type="button"
+            onClick={() => setShowDeleteAccount((value) => !value)}
+            className="block text-xs font-medium text-destructive/80 transition-colors hover:text-destructive"
+          >
+            注销账号
+          </button>
+          {showDeleteAccount && (
+            <div className="mt-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                提交后进入 7 天冷静期，期间可撤销。到期后账号信息会匿名化，公开内容默认保留。
+              </p>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+                placeholder="输入当前密码确认"
+                className="mt-3 w-full rounded-lg border border-border bg-card px-3 py-2 text-xs outline-none focus:border-destructive"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={requestDeletion}
+                  disabled={deleteLoading || !deletePassword}
+                  className="rounded-lg bg-destructive px-3 py-2 text-xs font-semibold text-destructive-foreground disabled:opacity-50"
+                >
+                  {deleteLoading ? '提交中...' : '提交注销申请'}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelDeletion}
+                  disabled={deleteLoading}
+                  className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-ink disabled:opacity-50"
+                >
+                  撤销注销
+                </button>
+              </div>
+              {deleteMessage && <p className="mt-2 text-xs text-muted-foreground">{deleteMessage}</p>}
+            </div>
+          )}
         </div>
       </div>
     </div>

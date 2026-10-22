@@ -82,3 +82,13 @@ export async function resetPassword(token: string, password: string): Promise<st
   const data = await api.resetPassword(token, password);
   return data.message;
 }
+
+export async function requestAccountDeletion(email: string, password: string): Promise<string> {
+  const data = await api.requestAccountDeletion(email, password);
+  return data.message;
+}
+
+export async function cancelAccountDeletion(): Promise<string> {
+  const data = await api.cancelAccountDeletion();
+  return data.message;
+}

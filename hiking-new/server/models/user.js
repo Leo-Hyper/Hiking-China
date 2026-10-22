@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { get, run } = require("./db");
+const { all, get, run } = require("./db");
 
 async function register(username, email, password) {
   const saltRounds = 12;
@@ -25,7 +25,7 @@ async function login(email, password) {
 
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new Error("邮箱或密码错误");
-  if (String(user.account_status || "active") !== "active") {
+  if (!["active", "pending_deletion"].includes(String(user.account_status || "active"))) {
     throw new Error("账号已被暂停，请联系管理员");
   }
 
@@ -36,7 +36,7 @@ async function login(email, password) {
 async function getUserById(id) {
   const user = await get(
     `SELECT id, username, email, avatar, bio, location, hikinglevel, gear_prefs,
-            profile_public, role, email_verified, account_status, created_at
+            profile_public, role, email_verified, account_status, deletion_requested_at, created_at
      FROM users WHERE id = ?`,
     [id]
   );
@@ -67,6 +67,45 @@ async function setUserPassword(userId, passwordHash) {
   const result = await run(
     "UPDATE users SET password_hash = ?, auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
     [passwordHash, userId]
+  );
+  return { changes: Number(result.changes) };
+}
+
+async function requestAccountDeletion(userId) {
+  const result = await run(
+    "UPDATE users SET account_status = 'pending_deletion', deletion_requested_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [new Date().toISOString(), userId]
+  );
+  return { changes: Number(result.changes) };
+}
+
+async function cancelAccountDeletion(userId) {
+  const result = await run(
+    "UPDATE users SET account_status = 'active', deletion_requested_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [userId]
+  );
+  return { changes: Number(result.changes) };
+}
+
+async function listDueAccountDeletions(cutoffIso) {
+  return all(
+    `SELECT id, email FROM users
+     WHERE account_status = 'pending_deletion'
+       AND deletion_requested_at IS NOT NULL
+       AND deletion_requested_at <= ?`,
+    [cutoffIso]
+  );
+}
+
+async function anonymizeAccount(userId) {
+  const result = await run(
+    `UPDATE users
+     SET username = ?, email = ?, password_hash = '', avatar = NULL, bio = '',
+         location = '', gear_prefs = '[]', profile_public = 0,
+         account_status = 'deleted', deletion_requested_at = NULL,
+         auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [`已注销用户_${userId}`, `deleted+${userId}@invalid.local`, userId]
   );
   return { changes: Number(result.changes) };
 }
@@ -120,6 +159,10 @@ module.exports = {
   getUserByEmail,
   markEmailVerified,
   setUserPassword,
+  requestAccountDeletion,
+  cancelAccountDeletion,
+  listDueAccountDeletions,
+  anonymizeAccount,
   updateUserProfile,
   getPublicUserById,
 };

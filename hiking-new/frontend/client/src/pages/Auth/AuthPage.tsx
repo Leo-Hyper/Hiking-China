@@ -8,6 +8,7 @@ import {
 import { withBasePath } from '@client/src/utils/base-path';
 import TopoBackground from '@client/src/components/visual/TopoBackground';
 import { Image } from '@client/src/components/ui/image';
+import { trackEvent } from '@client/src/utils/analytics';
 
 type AuthMode = 'login' | 'register';
 
@@ -50,6 +51,7 @@ const AuthPage = () => {
     setSuccessMsg('');
     try {
       const user = await loginUser(form.email, form.password);
+      trackEvent('login_success');
       if (!user.emailVerified) {
         setSuccessMsg('登录成功。请先完成邮箱验证后再发帖、评论或报名活动。');
         return;
@@ -68,6 +70,7 @@ const AuthPage = () => {
     setSuccessMsg('');
     try {
       await registerUser(form.username, form.email, form.password);
+      trackEvent('register_success');
       setSuccessMsg('注册成功。验证邮件已发送，请查收后再发帖、评论或报名活动。');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '注册失败，请重试');

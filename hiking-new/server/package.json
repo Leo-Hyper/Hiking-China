@@ -12,7 +12,8 @@
     "migrate:merge:check": "node scripts/migrate-local-to-turso.cjs --merge-content --check",
     "migrate:merge:apply": "node scripts/migrate-local-to-turso.cjs --merge-content --apply",
     "admin:grant": "node scripts/set-admin.cjs",
-    "backup:turso": "node scripts/backup-turso.cjs"
+    "backup:turso": "node scripts/backup-turso.cjs",
+    "accounts:process-deletions": "node scripts/process-account-deletions.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

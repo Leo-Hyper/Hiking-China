@@ -2,6 +2,7 @@
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
 const { toggleFollow, isFollowing } = require("../models/follow");
+const { createNotification } = require("../models/notification");
 
 // POST /api/follow/toggle/:userId - 切换关注
 router.post("/toggle/:userId", authMiddleware, async (req, res) => {
@@ -11,6 +12,18 @@ router.post("/toggle/:userId", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "不能关注自己" });
     }
     const result = await toggleFollow(req.userId, targetId);
+    if (result.following) {
+      await createNotification({
+        userId: targetId,
+        type: "follow",
+        actorId: req.userId,
+        entityType: "user",
+        entityId: req.userId,
+        title: "有人关注了你",
+        body: "去公开主页看看新的同行者",
+        link: `/user/${req.userId}`,
+      });
+    }
     res.json(result);
   } catch (err) {
     if (err.message === "用户不存在") {

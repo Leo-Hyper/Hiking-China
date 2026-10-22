@@ -94,6 +94,7 @@ const SCHEMA_STATEMENTS = [
   `ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 1`,
   `ALTER TABLE users ADD COLUMN auth_version INTEGER DEFAULT 0`,
   `ALTER TABLE users ADD COLUMN account_status TEXT DEFAULT 'active'`,
+  `ALTER TABLE users ADD COLUMN deletion_requested_at TEXT`,
 
   // Posts
   `CREATE TABLE IF NOT EXISTS posts (

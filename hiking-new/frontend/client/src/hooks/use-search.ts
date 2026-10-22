@@ -8,6 +8,22 @@ export interface HighlightPart {
   hit: boolean;
 }
 
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  雪山: ['四姑娘山', '贡嘎', '梅里', '雪线'],
+  装备: ['背包', '徒步鞋', '冲锋衣', '睡袋'],
+  北京: ['西山', '云蒙山', '长城', '怀柔'],
+  新手: ['入门', '初级', '轻装'],
+  长线: ['重装', '多日', '露营'],
+};
+
+function expandTokens(tokens: string[]): string[] {
+  const expanded = new Set(tokens);
+  tokens.forEach((token) => {
+    (SEARCH_SYNONYMS[token] || []).forEach((synonym) => expanded.add(synonym));
+  });
+  return [...expanded];
+}
+
 function toSearchItem(r: api.SearchResult): SearchItem {
   return {
     id: r.id,
@@ -53,7 +69,7 @@ export function useSearch() {
     let cancelled = false;
     setIsSearching(true);
     timerRef.current = setTimeout(async () => {
-      const tokens: string[] = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const tokens: string[] = expandTokens(query.trim().toLowerCase().split(/\s+/).filter(Boolean));
       const apiItems: SearchItem[] = await api
         .search(query.trim())
         .then((res: { results: api.SearchResult[] }) => (res.results || []).map(toSearchItem))

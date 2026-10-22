@@ -8,6 +8,7 @@ import CommentItemView from './CommentItemView';
 import { toast } from 'sonner';
 import { MessageSquare } from 'lucide-react';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import { trackEvent } from '@client/src/utils/analytics';
 
 interface CommentSectionProps {
   postId: number;
@@ -46,6 +47,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     setSubmitting(true);
     try {
       await addComment({ postId, content: newComment.trim(), imageUrl: commentImageUrls[0] || undefined });
+      trackEvent('comment_create', { post_id: postId });
       setNewComment('');
       setCommentImageUrls([]);
       reload();

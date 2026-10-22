@@ -5,6 +5,7 @@ const { createComment, getAllCommentsByPostId, likeComment, isCommentLiked, upda
 const { get } = require("../models/db");
 const { clearPublicCache } = require("../middleware/public-cache");
 const { safeImageUrl } = require("../utils/validation");
+const { createNotification } = require("../models/notification");
 
 // 二级扁平嵌套树：
 // 顶级评论 parent_id=NULL，子回复的 parent_id 指向所属顶级评论（而非直接父评论）
@@ -73,7 +74,7 @@ router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
     }
 
     // 如果是回复（有 parent_id 且 parent_id 的父评论有 parent_id），保持 parent_id 指向顶级评论
-    const post = await get("SELECT id FROM posts WHERE id = ? AND status = 1", [post_id]);
+    const post = await get("SELECT id, user_id FROM posts WHERE id = ? AND status = 1", [post_id]);
     if (!post) return res.status(404).json({ error: "帖子不存在" });
 
     let finalParentId = parent_id;
@@ -114,6 +115,20 @@ router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
                  LEFT JOIN users u ON c.user_id = u.id
                  WHERE c.id = ?`;
     const comment = await get(sql, [result.id]);
+
+    const notificationUserId = reply_to_user_id || Number(post.user_id);
+    if (notificationUserId && notificationUserId !== req.userId) {
+      await createNotification({
+        userId: notificationUserId,
+        type: reply_to_user_id ? "comment_reply" : "post_comment",
+        actorId: req.userId,
+        entityType: "post",
+        entityId: post_id,
+        title: reply_to_user_id ? "有人回复了你的评论" : "你的帖子有新评论",
+        body: content.slice(0, 120),
+        link: `/post/${post_id}`,
+      });
+    }
 
     clearPublicCache();
     res.status(201).json({ comment });

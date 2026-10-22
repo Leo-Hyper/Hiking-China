@@ -20,6 +20,8 @@ const {
 const { publicCache, clearPublicCache } = require("../middleware/public-cache");
 const { sanitizeRichText } = require("../services/sanitize");
 const { pageLimit, pageOffset, safeImageUrls } = require("../utils/validation");
+const { createNotification } = require("../models/notification");
+const { get } = require("../models/db");
 
 // GET /api/posts/my - 获取我的帖子（需登录）
 router.get("/my", authMiddleware, async (req, res) => {
@@ -214,6 +216,21 @@ router.post("/like/toggle/:postId", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "帖子 ID 无效" });
     }
     const result = await togglePostLike(postId, req.userId);
+    if (result.liked) {
+      const post = await get("SELECT user_id, title FROM posts WHERE id = ?", [postId]);
+      if (post && Number(post.user_id) !== req.userId) {
+        await createNotification({
+          userId: Number(post.user_id),
+          type: "post_like",
+          actorId: req.userId,
+          entityType: "post",
+          entityId: postId,
+          title: "你的帖子收到新的点赞",
+          body: post.title,
+          link: `/post/${postId}`,
+        });
+      }
+    }
     clearPublicCache();
     res.json(result);
   } catch (err) {

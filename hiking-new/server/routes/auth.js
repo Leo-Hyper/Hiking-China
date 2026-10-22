@@ -8,6 +8,8 @@ const {
   getUserByEmail,
   markEmailVerified,
   setUserPassword,
+  requestAccountDeletion,
+  cancelAccountDeletion,
   updateUserProfile,
   getPublicUserById,
 } = require("../models/user");
@@ -291,6 +293,39 @@ router.post("/reset-password", async (req, res) => {
   } catch (err) {
     console.error("[AUTH] reset password failed:", err);
     res.status(500).json({ error: "密码重置失败" });
+  }
+});
+
+// POST /api/auth/delete-account/request
+router.post("/delete-account/request", authMiddleware, async (req, res) => {
+  try {
+    const password = String(req.body.password || "");
+    const user = await getUserByEmail(String(req.body.email || "").trim().toLowerCase());
+    if (!user || Number(user.id) !== Number(req.userId)) {
+      return res.status(400).json({ error: "账号信息不匹配" });
+    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(401).json({ error: "密码错误" });
+
+    await requestAccountDeletion(req.userId);
+    res.json({
+      message: "注销申请已提交，7 天内可撤销；到期后将匿名化账号信息",
+      deletion_requested_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[AUTH] request account deletion failed:", err);
+    res.status(500).json({ error: "注销申请失败" });
+  }
+});
+
+// POST /api/auth/delete-account/cancel
+router.post("/delete-account/cancel", authMiddleware, async (req, res) => {
+  try {
+    await cancelAccountDeletion(req.userId);
+    res.json({ message: "已撤销注销申请" });
+  } catch (err) {
+    console.error("[AUTH] cancel account deletion failed:", err);
+    res.status(500).json({ error: "撤销注销失败" });
   }
 });
 

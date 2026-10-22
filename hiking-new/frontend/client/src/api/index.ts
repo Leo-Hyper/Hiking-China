@@ -39,6 +39,14 @@ export function resetPassword(token: string, password: string): Promise<{ messag
   return http.post<{ message: string }>('/api/auth/reset-password', { token, password });
 }
 
+export function requestAccountDeletion(email: string, password: string): Promise<{ message: string }> {
+  return http.post<{ message: string }>('/api/auth/delete-account/request', { email, password });
+}
+
+export function cancelAccountDeletion(): Promise<{ message: string }> {
+  return http.post<{ message: string }>('/api/auth/delete-account/cancel');
+}
+
 export function updateProfile(patch: Record<string, unknown>): Promise<{ message: string; user: Record<string, unknown> }> {
   return http.put<{ message: string; user: Record<string, unknown> }>('/api/auth/profile', patch);
 }
@@ -300,4 +308,17 @@ export function listAdminFeatureFlags(): Promise<{ flags: Record<string, unknown
 
 export function setAdminFeatureFlag(key: string, enabled: boolean): Promise<{ message: string }> {
   return http.put<{ message: string }>(`/api/admin/feature-flags/${encodeURIComponent(key)}`, { enabled });
+}
+
+// ---------- notifications ----------
+export function listNotifications(): Promise<{ notifications: Record<string, unknown>[]; unread: number }> {
+  return http.get<{ notifications: Record<string, unknown>[]; unread: number }>('/api/notifications');
+}
+
+export function markNotificationRead(notificationId: number): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/notifications/${notificationId}/read`);
+}
+
+export function markAllNotificationsRead(): Promise<{ message: string }> {
+  return http.put<{ message: string }>('/api/notifications/read-all');
 }

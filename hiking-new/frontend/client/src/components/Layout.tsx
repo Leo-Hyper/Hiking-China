@@ -4,6 +4,7 @@ import { CalendarDays, ChevronDown, FileText, Plus, Search } from 'lucide-react'
 import Footer from './Footer';
 import MobileTabBar from './MobileTabBar';
 import SearchOverlay from './SearchOverlay';
+import NotificationBell from './NotificationBell';
 import { useAuth } from '@client/src/hooks/use-hiking';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
@@ -52,6 +53,12 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-paper text-ink pb-[calc(4rem_+_env(safe-area-inset-bottom))] md:pb-0">
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[200] -translate-y-20 rounded-lg bg-pine-700 px-4 py-2 text-sm font-semibold text-paper transition-transform focus:translate-y-0"
+      >
+        跳到主要内容
+      </a>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isTransparent
@@ -128,6 +135,7 @@ const Layout = () => {
               >
                 <Search size={17} strokeWidth={2} />
               </button>
+              <NotificationBell />
 
               {isLoggedIn ? (
                 <>
@@ -185,7 +193,7 @@ const Layout = () => {
 
       </header>
 
-      <main className="pt-11 md:pt-20">
+      <main id="main-content" className="pt-11 md:pt-20">
         <Outlet />
       </main>
 

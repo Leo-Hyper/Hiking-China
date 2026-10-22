@@ -7,6 +7,7 @@ import { useIsMobile } from '@client/src/hooks/use-mobile';
 import type { HighlightPart } from '@client/src/hooks/use-search';
 import type { SearchItem } from '@client/src/data/hiking-types';
 import TrailTag from './visual/TrailTag';
+import { trackEvent } from '@client/src/utils/analytics';
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -162,7 +163,10 @@ const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
                       <Link
                         key={`${item.type}-${item.id}`}
                         to={item.route}
-                        onClick={close}
+                        onClick={() => {
+                          trackEvent('search_result_click', { query, type: item.type, route: item.route });
+                          close();
+                        }}
                         className="block p-4 rounded-lg border border-border bg-card md:hover:border-pine-300 md:hover:bg-pine-50/50 active:bg-pine-50 transition-colors group cursor-pointer max-md:p-3"
                       >
                         <div className="flex items-start justify-between gap-3">
