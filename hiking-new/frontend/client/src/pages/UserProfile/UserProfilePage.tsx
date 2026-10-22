@@ -99,85 +99,82 @@ const UserProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="max-w-3xl mx-auto px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
         {/* 用户信息卡片 */}
-        <div className="mb-8 rounded-xl border border-border bg-card p-6 md:p-8">
-          <div className="flex flex-col items-center text-center">
+        <section className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-2xs">
+          <div className="flex flex-col gap-5 p-6 md:flex-row md:items-start md:p-8">
             <UserAvatar
               src={profileUser.avatar}
               name={profileUser.username}
-              className="w-24 h-24 ring-2 ring-pine-200 mb-4"
+              className="w-20 h-20 md:w-24 md:h-24 ring-2 ring-pine-200"
               fallbackClassName="text-2xl md:text-4xl"
             />
-
-            <h1 className="font-display text-lg md:text-h2 text-ink mb-1">{profileUser.username}</h1>
-            {profileLevel && (
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-paper text-xs font-medium mb-2 ${levelClass}`}
-              >
-                {profileLevel}
-              </span>
-            )}
-            {profileUser.bio ? (
-              <p className="text-sm text-muted-foreground mb-4 max-w-md">{profileUser.bio}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground mb-2">这个人很懒，什么都没写...</p>
-            )}
-            {profileUser.location ? (
-              <p className="text-xs text-muted-foreground mb-4">{profileUser.location}</p>
-            ) : (
-              <p className="mb-4"></p>
-            )}
-
-            {profileGear.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 mb-3">
-                {profileGear.map((g: string) => (
-                  <span key={g} className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                    {g}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-display text-xl text-ink md:text-2xl">{profileUser.username}</h1>
+                {profileLevel && (
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-paper text-xs font-medium ${levelClass}`}>
+                    {profileLevel}
                   </span>
-                ))}
+                )}
               </div>
-            )}
-            <div className="font-data text-xs text-muted-foreground mb-4">加入于 {formatDate(profileUser.createdAt)}</div>
-
-            {/* 统计 */}
-            <div className="flex items-center gap-8 mb-6">
-              <div className="text-center">
-                <div className="font-data text-lg text-ink">{stats.postCount || 0}</div>
-                <div className="text-xs text-muted-foreground">帖子</div>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                {profileUser.bio || '这个人很懒，什么都没写...'}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {profileUser.location && <span>{profileUser.location}</span>}
+                <span className="font-data">加入于 {formatDate(profileUser.createdAt)}</span>
               </div>
-              <div className="text-center">
-                <div className="font-data text-lg text-ink">{stats.followersCount || 0}</div>
-                <div className="text-xs text-muted-foreground">粉丝</div>
-              </div>
-              <div className="text-center">
-                <div className="font-data text-lg text-ink">{stats.followingCount || 0}</div>
-                <div className="text-xs text-muted-foreground">关注</div>
-              </div>
+              {profileGear.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {profileGear.map((g: string) => (
+                    <span key={g} className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {/* 关注按钮（不给自己显示） */}
-            <FollowButton userId={profileUser.id} />
-
-            {isSelf && (
-              <Link
-                to="/profile"
-                className="rounded-lg border border-border bg-card px-4 py-2 md:px-8 md:py-2.5 text-sm font-medium text-ink transition-colors hover:border-pine-300"
-              >
-                编辑个人资料
-              </Link>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              <FollowButton userId={profileUser.id} />
+              {isSelf && (
+                <Link
+                  to="/profile"
+                  className="rounded-lg border border-border bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300"
+                >
+                  编辑资料
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
+          <div className="grid grid-cols-3 gap-px border-t border-border bg-border">
+            {[
+              ['帖子', stats.postCount || 0],
+              ['粉丝', stats.followersCount || 0],
+              ['关注', stats.followingCount || 0],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="bg-card px-4 py-4 text-center">
+                <div className="font-data text-lg text-ink">{value}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* 用户帖子 */}
         <div>
-          <h2 className="text-lg font-semibold text-ink mb-4">{profileUser.username} 发布的帖子</h2>
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-kicker uppercase text-ember-600">Public Journal</p>
+              <h2 className="mt-1 font-display text-lg text-ink">公开游记</h2>
+            </div>
+            <span className="font-data text-[11px] text-muted-foreground">{userPosts.length} 篇</span>
+          </div>
 
           {userPosts.length === 0 ? (
             <EmptyState title="暂无帖子" description="这位伙伴还没有发布路书和故事" />
           ) : (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-1 md:gap-y-4">
+            <div className="grid gap-y-4">
               {userPosts.map((post: Post) => (
                 <PostCard key={post.id} post={formatPost(post)} />
               ))}

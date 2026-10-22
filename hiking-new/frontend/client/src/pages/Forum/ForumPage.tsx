@@ -214,11 +214,54 @@ const ForumPage = () => {
             }
           />
         ) : posts.length > 0 ? (
-          /* 帖子列表 */
-          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card px-3 md:px-4">
-            {posts.map((post: Post) => (
-              <ForumPostRow key={post.id} post={post} />
-            ))}
+          <div className="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_264px]">
+            {/* 帖子列表 */}
+            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card px-3 md:px-4">
+              {posts.map((post: Post) => (
+                <ForumPostRow key={post.id} post={post} />
+              ))}
+            </div>
+            <aside className="space-y-4 md:sticky md:top-24">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-2xs">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h2 className="font-display text-base text-ink">本周热议</h2>
+                  <span className="font-data text-[10px] text-muted-foreground">WEEKLY</span>
+                </div>
+                <div className="space-y-1">
+                  {[
+                    ['# 高原反应怎么预防', '雪山'],
+                    ['# 雨崩村住宿怎么选', '雨崩村'],
+                    ['# 新手第一双徒步鞋', '装备'],
+                    ['# 周末结伴北京周边', '北京'],
+                  ].map(([label, query]) => (
+                    <Link
+                      key={label}
+                      to={`/forum?q=${encodeURIComponent(query)}`}
+                      className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition-colors hover:bg-pine-50 hover:text-pine-700"
+                    >
+                      <span>{label}</span>
+                      <span>→</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-5 shadow-2xs">
+                <h2 className="font-display text-base text-ink">社区规则</h2>
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+                  <li>安全优先，真实分享。</li>
+                  <li>尊重当地环境与同行者。</li>
+                  <li>路线和活动请标明时间与来源。</li>
+                </ul>
+              </div>
+              {isLoggedIn && (
+                <Link
+                  to="/publish"
+                  className="flex items-center justify-center rounded-xl bg-pine-700 px-4 py-3 text-sm font-semibold text-paper transition-colors hover:bg-pine-800"
+                >
+                  发布你的山野故事
+                </Link>
+              )}
+            </aside>
           </div>
         ) : (
           /* 空状态 */

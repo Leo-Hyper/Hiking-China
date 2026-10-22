@@ -84,62 +84,66 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-6 lg:px-8 py-12">
         {/* 头部 */}
-        <div className="text-center mb-10">
-          <div className="relative inline-block mb-4">
+        <section className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-2xs">
+          <div className="flex flex-col gap-5 px-6 py-6 md:flex-row md:items-center md:px-8 md:py-7">
             <UserAvatar
               src={user.avatar}
               name={user.username}
               className="w-20 h-20 ring-2 ring-pine-200"
               fallbackClassName="text-xl md:text-3xl"
             />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-display text-xl text-ink md:text-2xl">{user.username}</h1>
+                {profileLevel && (
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-paper text-xs font-medium ${levelClass}`}>
+                    {profileLevel}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
+                {user.bio || '这个人很懒，什么都没写...'}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {user.location && <span>{user.location}</span>}
+                <span className="font-data">TRAIL CHINA MEMBER</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border bg-paper px-4 text-sm font-medium text-ink transition-colors hover:border-pine-300"
+            >
+              编辑资料
+            </button>
           </div>
-          <h1 className="font-display text-lg md:text-h2 text-ink">{user.username}</h1>
-          {profileLevel && (
-            <p className="text-xs mt-2">
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-paper text-xs font-medium ${levelClass}`}
-              >
-                {profileLevel}
-              </span>
-            </p>
-          )}
-          <p className="text-sm text-muted-foreground mt-2">{user.bio || '这个人很懒，什么都没写...'}</p>
-          {user.location && <p className="text-xs text-muted-foreground mt-0.5">{user.location}</p>}
-
-          {/* 统计栏 */}
-          <div className="flex items-center justify-center gap-8 mt-5">
-            <div className="text-center">
-              <div className="font-data text-lg text-ink">{myPosts.length}</div>
-              <div className="text-xs text-muted-foreground">帖子</div>
-            </div>
-            <div className="text-center">
-              <div className="font-data text-lg text-ink">{stats.followersCount}</div>
-              <div className="text-xs text-muted-foreground">粉丝</div>
-            </div>
-            <div className="text-center">
-              <div className="font-data text-lg text-ink">{stats.followingCount}</div>
-              <div className="text-xs text-muted-foreground">关注</div>
-            </div>
-            <div className="text-center">
-              <div className="font-data text-lg text-ink">{myBookmarks.length}</div>
-              <div className="text-xs text-muted-foreground">收藏</div>
-            </div>
+          <div className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
+            {[
+              ['帖子', myPosts.length],
+              ['粉丝', stats.followersCount],
+              ['关注', stats.followingCount],
+              ['收藏', myBookmarks.length],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="bg-card px-5 py-4 text-center">
+                <div className="font-data text-lg text-ink">{value}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+              </div>
+            ))}
           </div>
-        </div>
+        </section>
 
         {/* Tab 切换 */}
-        <div className="mb-8 border-b border-border">
-          <div className="mx-auto flex max-w-md justify-center gap-8">
+        <div className="mb-7">
+          <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1 shadow-2xs">
             {PROFILE_TABS.map((tab: { key: ProfileTabKey; label: string }) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`-mb-px border-b-2 pb-3 text-sm transition-colors ${
+                className={`rounded-lg px-4 py-2.5 text-sm transition-colors ${
                   activeTab === tab.key
-                    ? 'border-pine-700 font-semibold text-ink'
-                    : 'border-transparent text-muted-foreground hover:text-ink'
+                    ? 'bg-pine-700 font-semibold text-paper shadow-2xs'
+                    : 'text-muted-foreground hover:bg-pine-50 hover:text-ink'
                 }`}
               >
                 {tab.label}

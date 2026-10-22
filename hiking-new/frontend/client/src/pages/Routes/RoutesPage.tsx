@@ -6,6 +6,7 @@ import type { RouteItem } from '@client/src/data/hiking-types';
 import RouteCard from '@client/src/components/RouteCard';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import TrailTag from '@client/src/components/visual/TrailTag';
 import { withCardImage } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 
@@ -102,8 +103,8 @@ const RoutesPage = () => {
     return list;
   }, [filters]);
 
-  const featuredRoute: RouteItem | undefined = filteredRoutes[0];
-  const remainingRoutes: RouteItem[] = filteredRoutes.slice(1);
+  const comparisonRoutes: RouteItem[] = filteredRoutes.slice(0, 3);
+  const remainingRoutes: RouteItem[] = filteredRoutes.slice(3);
   const pageCount: number = Math.max(1, Math.ceil(remainingRoutes.length / PAGE_SIZE));
   const pagedRoutes: RouteItem[] = remainingRoutes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -221,35 +222,55 @@ const RoutesPage = () => {
           />
         ) : (
           <>
-            {featuredRoute && (
-              <Link
-                to={featuredRoute.postId ? `/post/${featuredRoute.postId}` : '/routes'}
-                className="group relative mb-5 block min-h-[300px] overflow-hidden rounded-xl md:min-h-[340px]"
-              >
-                <Image
-                  src={withCardImage(featuredRoute.image)}
-                  alt={featuredRoute.name}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
-                  loading="eager"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-ink/75 via-ink/35 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-paper md:p-8">
-                  <span className="mb-3 inline-flex rounded-full bg-ember-500 px-2.5 py-1 text-[10px] font-semibold">
-                    本周推荐
-                  </span>
-                  <h2 className="font-display text-xl md:text-3xl">{featuredRoute.name}</h2>
-                  <p className="mt-2 max-w-xl text-xs leading-relaxed text-paper/80 md:text-sm">
-                    {featuredRoute.description}
-                  </p>
-                  <div className="mt-4 flex flex-wrap items-center gap-3 font-data text-[11px] text-paper/85 md:text-xs">
-                    <span>{featuredRoute.region}</span>
-                    <span>{featuredRoute.difficulty}</span>
-                    <span>{featuredRoute.distance}km</span>
-                    <span>{featuredRoute.duration}</span>
-                    <span>评分 {featuredRoute.rating}</span>
+            {comparisonRoutes.length > 0 && (
+              <section className="mb-6">
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className="text-kicker uppercase text-ember-600">Compare Routes</p>
+                    <h2 className="font-display text-lg text-ink md:text-xl">同维度看三条路线</h2>
                   </div>
+                  <span className="font-data text-[11px] text-muted-foreground">
+                    距离 · 耗时 · 评分
+                  </span>
                 </div>
-              </Link>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {comparisonRoutes.map((route: RouteItem) => (
+                    <Link
+                      key={route.id}
+                      to={route.postId ? `/post/${route.postId}` : '/routes'}
+                      className="group grid grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-card shadow-2xs transition-all hover:-translate-y-0.5 hover:border-pine-300 hover:shadow-md"
+                    >
+                      <div className="min-h-[150px] overflow-hidden bg-muted">
+                        <Image
+                          src={withCardImage(route.image)}
+                          alt={route.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="min-w-0 p-4">
+                        <TrailTag tone={route.difficulty === '高级' ? 'ember' : 'pine'}>
+                          {route.difficulty}
+                        </TrailTag>
+                        <h3 className="mt-2 line-clamp-2 font-display text-base leading-snug text-ink">
+                          {route.name}
+                        </h3>
+                        <div className="mt-3 grid grid-cols-3 gap-1.5 font-data text-[10px] text-muted-foreground">
+                          <span>{route.distance}km</span>
+                          <span>{route.duration}</span>
+                          <span>{route.rating}</span>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                          <span>{route.region}</span>
+                          <span className="text-pine-700 transition-transform group-hover:translate-x-0.5">
+                            查看 →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
             )}
 
             <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">

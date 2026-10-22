@@ -133,15 +133,8 @@ const EventDetailPage = () => {
       : []),
   ];
 
-  const gridColsClass: string =
-    infoCells.length >= 5
-      ? 'md:grid-cols-5'
-      : infoCells.length === 4
-        ? 'md:grid-cols-4'
-        : 'md:grid-cols-3';
-
   return (
-    <div className="mx-auto max-w-4xl px-6 pb-40 pt-10 md:pb-16 md:pt-16 lg:px-8">
+    <div className="mx-auto max-w-6xl px-6 pb-40 pt-10 md:pb-16 md:pt-16 lg:px-8">
       <Link
         to="/events"
         className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-ink group"
@@ -175,48 +168,90 @@ const EventDetailPage = () => {
         <h1 className="font-display text-xl text-ink md:text-h2">{event.title}</h1>
       </header>
 
-      <div className={`mt-6 grid grid-cols-2 gap-3 ${gridColsClass}`}>
-        {infoCells.map((cell: InfoCell) => {
-          const Icon = cell.icon;
-          return (
-            <div key={cell.label} className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <Icon size={13} className="text-pine-600" />
-                {cell.label}
-              </div>
-              <p className="text-sm font-medium text-ink">{cell.value}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {event.maxParticipants > 0 && (
-        <div className="mt-4 rounded-xl border border-border bg-card p-4">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>报名进度</span>
-            <span className="font-data tabular-nums">{count}/{event.maxParticipants} 人</span>
+      <div className="mt-6 grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0">
+          <div className="grid grid-cols-2 gap-3">
+            {infoCells.map((cell: InfoCell) => {
+              const Icon = cell.icon;
+              return (
+                <div key={cell.label} className="rounded-xl border border-border bg-card p-4">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Icon size={13} className="text-pine-600" />
+                    {cell.label}
+                  </div>
+                  <p className="text-sm font-medium text-ink">{cell.value}</p>
+                </div>
+              );
+            })}
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
+
+          <section className="mt-8">
+            <h3 className="font-display text-lg text-ink md:text-h3">活动介绍</h3>
+            <div className="mt-3 mb-4 h-px bg-border" />
             <div
-              className="h-full rounded-full bg-pine-600 transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              className="prose max-w-none text-sm leading-[1.9] text-foreground md:text-[15px]"
+              dangerouslySetInnerHTML={{ __html: safeContent }}
             />
-          </div>
+          </section>
         </div>
-      )}
 
-      <div className="mt-8 hidden md:block">
-        <button onClick={handleSignup} disabled={ctaDisabled} className={ctaClass}>
-          {ctaLabel}
-        </button>
+        <aside className="space-y-4 md:sticky md:top-24">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-2xs">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="font-display text-lg text-ink">报名状态</h3>
+              <TrailTag tone={ended || deadlinePassed ? 'neutral' : 'ember'}>
+                {ended ? '已结束' : deadlinePassed ? '报名截止' : isFull ? '已满员' : '报名中'}
+              </TrailTag>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">活动日期</span>
+                <span className="text-right font-medium text-ink">{formatEventDate(event.eventDate)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">活动地点</span>
+                <span className="text-right font-medium text-ink">{event.location}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">报名人数</span>
+                <span className="font-data text-ink">
+                  {count}{event.maxParticipants > 0 ? ` / ${event.maxParticipants}` : ''} 人
+                </span>
+              </div>
+            </div>
+            {event.maxParticipants > 0 && (
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>报名进度</span>
+                  <span className="font-data">{progress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-pine-600 transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <button
+              onClick={handleSignup}
+              disabled={ctaDisabled}
+              className={`mt-5 w-full ${ctaClass}`}
+            >
+              {ctaLabel}
+            </button>
+          </div>
+
+          <div className="rounded-xl border border-border bg-pine-50/60 p-5">
+            <h3 className="text-sm font-semibold text-ink">参与提示</h3>
+            <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+              <li>报名后请留意集合时间和领队通知。</li>
+              <li>根据天气准备防风、防雨和足量饮水。</li>
+              <li>活动开始前可在“我的报名”中取消。</li>
+            </ul>
+          </div>
+        </aside>
       </div>
-
-      <section className="mt-10">
-        <h3 className="font-display text-lg text-ink md:text-h3">活动介绍</h3>
-        <div className="h-px bg-border mt-3 mb-4" />
-        <div className="prose max-w-none text-sm leading-[1.9] text-foreground md:text-[15px]"
-          dangerouslySetInnerHTML={{ __html: safeContent }} />
-      </section>
 
       <div className="fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-40 border-t border-border bg-paper p-4 md:hidden">
         <button onClick={handleSignup} disabled={ctaDisabled} className={`w-full ${ctaClass}`}>

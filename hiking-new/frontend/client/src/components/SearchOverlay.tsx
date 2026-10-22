@@ -14,6 +14,7 @@ interface SearchOverlayProps {
 }
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const QUICK_SEARCHES = ['四姑娘山', '虎跳峡', '雨崩村', '秋季装备', '北京周边'];
 
 const makePanelVariants = (isMobile: boolean): Variants =>
   isMobile
@@ -203,8 +204,24 @@ const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
           )}
 
           {!hasQueried && (
-            <div className="flex flex-col items-center py-12 text-muted-foreground/70">
-              <p className="text-sm">输入关键词，检索路线、装备与游记</p>
+            <div className="py-6">
+              <p className="text-kicker uppercase text-muted-foreground">Quick Search</p>
+              <h3 className="mt-2 font-display text-lg text-ink">从哪里开始？</h3>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {QUICK_SEARCHES.map((term: string) => (
+                  <button
+                    key={term}
+                    type="button"
+                    onClick={() => setQuery(term)}
+                    className="rounded-full border border-border bg-card px-3.5 py-2 text-xs text-muted-foreground transition-colors hover:border-pine-300 hover:bg-pine-50 hover:text-pine-700"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-5 text-xs text-muted-foreground/70">
+                输入关键词，检索路线、装备、活动和游记。
+              </p>
             </div>
           )}
         </motion.div>

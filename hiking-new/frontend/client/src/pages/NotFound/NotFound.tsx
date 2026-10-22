@@ -10,8 +10,8 @@ const NotFound = () => {
         <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card shadow-sm">
           <span className="font-data text-xl tracking-widest text-pine-700">404</span>
         </div>
-        <p className="text-kicker uppercase text-ember-600">Off the map</p>
-        <h1 className="mt-4 font-display text-xl md:text-h1 text-ink">此路不通</h1>
+        <p className="text-kicker uppercase text-ember-600">Lost Trail</p>
+        <h1 className="mt-4 font-display text-xl md:text-h1 text-ink">这条路径不存在</h1>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
           你走到了地图之外的地方。沿原路折返，从起点重新选择方向，
           或者去论坛看看其他人走过的路。

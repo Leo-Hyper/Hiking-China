@@ -53,10 +53,10 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-paper text-ink pb-[calc(4rem_+_env(safe-area-inset-bottom))] md:pb-0">
       <header
-        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isTransparent
-            ? 'border-b border-transparent max-md:border-border/70 max-md:bg-paper/95 max-md:shadow-sm md:bg-transparent'
-            : 'nav-paper bg-paper/95 shadow-sm'
+            ? 'border-b border-transparent bg-transparent shadow-none'
+            : 'nav-paper bg-paper/95 shadow-sm backdrop-blur-xl'
         }`}
       >
         <nav className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -70,7 +70,7 @@ const Layout = () => {
                 }`}
               >
                 <Image
-                  src={withBasePath('/favicon-hiking.svg')}
+                  src={withBasePath('/favicon.svg')}
                   alt="徒步中国"
                   className="w-full h-full object-contain p-0.5"
                 />
@@ -110,7 +110,6 @@ const Layout = () => {
                           : 'font-medium text-muted-foreground hover:bg-white/80 hover:text-ink'
                     }`}
                   >
-                    {isActive && <span className="h-1 w-1 rounded-full bg-ember-500 dot-pop" />}
                     {item.label}
                   </Link>
                 );

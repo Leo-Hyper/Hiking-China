@@ -28,7 +28,7 @@ const Footer = () => {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-pine-900 ring-1 ring-pine-700">
                 <Image
-                  src={withBasePath('/favicon-hiking.svg')}
+                  src={withBasePath('/favicon.svg')}
                   alt="徒步中国"
                   className="w-full h-full object-contain p-0.5"
                 />
