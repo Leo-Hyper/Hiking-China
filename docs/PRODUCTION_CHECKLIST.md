@@ -35,6 +35,7 @@
 | `SMTP_USER` | SMTP 用户名 | 同上 |
 | `SMTP_PASS` | SMTP 密码/授权码 | 同上 |
 | `MAIL_FROM` | `徒步中国 <no-reply@...>` | 发件人显示正确 |
+| `BREVO_API_KEY` | Brevo v3 API Key（Transactional email 权限） | 注册验证邮件发送成功 |
 | `UPLOAD_PROVIDER` | `cloudinary` | 上传返回 https 直链 |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | 上传成功 |
 | `CLOUDINARY_API_KEY` | Cloudinary key | 同上 |
@@ -77,6 +78,8 @@ curl -I https://hiking-china.onrender.com
 4. 确认 `environment=production`、`release` 为当前 commit。
 
 ## 4. SMTP
+
+> 重要：Render 免费实例的出站 SMTP 连接会被阻断（实测 587 端口 `ETIMEDOUT`）。生产优先使用 `BREVO_API_KEY` 走 Brevo HTTP API（HTTPS 443），SMTP 变量仅作为备用。
 
 1. 配置 SMTP 变量并重新部署 API。
 2. 注册一个新账号，确认收到验证邮件。

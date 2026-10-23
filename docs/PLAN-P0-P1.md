@@ -11,11 +11,11 @@
 |------|------|------|
 | Phase 0 | 完成 | 实施分支、测试库隔离、环境清单 |
 | Phase 1 | 完成 | Playwright 11 条用例、CI e2e job、失败产物 |
-| Phase 2 | 代码/文档完成 | 生产清单、CSP 方案、备份 workflow、检查脚本；线上变量与响应头待配置 |
+| Phase 2 | 完成 | 生产清单、CSP/安全头、备份 workflow、检查脚本；线上变量与响应头已配置 |
 | Phase 3 | 完成 | `routes` / `route_favorites` 表、API、静态路线迁移 |
 | Phase 4 | 完成 | GPX 解析、简化、距离/爬升统计、管理员录入 |
 | Phase 5 | 完成 | 路线详情、轨迹地图、海拔剖面、收藏与个人中心 Tab |
-| Phase 6 | 待发布 | 需要部署到 Render 并跑线上验收 |
+| Phase 6 | 完成 | 已合并到 main、部署到 Render，并完成线上验收 |
 
 ---
 
