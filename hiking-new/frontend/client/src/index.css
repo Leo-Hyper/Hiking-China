@@ -142,6 +142,20 @@
     transform: scale(1.04);
   }
 
+  .action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--pine-700);
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .action-link:hover {
+    color: var(--pine-800);
+  }
+
   /* Hero 大图 Ken Burns 缓慢呼吸动效 */
   .hero-kenburns {
     animation: heroKenburns 25s ease-in-out infinite alternate;

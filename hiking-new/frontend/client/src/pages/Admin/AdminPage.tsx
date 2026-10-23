@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import {
   CalendarDays,
@@ -9,6 +9,9 @@ import {
   ToggleLeft,
   Users,
   FileText,
+  RefreshCw,
+  Search,
+  ArrowUpRight,
 } from 'lucide-react';
 import * as api from '@client/src/api';
 import { useAuth } from '@client/src/hooks/use-hiking';
@@ -56,12 +59,16 @@ const AdminPage = () => {
   const [summary, setSummary] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tableQuery, setTableQuery] = useState('');
 
   const reload = useCallback(async (): Promise<void> => {
     if (!isLoggedIn) return;
     setLoading(true);
     setError('');
     try {
+      void api.getAdminSummary()
+        .then((data) => setSummary(data.summary || {}))
+        .catch(() => {});
       if (tab === 'summary') {
         const data = await api.getAdminSummary();
         setSummary(data.summary || {});
@@ -98,6 +105,24 @@ const AdminPage = () => {
     void reload();
   }, [reload]);
 
+  useEffect(() => {
+    setTableQuery('');
+  }, [tab]);
+
+  const visibleRows: Row[] = useMemo(() => {
+    const query = tableQuery.trim().toLowerCase();
+    if (!query) return rows;
+    return rows.filter((row) => JSON.stringify(row).toLowerCase().includes(query));
+  }, [rows, tableQuery]);
+
+  const summaryCards = [
+    { label: '用户', value: summary.users || 0, to: '/admin/users', adminOnly: true },
+    { label: '帖子', value: summary.posts || 0, to: '/admin/posts', adminOnly: false },
+    { label: '评论', value: summary.comments || 0, to: '/admin/comments', adminOnly: false },
+    { label: '活动', value: summary.events || 0, to: '/admin/events', adminOnly: false },
+    { label: '待处理举报', value: summary.open_reports || 0, to: '/admin/reports', adminOnly: false },
+  ].filter((card) => !card.adminOnly || user?.role === 'admin');
+
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   if (user?.role !== 'admin' && user?.role !== 'moderator') {
     return (
@@ -130,12 +155,19 @@ const AdminPage = () => {
           <h1 className="mt-2 font-display text-xl text-ink md:text-h1">管理后台</h1>
           <p className="mt-2 text-sm text-muted-foreground">内容审核、举报处理、用户权限和功能开关。</p>
         </div>
-        <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
-          {user.username} · {user.role}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-pine-200 bg-pine-50 px-3 py-1.5 text-xs font-medium text-pine-800">
+            <Shield size={13} />
+            {user.username} · {user.role}
+          </span>
+          <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-ink">
+            返回站点
+            <ArrowUpRight size={13} />
+          </Link>
+        </div>
       </div>
 
-      <nav className="mb-6 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1">
+      <nav className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 shadow-2xs">
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = item.key === tab;
@@ -145,7 +177,8 @@ const AdminPage = () => {
             <Link
               key={item.key}
               to={TAB_PATHS[item.key]}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+              aria-current={active ? 'page' : undefined}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-medium transition-all ${
                 active ? 'bg-pine-700 text-paper' : 'text-muted-foreground hover:bg-pine-50 hover:text-ink'
               }`}
             >
@@ -156,29 +189,82 @@ const AdminPage = () => {
         })}
       </nav>
 
-      {loading && <p className="py-10 text-center text-sm text-muted-foreground">加载中...</p>}
-      {error && <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
+      <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-5">
+        {summaryCards.map((card) => (
+          <Link
+            key={card.label}
+            to={card.to}
+            className={`group flex items-center justify-between rounded-lg border px-4 py-3 transition-all ${
+              card.label === '待处理举报' && card.value > 0
+                ? 'border-ember-200 bg-ember-50 hover:border-ember-300'
+                : 'border-border bg-card hover:border-pine-300 hover:shadow-2xs'
+            }`}
+          >
+            <div>
+              <div className="font-data text-lg leading-none text-ink">{card.value}</div>
+              <div className="mt-1.5 text-[11px] text-muted-foreground">{card.label}</div>
+            </div>
+            <ArrowUpRight size={14} className="text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-pine-700" />
+          </Link>
+        ))}
+      </div>
+
+      {tab !== 'summary' && tab !== 'users' && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="relative w-full max-w-sm">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={tableQuery}
+              onChange={(event) => setTableQuery(event.target.value)}
+              placeholder="在当前列表中搜索..."
+              className="w-full rounded-lg border border-border bg-card py-2 pl-8 pr-3 text-sm outline-none transition-colors focus:border-pine-500 focus:ring-2 focus:ring-pine-500/15"
+            />
+          </div>
+          <span className="font-data text-[11px] text-muted-foreground">
+            {visibleRows.length} / {rows.length} 条
+          </span>
+        </div>
+      )}
+
+      {loading && (
+        <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+          {[0, 1, 2, 3, 4].map((item) => (
+            <div key={item} className="h-10 animate-pulse rounded-lg bg-muted/70" />
+          ))}
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <span>{error}</span>
+          <button type="button" onClick={() => void reload()} className="inline-flex items-center gap-1 font-semibold">
+            <RefreshCw size={13} />
+            重试
+          </button>
+        </div>
+      )}
 
       {!loading && !error && tab === 'summary' && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          {[
-            ['用户', summary.users || 0],
-            ['帖子', summary.posts || 0],
-            ['评论', summary.comments || 0],
-            ['活动', summary.events || 0],
-            ['待处理举报', summary.open_reports || 0],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="rounded-xl border border-border bg-card p-5 shadow-2xs">
-              <div className="font-data text-2xl text-ink">{value}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{label}</div>
-            </div>
-          ))}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-2xs">
+          <h2 className="font-display text-base text-ink">运营提示</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            待处理举报会优先显示在概览中。建议每天检查举报队列、用户状态和异常内容，所有管理操作都会写入审计日志。
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to="/admin/reports" className="inline-flex items-center rounded-lg bg-pine-700 px-3.5 py-2 text-xs font-semibold text-paper hover:bg-pine-800">
+              处理举报
+            </Link>
+            {user.role === 'admin' && (
+              <Link to="/admin/users" className="inline-flex items-center rounded-lg border border-border bg-paper px-3.5 py-2 text-xs font-medium text-ink hover:border-pine-300">
+                管理用户
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
       {!loading && !error && tab === 'reports' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['ID', '对象', '原因', '举报人', '状态', '时间', '操作']}
           render={(row) => (
             <>
@@ -199,7 +285,7 @@ const AdminPage = () => {
 
       {!loading && !error && tab === 'posts' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['ID', '标题', '作者', '状态', '时间', '操作']}
           render={(row) => (
             <>
@@ -219,7 +305,7 @@ const AdminPage = () => {
 
       {!loading && !error && tab === 'comments' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['ID', '内容', '作者', '状态', '时间', '操作']}
           render={(row) => (
             <>
@@ -243,7 +329,7 @@ const AdminPage = () => {
 
       {!loading && !error && tab === 'events' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['ID', '标题', '作者', '状态', '日期', '操作']}
           render={(row) => (
             <>
@@ -263,7 +349,7 @@ const AdminPage = () => {
 
       {!loading && !error && tab === 'audit' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['ID', '操作', '对象', '操作人', '时间']}
           render={(row) => (
             <>
@@ -279,7 +365,7 @@ const AdminPage = () => {
 
       {!loading && !error && tab === 'flags' && (
         <AdminTable
-          rows={rows}
+          rows={visibleRows}
           columns={['开关', '状态', '说明', '操作']}
           render={(row) => (
             <>
@@ -315,9 +401,13 @@ const AdminTable = ({
   columns: string[];
   render: (row: Row) => ReactNode;
 }) => (
-  <div className="overflow-x-auto rounded-xl border border-border bg-card">
+  <div className="overflow-hidden rounded-xl border border-border bg-card shadow-2xs">
+    <p className="border-b border-border bg-muted/30 px-4 py-2 text-[10px] text-muted-foreground md:hidden">
+      左右滑动查看完整表格
+    </p>
+    <div className="overflow-x-auto">
     <table className="w-full min-w-[760px] text-left text-sm">
-      <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
+      <thead className="sticky top-0 z-10 border-b border-border bg-muted/90 text-xs text-muted-foreground backdrop-blur">
         <tr>
           {columns.map((column) => (
             <th key={column} className="px-4 py-3 font-medium">{column}</th>
@@ -326,7 +416,7 @@ const AdminTable = ({
       </thead>
       <tbody className="divide-y divide-border">
         {rows.map((row) => (
-          <tr key={String(row.id || row.key)} className="align-middle">
+          <tr key={String(row.id || row.key)} className="align-middle transition-colors hover:bg-pine-50/40">
             {render(row)}
           </tr>
         ))}
@@ -339,6 +429,7 @@ const AdminTable = ({
         )}
       </tbody>
     </table>
+    </div>
   </div>
 );
 

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronDown, FileText, MessageCircle, Plus, Search } from 'lucide-react';
+import { CalendarDays, ChevronDown, FileText, LogOut, MessageCircle, Plus, Search, Shield, UserRound } from 'lucide-react';
 import Footer from './Footer';
 import MobileTabBar from './MobileTabBar';
 import SearchOverlay from './SearchOverlay';
 import NotificationBell from './NotificationBell';
 import { useAuth } from '@client/src/hooks/use-hiking';
+import { logoutUser } from '@client/src/data/hiking-store';
 import { withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
@@ -13,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@client/src/components/ui/dropdown-menu';
 
@@ -171,18 +173,43 @@ const Layout = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Link
-                    to="/profile"
-                    title="个人中心"
-                    className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full"
-                  >
-                    <UserAvatar
-                      src={user?.avatar}
-                      name={user?.username}
-                      className="h-7 w-7 md:h-10 md:w-10 ring-1 ring-pine-800/30 transition-opacity hover:opacity-90"
-                      fallbackClassName="text-xs md:text-sm"
-                    />
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      aria-label="账户菜单"
+                      className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full outline-none ring-pine-500/30 transition-shadow focus-visible:ring-2 data-[state=open]:ring-2 md:ring-0"
+                    >
+                      <UserAvatar
+                        src={user?.avatar}
+                        name={user?.username}
+                        className="h-7 w-7 md:h-10 md:w-10 ring-1 ring-pine-800/30 transition-opacity hover:opacity-90"
+                        fallbackClassName="text-xs md:text-sm"
+                      />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer gap-2">
+                        <UserRound size={15} />
+                        个人中心
+                      </DropdownMenuItem>
+                      {(user?.role === 'admin' || user?.role === 'moderator') && (
+                        <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer gap-2">
+                          <Shield size={15} />
+                          {user.role === 'admin' ? '管理后台' : '审核后台'}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                          logoutUser();
+                          navigate('/login');
+                        }}
+                        className="cursor-pointer gap-2"
+                      >
+                        <LogOut size={15} />
+                        退出登录
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               ) : (
                 <Link
