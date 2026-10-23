@@ -4,6 +4,7 @@ import {
   Bookmark,
   CalendarDays,
   ChevronDown,
+  ExternalLink,
   FileText,
   History,
   LogOut,
@@ -12,6 +13,7 @@ import {
   Search,
   Settings,
   Shield,
+  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import Footer from './Footer';
@@ -224,7 +226,16 @@ const Layout = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer gap-2 py-2">
                         <UserRound size={15} />
-                        个人主页
+                        个人中心
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (user) navigate(`/user/${user.id}`);
+                        }}
+                        className="cursor-pointer gap-2 py-2"
+                      >
+                        <ExternalLink size={15} />
+                        查看公开主页
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/profile?tab=profile')} className="cursor-pointer gap-2 py-2">
                         <Settings size={15} />
@@ -246,6 +257,10 @@ const Layout = () => {
                       <DropdownMenuItem onClick={() => navigate('/messages')} className="cursor-pointer gap-2 py-2">
                         <MessageCircle size={15} />
                         我的私信
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/profile?tab=account')} className="cursor-pointer gap-2 py-2">
+                        <ShieldCheck size={15} />
+                        账号与安全
                       </DropdownMenuItem>
                       {(user?.role === 'admin' || user?.role === 'moderator') && (
                         <>

@@ -146,7 +146,7 @@ const UserProfilePage = () => {
               <FollowButton userId={profileUser.id} />
               {isSelf && (
                 <Link
-                  to="/profile"
+                  to="/profile?tab=profile"
                   className="rounded-lg border border-border bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300"
                 >
                   编辑资料
