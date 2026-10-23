@@ -41,8 +41,8 @@ const PROFILE_TABS: ProfileTab[] = [
   { key: 'posts', label: '我的帖子', description: '管理草稿和已发布的路书、攻略与故事。', eyebrow: 'Content library', icon: FileText },
   { key: 'recent', label: '最近浏览', description: '继续阅读你近期打开过的路线和游记。', eyebrow: 'Recent trails', icon: History },
   { key: 'bookmarks', label: '我的收藏', description: '集中整理准备出发前再次查看的内容。', eyebrow: 'Saved trails', icon: Bookmark },
-  { key: 'profile', label: '个人资料', description: '编辑公开身份、徒步经验和装备偏好。', eyebrow: 'Public identity', icon: UserRound },
-  { key: 'account', label: '账号与安全', description: '管理邮箱、密码、数据导出和账号状态。', eyebrow: 'Account security', icon: ShieldCheck },
+  { key: 'profile', label: '个人资料', description: '编辑公开身份、徒步经验和装备偏好。', eyebrow: 'Profile settings', icon: UserRound },
+  { key: 'account', label: '账号与安全', description: '管理邮箱、密码、数据导出和账号状态。', eyebrow: 'Account overview', icon: ShieldCheck },
 ];
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
@@ -196,8 +196,8 @@ const ProfilePage = () => {
         </header>
 
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
-          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24">
-            <section className="rounded-xl border border-border bg-card p-5 shadow-2xs" aria-label="账号概要">
+          <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24">
+            <section className="order-2 rounded-xl border border-border bg-card p-5 shadow-2xs" aria-label="账号概要">
               <div className="flex items-start gap-4">
                 <UserAvatar
                   src={user.avatar}
@@ -276,7 +276,7 @@ const ProfilePage = () => {
               </div>
             </section>
 
-            <nav className="rounded-xl border border-border bg-card p-1.5 shadow-2xs" aria-label="个人中心功能">
+            <nav className="order-1 rounded-xl border border-border bg-card p-1.5 shadow-2xs" aria-label="个人中心功能">
               <div ref={tabListRef} className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" role="tablist" aria-label="个人中心">
                 {PROFILE_TABS.map((tab, index) => {
                   const Icon = tab.icon;
