@@ -4,14 +4,14 @@
 
 ## 服务配置
 
-- Service: `hiking-china-web`
-- Service ID: `srv-dbd5rhgm7kps73bttiv0`
+- Service: `hiking-china`
+- Service ID: `srv-dbdflngae00c7381pogg`
 - Repository: `Leo-Hyper/Hiking-China`
 - Branch: `main`
 - Root Directory: `hiking-new/frontend`
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
-- URL: `https://hiking-china-web.onrender.com`
+- URL: `https://hiking-china.onrender.com`
 
 ## 环境变量
 
@@ -36,10 +36,12 @@ Action: Rewrite
 Render API 的 `FRONTEND_URL` 需要包含：
 
 ```text
-https://hiking-china.netlify.app,https://hiking-china-web.onrender.com
+https://hiking-china.netlify.app,https://hiking-china.onrender.com,https://hiking-china-web.onrender.com
 ```
 
-代码中已将临时静态站点 Origin 加入允许列表。
+代码中已将新站点和旧临时站点 Origin 均加入允许列表。
+
+旧站点 `hiking-china-web.onrender.com` 保留为回滚入口。
 
 ## 图片兼容
 

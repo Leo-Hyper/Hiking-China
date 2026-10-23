@@ -29,6 +29,7 @@ const configuredOrigins = (process.env.FRONTEND_URL || "")
   .filter(Boolean);
 const FRONTEND_ORIGINS = [...new Set([
   "https://hiking-china.netlify.app",
+  "https://hiking-china.onrender.com",
   "https://hiking-china-web.onrender.com",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
