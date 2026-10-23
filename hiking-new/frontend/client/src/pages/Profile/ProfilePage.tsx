@@ -85,11 +85,19 @@ const ProfilePage = () => {
   }, [requestedTab]);
 
   useEffect(() => {
-    const activeTabElement = document.getElementById(`profile-tab-${activeTab}`);
-    const tabList = tabListRef.current;
-    if (!activeTabElement || !tabList) return;
-    const nextLeft = activeTabElement.offsetLeft - (tabList.clientWidth - activeTabElement.clientWidth) / 2;
-    tabList.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
+    const frame = window.requestAnimationFrame(() => {
+      const activeTabElement = document.getElementById(`profile-tab-${activeTab}`);
+      const tabList = tabListRef.current;
+      if (!activeTabElement || !tabList) return;
+      const tabRect = activeTabElement.getBoundingClientRect();
+      const listRect = tabList.getBoundingClientRect();
+      const nextLeft = tabList.scrollLeft
+        + tabRect.left
+        - listRect.left
+        - (tabList.clientWidth - tabRect.width) / 2;
+      tabList.scrollTo({ left: Math.max(0, nextLeft), behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [activeTab]);
 
   const selectTab = (tab: ProfileTabKey): void => {
