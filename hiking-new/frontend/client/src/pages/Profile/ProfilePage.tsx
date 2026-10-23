@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -52,6 +52,7 @@ const PROFILE_TAB_KEYS: ProfileTabKey[] = PROFILE_TABS.map((tab) => tab.key);
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const tabListRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const requestedTab = searchParams.get('tab') as ProfileTabKey | null;
   const [activeTab, setActiveTab] = useState<ProfileTabKey>(
@@ -82,6 +83,14 @@ const ProfilePage = () => {
   useEffect(() => {
     setActiveTab(requestedTab && PROFILE_TAB_KEYS.includes(requestedTab) ? requestedTab : 'posts');
   }, [requestedTab]);
+
+  useEffect(() => {
+    const activeTabElement = document.getElementById(`profile-tab-${activeTab}`);
+    const tabList = tabListRef.current;
+    if (!activeTabElement || !tabList) return;
+    const nextLeft = activeTabElement.offsetLeft - (tabList.clientWidth - activeTabElement.clientWidth) / 2;
+    tabList.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
+  }, [activeTab]);
 
   const selectTab = (tab: ProfileTabKey): void => {
     setActiveTab(tab);
@@ -268,7 +277,7 @@ const ProfilePage = () => {
             </section>
 
             <nav className="rounded-xl border border-border bg-card p-1.5 shadow-2xs" aria-label="个人中心功能">
-              <div className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" role="tablist" aria-label="个人中心">
+              <div ref={tabListRef} className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" role="tablist" aria-label="个人中心">
                 {PROFILE_TABS.map((tab, index) => {
                   const Icon = tab.icon;
                   const count = tab.key === 'posts'
