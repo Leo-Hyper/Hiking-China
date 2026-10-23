@@ -1,0 +1,17 @@
+{
+  "name": "徒步中国 · 山径手册",
+  "short_name": "徒步中国",
+  "description": "发现中国徒步路线、装备指南、活动召集与山野故事。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#2f6f55",
+  "icons": [
+    {
+      "src": "/img/logo-original.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

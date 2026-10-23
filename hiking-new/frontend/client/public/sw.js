@@ -1,5 +1,5 @@
-const CACHE_NAME = 'hiking-china-shell-v1';
-const SHELL = ['/', '/offline.html', '/manifest.webmanifest'];
+const CACHE_NAME = 'hiking-china-shell-v2';
+const SHELL = ['/', '/offline.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)));
