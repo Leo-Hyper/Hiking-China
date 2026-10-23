@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getPostForEdit, updatePost } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
 import type { Post, PostExtraInfo } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
-import { resolveImageUrl } from '@client/src/utils/base-path';
+import { resolveImageUrl, withBasePath } from '@client/src/utils/base-path';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import RichTextEditor from '@client/src/components/RichTextEditor';
 import MapPicker from '@client/src/components/MapPicker';
@@ -48,7 +48,6 @@ const DEFAULT_EXTRA: ExtraFormState = {
 const EditPostPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const postId: number = parseInt(id || '0', 10);
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [forbidden, setForbidden] = useState<boolean>(false);
@@ -164,7 +163,7 @@ const EditPostPage: React.FC = () => {
         status: 1,
       });
       setSuccessMsg('保存成功！即将返回...');
-      setTimeout(() => navigate('/profile?tab=posts'), 1000);
+      setTimeout(() => window.location.assign(withBasePath('/profile?tab=posts')), 1000);
     } catch (err) {
       setErrorMsg((err as Error).message);
     } finally {
@@ -363,7 +362,7 @@ const EditPostPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/profile?tab=posts')}
+              onClick={() => window.location.assign(withBasePath('/profile?tab=posts'))}
               className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300 md:px-5 md:py-2.5"
             >
               取消
