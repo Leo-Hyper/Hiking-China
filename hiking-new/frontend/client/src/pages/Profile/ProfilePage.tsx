@@ -33,15 +33,16 @@ interface ProfileTab {
   key: ProfileTabKey;
   label: string;
   description: string;
+  eyebrow: string;
   icon: LucideIcon;
 }
 
 const PROFILE_TABS: ProfileTab[] = [
-  { key: 'posts', label: '我的帖子', description: '管理草稿和已发布的路书、攻略与故事。', icon: FileText },
-  { key: 'recent', label: '最近浏览', description: '继续阅读你近期打开过的路线和游记。', icon: History },
-  { key: 'bookmarks', label: '我的收藏', description: '集中整理准备出发前再次查看的内容。', icon: Bookmark },
-  { key: 'profile', label: '个人资料', description: '编辑公开身份、徒步经验和装备偏好。', icon: UserRound },
-  { key: 'account', label: '账号与安全', description: '管理邮箱、密码、数据导出和账号状态。', icon: ShieldCheck },
+  { key: 'posts', label: '我的帖子', description: '管理草稿和已发布的路书、攻略与故事。', eyebrow: 'Content library', icon: FileText },
+  { key: 'recent', label: '最近浏览', description: '继续阅读你近期打开过的路线和游记。', eyebrow: 'Recent trails', icon: History },
+  { key: 'bookmarks', label: '我的收藏', description: '集中整理准备出发前再次查看的内容。', eyebrow: 'Saved trails', icon: Bookmark },
+  { key: 'profile', label: '个人资料', description: '编辑公开身份、徒步经验和装备偏好。', eyebrow: 'Public identity', icon: UserRound },
+  { key: 'account', label: '账号与安全', description: '管理邮箱、密码、数据导出和账号状态。', eyebrow: 'Account security', icon: ShieldCheck },
 ];
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
@@ -88,6 +89,12 @@ const ProfilePage = () => {
     if (tab === 'posts') params.delete('tab');
     else params.set('tab', tab);
     setSearchParams(params, { replace: true });
+    window.requestAnimationFrame(() => {
+      document.getElementById('profile-content-title')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
@@ -179,8 +186,8 @@ const ProfilePage = () => {
           </Link>
         </header>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
-          <aside className="space-y-4 lg:sticky lg:top-24">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24">
             <section className="rounded-xl border border-border bg-card p-5 shadow-2xs" aria-label="账号概要">
               <div className="flex items-start gap-4">
                 <UserAvatar
@@ -303,11 +310,11 @@ const ProfilePage = () => {
             </nav>
           </aside>
 
-          <section className="min-w-0" aria-labelledby="profile-content-title">
+          <section className="min-w-0 scroll-mt-24" aria-labelledby="profile-content-title">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-kicker uppercase text-muted-foreground">{activeTabMeta.label}</p>
-                <h2 id="profile-content-title" className="mt-1 font-display text-xl text-ink">{activeTabMeta.label}</h2>
+                <p className="text-kicker uppercase text-muted-foreground">{activeTabMeta.eyebrow}</p>
+                <h2 id="profile-content-title" className="mt-1 scroll-mt-24 font-display text-xl text-ink">{activeTabMeta.label}</h2>
                 <p className="mt-1.5 text-xs text-muted-foreground">{activeTabMeta.description}</p>
               </div>
               {activeTab === 'posts' && !myPostsLoading && (
