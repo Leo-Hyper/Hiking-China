@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronDown, FileText, LogOut, MessageCircle, Plus, Search, Shield, UserRound } from 'lucide-react';
+import {
+  Bookmark,
+  CalendarDays,
+  ChevronDown,
+  FileText,
+  History,
+  LogOut,
+  MessageCircle,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+  UserRound,
+} from 'lucide-react';
 import Footer from './Footer';
 import MobileTabBar from './MobileTabBar';
 import SearchOverlay from './SearchOverlay';
@@ -14,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@client/src/components/ui/dropdown-menu';
@@ -52,6 +66,8 @@ const Layout = () => {
 
   const isHome: boolean = location.pathname === '/';
   const isTransparent: boolean = isHome && !scrolled;
+  const roleLabel: string =
+    user?.role === 'admin' ? '管理员' : user?.role === 'moderator' ? '版主' : '成员';
 
   return (
     <div className="min-h-screen bg-paper text-ink pb-[calc(4rem_+_env(safe-area-inset-bottom))] md:pb-0">
@@ -185,16 +201,60 @@ const Layout = () => {
                         fallbackClassName="text-xs md:text-sm"
                       />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer gap-2">
+                    <DropdownMenuContent align="end" className="w-64">
+                      <DropdownMenuLabel className="p-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <UserAvatar
+                            src={user?.avatar}
+                            name={user?.username}
+                            className="h-10 w-10 ring-1 ring-pine-200"
+                            fallbackClassName="text-sm"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-ink">{user?.username}</p>
+                            <p className="truncate text-[11px] text-muted-foreground">
+                              {user?.email || '徒步中国成员'}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-pine-50 px-2 py-0.5 text-[10px] font-medium text-pine-700">
+                            {roleLabel}
+                          </span>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer gap-2 py-2">
                         <UserRound size={15} />
-                        个人中心
+                        个人主页
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/profile?tab=profile')} className="cursor-pointer gap-2 py-2">
+                        <Settings size={15} />
+                        编辑资料
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate('/profile?tab=posts')} className="cursor-pointer gap-2 py-2">
+                        <FileText size={15} />
+                        我的帖子
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/profile?tab=bookmarks')} className="cursor-pointer gap-2 py-2">
+                        <Bookmark size={15} />
+                        我的收藏
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/profile?tab=recent')} className="cursor-pointer gap-2 py-2">
+                        <History size={15} />
+                        最近浏览
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/messages')} className="cursor-pointer gap-2 py-2">
+                        <MessageCircle size={15} />
+                        我的私信
                       </DropdownMenuItem>
                       {(user?.role === 'admin' || user?.role === 'moderator') && (
-                        <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer gap-2">
-                          <Shield size={15} />
-                          {user.role === 'admin' ? '管理后台' : '审核后台'}
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer gap-2 py-2">
+                            <Shield size={15} />
+                            {user.role === 'admin' ? '管理后台' : '审核后台'}
+                          </DropdownMenuItem>
+                        </>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem

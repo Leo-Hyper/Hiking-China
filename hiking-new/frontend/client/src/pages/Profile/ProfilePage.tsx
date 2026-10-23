@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { MouseEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import {
   deletePost,
@@ -28,11 +28,16 @@ const PROFILE_TABS: { key: ProfileTabKey; label: string }[] = [
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
 const LEVEL_CLASSES: string[] = ['', 'bg-pine-500', 'bg-mist-500', 'bg-ember-500'];
+const PROFILE_TAB_KEYS: ProfileTabKey[] = ['posts', 'recent', 'bookmarks', 'profile'];
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<ProfileTabKey>('posts');
+  const requestedTab = searchParams.get('tab') as ProfileTabKey | null;
+  const [activeTab, setActiveTab] = useState<ProfileTabKey>(
+    requestedTab && PROFILE_TAB_KEYS.includes(requestedTab) ? requestedTab : 'posts'
+  );
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
   const [sendingVerification, setSendingVerification] = useState(false);
 
@@ -55,6 +60,20 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) navigate('/login');
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (requestedTab && PROFILE_TAB_KEYS.includes(requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [requestedTab]);
+
+  const selectTab = (tab: ProfileTabKey): void => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams);
+    if (tab === 'posts') params.delete('tab');
+    else params.set('tab', tab);
+    setSearchParams(params, { replace: true });
+  };
 
   if (!user) return null;
 
@@ -139,7 +158,7 @@ const ProfilePage = () => {
               )}
             </div>
             <button
-              onClick={() => setActiveTab('profile')}
+              onClick={() => selectTab('profile')}
               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border bg-paper px-4 text-sm font-medium text-ink transition-colors hover:border-pine-300"
             >
               编辑资料
@@ -166,7 +185,7 @@ const ProfilePage = () => {
             {PROFILE_TABS.map((tab: { key: ProfileTabKey; label: string }) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => selectTab(tab.key)}
                 className={`rounded-lg px-4 py-2.5 text-sm transition-colors ${
                   activeTab === tab.key
                     ? 'bg-pine-700 font-semibold text-paper shadow-2xs'
