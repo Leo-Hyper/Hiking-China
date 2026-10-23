@@ -132,60 +132,62 @@ const RouteDetailPage = () => {
         />
       ) : route ? (
         <>
-          <div className="relative overflow-hidden rounded-2xl bg-pine-950">
-            <Image
-              src={withBasePath(route.image)}
-              alt={route.name}
-              className="h-[320px] w-full object-cover opacity-80 md:h-[380px]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-pine-950/90 via-pine-950/20 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-paper/15 px-2.5 py-1 text-[11px] font-medium text-paper backdrop-blur">
-                  {route.region}
-                </span>
-                <span className="rounded-full bg-ember-500/90 px-2.5 py-1 text-[11px] font-medium text-white">
-                  {route.difficulty}
-                </span>
-                {route.tags?.map((tag: string) => (
-                  <span key={tag} className="rounded-full bg-paper/10 px-2.5 py-1 text-[11px] text-paper/85 backdrop-blur">
-                    {tag}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="relative overflow-hidden rounded-2xl bg-pine-950 lg:h-[380px]">
+              <Image
+                src={withBasePath(route.image)}
+                alt={route.name}
+                className="h-[320px] w-full object-cover opacity-80 md:h-[380px] lg:h-full"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-pine-950/90 via-pine-950/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-paper/15 px-2.5 py-1 text-[11px] font-medium text-paper backdrop-blur">
+                    {route.region}
                   </span>
-                ))}
-              </div>
-              <h1 className="font-display text-2xl text-paper md:text-4xl">{route.name}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-paper/75 md:text-base">
-                {route.description}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-4 font-data text-xs text-paper/80">
-                <span className="flex items-center gap-1.5"><RouteIcon size={14} />{route.distance}km</span>
-                <span className="flex items-center gap-1.5"><Clock size={14} />{route.duration || '未标注'}</span>
-                <span className="flex items-center gap-1.5"><Star size={14} className="text-ember-300" />{route.rating.toFixed(1)}</span>
-                <span className="flex items-center gap-1.5"><MapPin size={14} />{route.startPoint || '起点未标注'}</span>
+                  <span className="rounded-full bg-ember-500/90 px-2.5 py-1 text-[11px] font-medium text-white">
+                    {route.difficulty}
+                  </span>
+                  {route.tags?.map((tag: string) => (
+                    <span key={tag} className="rounded-full bg-paper/10 px-2.5 py-1 text-[11px] text-paper/85 backdrop-blur">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <h1 className="font-display text-2xl text-paper md:text-4xl">{route.name}</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-paper/75 md:text-base">
+                  {route.description}
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-4 font-data text-xs text-paper/80">
+                  <span className="flex items-center gap-1.5"><RouteIcon size={14} />{route.distance}km</span>
+                  <span className="flex items-center gap-1.5"><Clock size={14} />{route.duration || '未标注'}</span>
+                  <span className="flex items-center gap-1.5"><Star size={14} className="text-ember-300" />{route.rating.toFixed(1)}</span>
+                  <span className="flex items-center gap-1.5"><MapPin size={14} />{route.startPoint || '起点未标注'}</span>
+                </div>
               </div>
             </div>
+
+            <section className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-4">
+              {[
+                { label: '累计爬升', value: route.ascent == null ? '—' : `${route.ascent}m`, icon: TrendingUp },
+                { label: '累计下降', value: route.descent == null ? '—' : `${route.descent}m`, icon: TrendingDown },
+                { label: '最高海拔', value: route.maxElevation == null ? '—' : `${route.maxElevation}m`, icon: Mountain },
+                { label: '轨迹点数', value: route.pointCount ? String(route.pointCount) : '—', icon: RouteIcon },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="flex flex-col justify-center rounded-xl border border-border bg-card p-4">
+                    <Icon size={16} className="text-pine-700" />
+                    <p className="mt-3 font-data text-lg text-ink">{item.value}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{item.label}</p>
+                  </div>
+                );
+              })}
+            </section>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-6">
-              <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {[
-                  { label: '累计爬升', value: route.ascent == null ? '—' : `${route.ascent}m`, icon: TrendingUp },
-                  { label: '累计下降', value: route.descent == null ? '—' : `${route.descent}m`, icon: TrendingDown },
-                  { label: '最高海拔', value: route.maxElevation == null ? '—' : `${route.maxElevation}m`, icon: Mountain },
-                  { label: '轨迹点数', value: route.pointCount ? String(route.pointCount) : '—', icon: RouteIcon },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.label} className="rounded-xl border border-border bg-card p-4">
-                      <Icon size={16} className="text-pine-700" />
-                      <p className="mt-3 font-data text-lg text-ink">{item.value}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">{item.label}</p>
-                    </div>
-                  );
-                })}
-              </section>
-
               <section className="rounded-xl border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
