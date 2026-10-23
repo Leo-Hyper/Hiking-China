@@ -236,6 +236,12 @@ function jsonBody(method: string) {
 export const http = {
   get: <T>(path: string) => cachedGet<T>(path),
   post: jsonBody('POST'),
+  postText: <T>(path: string, body: string): Promise<T> =>
+    request<T>(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body,
+    }),
   put: jsonBody('PUT'),
   delete: jsonBody('DELETE'),
   upload: <T>(path: string, files: File[]): Promise<T> => {
@@ -244,3 +250,7 @@ export const http = {
     return request<T>(path, { method: 'POST', body: form });
   },
 };
+
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}

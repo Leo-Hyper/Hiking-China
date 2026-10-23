@@ -183,10 +183,11 @@ const ImageUrlPicker: React.FC<ImageUrlPickerProps> = ({
       </button>
       {showPresets && (
         <div className="grid grid-cols-4 gap-2 mt-2">
-          {PRESET_IMAGES.map((path: string) => (
+          {PRESET_IMAGES.map((path: string, index: number) => (
             <button
               key={path}
               type="button"
+              data-testid={`preset-image-${index}`}
               onClick={() => addPreset(path)}
               className="relative aspect-square rounded-lg overflow-hidden border border-border hover:border-pine-500 transition-colors"
             >

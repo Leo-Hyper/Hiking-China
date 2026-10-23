@@ -57,12 +57,30 @@
 ## 🚧 In Progress
 - [ ] 轮换 Cloudinary API Secret 和 JWT_SECRET，并更新 Render 后重新部署
 - [ ] 将 `FRONTEND_URL` 设置为 `https://hiking-china.netlify.app`
-- [ ] 使用 Render 完全相同的 Turso URL/Token 执行 `migrate:check` / `migrate:apply`
+- [ ] 使用目标 Turso 执行 `migrate:merge:check` 后运行 `migrate:merge:apply`，保留线上 12 个账号
 - [ ] 清理公开 Git 历史中的 SQLite 快照，并重置受影响账号密码
 - [ ] 修复帖子/活动/编辑预览的存储型 XSS
 - [ ] 上传解析增加 MIME/文件头校验；优化 hero 视频与 JS/CSS bundle
 
-## ✅ Recently Completed (2026-08-24)
+## ✅ Recently Completed (2026-10-21)
+- [x] 新增保留线上用户的合并导入模式，并按用户名映射作者
+- [x] 合并模式增加业务键去重和关联 ID 重映射
+- [x] 模拟线上 12 用户环境完整合并通过，外键违规为 0
+- [x] 构造重复帖/评论/活动测试，3 条重复数据被正确排除
+- [x] 服务端/前端双层 XSS 清洗 + Netlify CSP/安全响应头
+- [x] JWT、bcrypt、认证限流、输入边界、上传文件头校验加固
+- [x] 修复公开用户草稿泄漏、孤儿点赞/关注、内部错误泄漏
+- [x] 前后端和工具包依赖审计清零
+- [x] API gzip/缓存/列表瘦身/N+1 消除/批量最近浏览/复合索引
+- [x] 图片 WebP 大图与卡片图、Hero 720p/540p 自动播放、路由拆包
+- [x] 前端 store、上传解析、书签/点赞完成领域拆分
+- [x] 最终 type:check/build、运行期测试、迁移干跑全部通过
+- [x] 公共 GET 客户端 SWR 缓存与请求去重
+- [x] 主页空闲预取路线、装备、活动、论坛代码及帖子/活动数据
+- [x] Forum 搜索 300ms 防抖，Events 报名状态批量查询
+- [x] 帖子详情、活动详情、评论列表增加返回导航缓存
+
+## ✅ Previously Completed (2026-08-24)
 - [x] 全链路体检前端、Netlify、Render、数据库、CORS、上传与安全面
 - [x] 修复根部署 `CLIENT_BASE_PATH` 造成的 `//img/...` 破图并验证上线
 - [x] 验证 Git 内全部 20 张前端图片线上状态 200 且 MIME 正确
@@ -79,7 +97,7 @@
 
 ## 📋 Backlog
 - [ ] 部署后验证图片 URL 跨重部署持久（Cloudinary）
-- [ ] hero 视频 16.9MB → poster 首屏 + 点击播放
+- [x] hero 视频 16.9MB → 自动播放 720p/540p（1.69MB/0.77MB）+ 海报
 - [ ] 路由级 code-split（chunk >500KB 警告）
 - [ ] 帖子点赞接后端 API（现为本地语义）
 - [ ] 安全加固：updatePost SQL 参数化 / 富文本 XSS 过滤 / 敏感词 / 防爆破

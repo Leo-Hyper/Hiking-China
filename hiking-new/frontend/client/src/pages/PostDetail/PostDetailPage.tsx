@@ -398,7 +398,9 @@ const PostDetailPage: React.FC = () => {
 
           {/* 操作按钮 */}
           <div className="flex items-center gap-4 mb-12 pb-8 border-b border-border">
-            <button onClick={toggleLike}
+            <button
+              onClick={toggleLike}
+              aria-label={isLiked ? '取消点赞' : '点赞'}
               className={`flex min-h-11 items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors md:min-h-0 ${isLiked ? 'text-ember-600 bg-ember-100' : 'text-muted-foreground'}`}>
               <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
               <span className="text-sm font-data">{likeCount || 0}</span>

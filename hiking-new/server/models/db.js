@@ -306,6 +306,42 @@ const SCHEMA_STATEMENTS = [
     FOREIGN KEY (user_id) REFERENCES users(id))`,
   `ALTER TABLE events ADD COLUMN signup_deadline TEXT DEFAULT ''`,
 
+  // Routes（路线实体：静态路线升级为可检索、可收藏的数据库记录）
+  `CREATE TABLE IF NOT EXISTS routes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    name TEXT NOT NULL,
+    region TEXT DEFAULT '',
+    difficulty TEXT DEFAULT '初级',
+    description TEXT DEFAULT '',
+    content TEXT DEFAULT '',
+    distance REAL DEFAULT 0,
+    duration TEXT DEFAULT '',
+    rating REAL DEFAULT 4.5,
+    image TEXT DEFAULT '',
+    post_id INTEGER,
+    tags TEXT DEFAULT '',
+    geojson TEXT DEFAULT '',
+    ascent_m REAL,
+    descent_m REAL,
+    min_elevation REAL,
+    max_elevation REAL,
+    start_point TEXT DEFAULT '',
+    end_point TEXT DEFAULT '',
+    point_count INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL)`,
+  `CREATE TABLE IF NOT EXISTS route_favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    route_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, route_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE)`,
+
   // Indexes
   `CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
   `CREATE INDEX IF NOT EXISTS idx_search_type ON search_index(type)`,
@@ -331,6 +367,10 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_conversation_members_user ON conversation_members(user_id, conversation_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_routes_status ON routes(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_routes_region ON routes(region)`,
+  `CREATE INDEX IF NOT EXISTS idx_routes_difficulty ON routes(difficulty)`,
+  `CREATE INDEX IF NOT EXISTS idx_route_favorites_user ON route_favorites(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at DESC)`,
 ];
 
@@ -369,6 +409,42 @@ async function initDb() {
   const { loadSeedEvents, deactivateLegacyPost17 } = require("./seed");
   await loadSeedEvents();
   await deactivateLegacyPost17();
+
+  const routeCount = await get("SELECT COUNT(*) AS count FROM routes");
+  if (Number(routeCount?.count || 0) === 0) {
+    const { ROUTE_SEEDS } = require("./seed-routes");
+    for (const route of ROUTE_SEEDS) {
+      await run(
+        `INSERT INTO routes (
+          id, name, region, difficulty, description, content, distance, duration,
+          rating, image, post_id, tags, geojson, ascent_m, descent_m,
+          min_elevation, max_elevation, start_point, end_point, point_count, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+        [
+          route.id,
+          route.name,
+          route.region,
+          route.difficulty,
+          route.description,
+          route.content,
+          route.distance,
+          route.duration,
+          route.rating,
+          route.image,
+          route.postId,
+          route.tags,
+          route.geojson,
+          route.ascentM,
+          route.descentM,
+          route.minElevation,
+          route.maxElevation,
+          route.startPoint,
+          route.endPoint,
+          route.pointCount,
+        ]
+      );
+    }
+  }
 }
 
 async function closeDb() {

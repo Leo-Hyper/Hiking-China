@@ -157,7 +157,7 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 
 ## Phase 8.2 (2026-08-24) — 全链路体检
 
-- 前端根路径 `CLIENT_BASE_PATH="/" 导致 withBasePath 生成协议相对地址 `//img/...`，是截图破图的根因；已改为根部署时使用空串并上线。
+- 前端根路径 `CLIENT_BASE_PATH="/"` 导致 `withBasePath` 生成协议相对地址 `//img/...`，是截图破图的根因；已改为根部署时使用空串并上线。
 - 最新 Netlify 构建无 `//img/` 命中；Git 内全部 20 张前端图片在线上均为 HTTP 200 且 MIME 为 image/*。
 - Render API 正常但冷启动约 22.7 秒；`/api/posts` 为空，用户仍是 `system` 和两个 API smoke 用户，证明 Render 所连库未收到本地快照导入。
 - Render/Netlify 代理链路补充 `trust proxy`，避免全站共享一个限流桶；Netlify 增加 `/uploads/*` 反代，旧上传已返回 image/png。
@@ -165,7 +165,33 @@ Map: Leaflet + OpenStreetMap (tile.openstreetmap.fr/hot)
 - Render 环境截图暴露 Cloudinary API Secret 和 JWT_SECRET；必须立即轮换。`FRONTEND_URL` 仍为 localhost，生产 Origin 的 CORS 未放行。
 - React 帖子/活动/编辑预览仍直接渲染数据库 HTML，存在存储型 XSS；上传解析只校验扩展名，未校验 MIME/文件头。
 
-## Risks（2026-08-23 更新）
+## Phase 8.3 (2026-10-21) — 保留用户的内容合并
+
+- 线上 Turso 当前 12 用户 / 0 帖子 / 4 活动；除线上 `Leo` 外其余 11 个均为 API 冒烟账号。
+- 新增 `--merge-content` 与 `migrate:merge:check` / `migrate:merge:apply`：保留远端用户、活动和报名，仅替换帖子、评论、点赞、收藏和搜索索引。
+- 本地内容作者按用户名映射，当前 `local 3 Leo -> remote 12 Leo`；缺少映射时直接失败，不静默丢数据。
+- 合并模式拒绝覆盖远端已有的帖子/评论/互动内容，并支持业务键去重及帖子/评论/活动 ID 级联重映射。
+- 模拟 12 用户环境测试通过：保留 12 用户/4 活动，导入 17 帖/11 评论/16 搜索/2 收藏，外键检查 0 违规。
+- 额外构造 1 重复帖 + 1 重复评论 + 1 重复活动，工具正确排除 3 条重复数据，导入结果不变。
+
+## Phase 9 (2026-10-21) — 全栈安全、性能与架构加固
+
+- 安全：JWT issuer/audience/24h + 生产 Secret 32 字校验；bcrypt 12；登录/注册/上传独立限流；CORS 默认生产域名；JSON 1MB。
+- XSS：服务端 sanitize-html + 前端 DOMPurify；CSP/HSTS/X-Frame-Options 等 Netlify 安全头。
+- 上传：JPEG/PNG/GIF/WebP 文件头校验，扩展名与内容必须一致。
+- 隐私：公开用户帖子只返回已发布内容；私密资料隐藏；错误响应不再泄漏数据库信息。
+- 架构：前端 431 行 store 拆为 session/post/comment/event/social/user/mappers/runtime，保留兼容门面；上传解析拆到 middleware；书签与帖子点赞归入 model 层。
+- 性能：路由懒加载 + vendor 拆包；API gzip + 30 秒公共缓存；帖子/活动列表瘦身；评论数/作者头像并入列表；最近浏览批量接口；浏览数异步更新；复合索引。
+- 请求收敛：帖子详情直接返回作者头像和评论数；编辑/发布回读走受保护的 `/:id/manage`，不会误增浏览量；公开用户统计复用同一响应。
+- 回源收敛：公共 GET 响应同时设置浏览器 30 秒缓存和 Netlify CDN 120 秒 `stale-while-revalidate` 缓存提示，降低 Render 冷启动回源。
+- Render 部署失败修复：生产 Turso 模式改为懒加载 sqlite3，并将其标记为 optionalDependency，避免 Node 24 加载或构建失败阻断部署。
+- 线上破图复核：导航栏仍引用妙搭 `/spark/...` 临时资源，已改回本地 `/img/logo.png`；图片组件移除平台远程处理白名单。
+- 切页优化：公共 GET 增加 2 分钟新鲜/10 分钟 SWR 客户端缓存与请求去重；主路由代码和帖子/活动数据空闲预取；搜索 300ms 防抖；登录用户报名状态改为单次批量接口；详情和评论支持缓存。
+- 图片：生成 1600px WebP 大图与 800px 卡片图，列表自动使用卡片图；Hero 保留自动循环播放，改为桌面 720p / 移动 540p 双分辨率并预加载海报。
+- 验证：前后端及工具包 `npm audit` 全为 0；前端 type:check/build 通过；安全样例、运行期 gzip/缓存/CORS/鉴权测试通过；迁移干跑通过。
+- 实测：CSS 576KB→178KB（gzip 186→27.6KB）；帖子列表 JSON 66.5KB→23.8KB（gzip 7.8KB）；原图 10.03MB→2.28MB 大图 + 0.84MB 卡片图。
+
+## Risks（2026-10-21 更新）
 - Render 免费实例：15 分钟空闲休眠 → 首次访问冷启动 30-60s；无持久磁盘 → 已用 Turso+Cloudinary 规避
 - 新前端依赖真实后端：本地无 API 时页面显示空态/错误（静态种子已删除）
 - 帖子点赞按钮当前为本地语义（未接 API），后端 like/toggle 已具备，后续可接线

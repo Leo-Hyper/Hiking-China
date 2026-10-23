@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Map as MapIcon, RotateCcw, Scale, SlidersHorizontal, Users } from 'lucide-react';
-import { ROUTES_LIST } from '@client/src/data/hiking-data';
+import { listRoutes } from '@client/src/api';
+import { mapRoute } from '@client/src/data/mappers';
 import type { RouteItem } from '@client/src/data/hiking-types';
+import { useAsyncData } from '@client/src/hooks/use-hiking';
 import RouteCard from '@client/src/components/RouteCard';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
@@ -10,12 +12,7 @@ import Seo from '@client/src/components/Seo';
 
 const REGION_ORDER: string[] = ['四川', '云南', '西藏', '新疆', '安徽', '湖南'];
 
-const REGIONS: string[] = [
-  ...REGION_ORDER.filter((r: string) => ROUTES_LIST.some((item: RouteItem) => item.region === r)),
-  ...Array.from(new Set(ROUTES_LIST.map((item: RouteItem) => item.region))).filter(
-    (r: string) => !REGION_ORDER.includes(r)
-  ),
-];
+const REGIONS: string[] = REGION_ORDER;
 
 const DIFFICULTIES: string[] = ['初级', '中级', '高级'];
 const PAGE_SIZE = 6;
@@ -92,9 +89,17 @@ const RoutesPage = () => {
   const [openKey, setOpenKey] = useState<FilterKey | null>(null);
   const [page, setPage] = useState<number>(1);
   const [compareIds, setCompareIds] = useState<number[]>([]);
+  const { data, loading, error, reload } = useAsyncData<RouteItem[]>(
+    async () => {
+      const result = await listRoutes();
+      return result.routes.map(mapRoute);
+    },
+    []
+  );
+  const routes: RouteItem[] = data ?? [];
 
   const filteredRoutes: RouteItem[] = useMemo(() => {
-    const list: RouteItem[] = ROUTES_LIST.filter((r: RouteItem) => {
+    const list: RouteItem[] = routes.filter((r: RouteItem) => {
       if (filters.region && r.region !== filters.region) return false;
       if (filters.difficulty && r.difficulty !== filters.difficulty) return false;
       if (filters.distance === 'short' && r.distance >= 10) return false;
@@ -106,7 +111,7 @@ const RoutesPage = () => {
     if (filters.sort === 'distanceAsc') list.sort((a: RouteItem, b: RouteItem) => a.distance - b.distance);
     if (filters.sort === 'distanceDesc') list.sort((a: RouteItem, b: RouteItem) => b.distance - a.distance);
     return list;
-  }, [filters]);
+  }, [filters, routes]);
 
   useEffect(() => {
     setCompareIds((prev: number[]) => {
@@ -253,7 +258,31 @@ const RoutesPage = () => {
 
       {/* 路线网格 */}
       <div className="pt-6 md:pt-10">
-        {filteredRoutes.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index: number) => (
+              <div key={index} className="animate-pulse">
+                <div className="aspect-[16/10] rounded-lg bg-muted" />
+                <div className="mt-2 h-4 w-4/5 rounded bg-muted" />
+                <div className="mt-2 h-3 w-1/3 rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <EmptyState
+            icon={MapIcon}
+            title="路线加载失败"
+            description={error}
+            action={
+              <button
+                onClick={reload}
+                className="inline-flex items-center rounded-lg bg-pine-700 px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-pine-800"
+              >
+                重新加载
+              </button>
+            }
+          />
+        ) : filteredRoutes.length === 0 ? (
           <EmptyState
             icon={MapIcon}
             title="没有符合条件的路线"

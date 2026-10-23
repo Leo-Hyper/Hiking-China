@@ -18,6 +18,9 @@ function createTransport() {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 465),
     secure: String(process.env.SMTP_SECURE || "true") !== "false",
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
     auth: process.env.SMTP_USER
       ? {
           user: process.env.SMTP_USER,
@@ -27,10 +30,50 @@ function createTransport() {
   });
 }
 
+function parseFrom(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^(.*?)\s*<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim() || "徒步中国", email: match[2].trim() };
+  }
+  return { name: "徒步中国", email: raw };
+}
+
+async function sendViaBrevoApi({ to, subject, html, text, from }) {
+  const sender = parseFrom(from);
+  if (!sender.email) throw new Error("MAIL_FROM 未配置");
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`Brevo API ${response.status}: ${body.slice(0, 300)}`);
+  }
+  return { provider: "brevo-api", response: body };
+}
+
 async function sendMail({ to, subject, html, text }) {
-  const transport = createTransport();
   const from = process.env.MAIL_FROM || "徒步中国 <no-reply@hikingchina.com>";
 
+  if (process.env.BREVO_API_KEY) {
+    return sendViaBrevoApi({ to, subject, html, text, from });
+  }
+
+  const transport = createTransport();
   if (!transport) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("邮件服务尚未配置");

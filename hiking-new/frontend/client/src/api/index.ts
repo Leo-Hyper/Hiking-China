@@ -390,3 +390,67 @@ export function sendMessage(conversationId: number, content: string): Promise<{ 
 export function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {
   return http.put<{ ok: boolean }>(`/api/messages/conversations/${conversationId}/read`);
 }
+
+// ---------- routes ----------
+export interface RouteQuery {
+  region?: string;
+  difficulty?: string;
+  distance?: string;
+  sort?: string;
+}
+
+export interface ParsedGpx {
+  name: string;
+  geojson: { type: 'LineString'; coordinates: [number, number, number?][] };
+  points: [number, number, number?][];
+  stats: {
+    distance: number;
+    ascentM: number;
+    descentM: number;
+    minElevation: number | null;
+    maxElevation: number | null;
+    pointCount: number;
+  };
+}
+
+export function listRoutes(query: RouteQuery = {}): Promise<{ routes: Record<string, unknown>[] }> {
+  const params = new URLSearchParams();
+  if (query.region) params.set('region', query.region);
+  if (query.difficulty) params.set('difficulty', query.difficulty);
+  if (query.distance) params.set('distance', query.distance);
+  if (query.sort) params.set('sort', query.sort);
+  const suffix = params.toString();
+  return http.get<{ routes: Record<string, unknown>[] }>(`/api/routes${suffix ? `?${suffix}` : ''}`);
+}
+
+export function getRoute(routeId: number): Promise<{ route: Record<string, unknown> }> {
+  return http.get<{ route: Record<string, unknown> }>(`/api/routes/${routeId}`);
+}
+
+export function toggleRouteFavorite(routeId: number): Promise<{ favorited: boolean }> {
+  return http.post<{ favorited: boolean }>(`/api/routes/${routeId}/favorite`);
+}
+
+export function checkRouteFavorite(routeId: number): Promise<{ favorited: boolean }> {
+  return http.get<{ favorited: boolean }>(`/api/routes/${routeId}/favorite`);
+}
+
+export function listRouteFavorites(): Promise<{ routes: Record<string, unknown>[] }> {
+  return http.get<{ routes: Record<string, unknown>[] }>('/api/routes/favorites');
+}
+
+export function parseRouteGpx(gpx: string): Promise<ParsedGpx> {
+  return http.postText<ParsedGpx>('/api/routes/parse-gpx', gpx);
+}
+
+export function createRoute(input: Record<string, unknown>): Promise<{ route: Record<string, unknown> }> {
+  return http.post<{ route: Record<string, unknown> }>('/api/routes', input);
+}
+
+export function updateRoute(routeId: number, input: Record<string, unknown>): Promise<{ route: Record<string, unknown> }> {
+  return http.put<{ route: Record<string, unknown> }>(`/api/routes/${routeId}`, input);
+}
+
+export function deleteRoute(routeId: number): Promise<{ message: string }> {
+  return http.delete<{ message: string }>(`/api/routes/${routeId}`);
+}

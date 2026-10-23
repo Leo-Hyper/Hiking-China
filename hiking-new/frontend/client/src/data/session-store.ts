@@ -12,14 +12,26 @@ function saveSessionUser(user: HikingUser): void {
   writeJson(SESSION_USER_KEY, user);
 }
 
-export async function registerUser(username: string, email: string, password: string): Promise<HikingUser> {
+export interface RegisterResult {
+  user: HikingUser;
+  verificationEmailSent: boolean;
+}
+
+export async function registerUser(
+  username: string,
+  email: string,
+  password: string,
+): Promise<RegisterResult> {
   const data = await api.register({ username, email, password });
   setToken(data.token);
   const user = mapUser(data.user);
   saveSessionUser(user);
   invalidateGetCache('/api/auth/users');
   notify();
-  return user;
+  return {
+    user,
+    verificationEmailSent: data.verification_email_sent !== false,
+  };
 }
 
 export async function loginUser(email: string, password: string): Promise<HikingUser> {

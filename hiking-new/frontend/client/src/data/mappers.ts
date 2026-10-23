@@ -1,4 +1,4 @@
-import type { HikingComment, HikingEvent, HikingUser, Post } from './hiking-types';
+import type { HikingComment, HikingEvent, HikingUser, Post, RouteItem } from './hiking-types';
 
 export function parseTags(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.map(String).map((tag) => tag.trim()).filter(Boolean);
@@ -102,6 +102,47 @@ export function mapComment(raw: Record<string, unknown>): HikingComment {
     replies: Array.isArray(raw.replies)
       ? raw.replies.map((reply: unknown) => mapComment(reply as Record<string, unknown>))
       : undefined,
+  };
+}
+
+function parseGeojson(raw: unknown): RouteItem['geojson'] {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as RouteItem['geojson'];
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw === 'object') return raw as RouteItem['geojson'];
+  return null;
+}
+
+export function mapRoute(raw: Record<string, unknown>): RouteItem {
+  return {
+    id: Number(raw.id),
+    name: String(raw.name || ''),
+    region: String(raw.region || ''),
+    difficulty: String(raw.difficulty || '初级'),
+    description: String(raw.description || ''),
+    distance: Number(raw.distance ?? 0),
+    duration: String(raw.duration || ''),
+    rating: Number(raw.rating ?? 0),
+    image: String(raw.image || ''),
+    postId: raw.post_id == null ? undefined : Number(raw.post_id),
+    content: String(raw.content || ''),
+    tags: parseTags(raw.tags),
+    ascent: raw.ascent_m == null ? null : Number(raw.ascent_m),
+    descent: raw.descent_m == null ? null : Number(raw.descent_m),
+    minElevation: raw.min_elevation == null ? null : Number(raw.min_elevation),
+    maxElevation: raw.max_elevation == null ? null : Number(raw.max_elevation),
+    startPoint: String(raw.start_point || ''),
+    endPoint: String(raw.end_point || ''),
+    pointCount: Number(raw.point_count ?? 0),
+    geojson: parseGeojson(raw.geojson),
+    favoriteCount: Number(raw.favorite_count ?? 0),
+    isFavorited: Boolean(raw.is_favorited),
+    authorId: raw.user_id == null ? undefined : Number(raw.user_id),
   };
 }
 

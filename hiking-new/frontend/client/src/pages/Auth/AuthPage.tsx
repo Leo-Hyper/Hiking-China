@@ -36,6 +36,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+  const [verificationEmailSent, setVerificationEmailSent] = useState<boolean | null>(null);
   const [sendingVerification, setSendingVerification] = useState<boolean>(false);
   const [form, setForm] = useState<AuthFormState>({ username: '', email: '', password: '' });
 
@@ -49,6 +50,7 @@ const AuthPage = () => {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
+    setVerificationEmailSent(null);
     try {
       const user = await loginUser(form.email, form.password);
       trackEvent('login_success');
@@ -68,10 +70,16 @@ const AuthPage = () => {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
+    setVerificationEmailSent(null);
     try {
-      await registerUser(form.username, form.email, form.password);
-      trackEvent('register_success');
-      setSuccessMsg('注册成功。验证邮件已发送，请查收后再发帖、评论或报名活动。');
+      const result = await registerUser(form.username, form.email, form.password);
+      trackEvent('register_success', { verification_email_sent: result.verificationEmailSent });
+      setVerificationEmailSent(result.verificationEmailSent);
+      setSuccessMsg(
+        result.verificationEmailSent
+          ? '注册成功。验证邮件已发送，请查收后再发帖、评论或报名活动。'
+          : '注册成功，但验证邮件发送失败。请稍后点击“重新发送验证邮件”，或联系管理员。'
+      );
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '注册失败，请重试');
     } finally {
@@ -84,8 +92,10 @@ const AuthPage = () => {
     setErrorMsg('');
     try {
       await sendVerificationEmail();
+      setVerificationEmailSent(true);
       setSuccessMsg('验证邮件已重新发送，请查收。');
     } catch (err) {
+      setVerificationEmailSent(false);
       setErrorMsg(err instanceof Error ? err.message : '验证邮件发送失败');
     } finally {
       setSendingVerification(false);
@@ -203,7 +213,13 @@ const AuthPage = () => {
                   </Link>
                 </div>
                 {successMsg && (
-                  <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                  <div
+                    className={`rounded-lg border px-3.5 py-3 text-xs leading-relaxed ${
+                      verificationEmailSent === false
+                        ? 'border-amber-200 bg-amber-50 text-amber-800'
+                        : 'border-pine-200 bg-pine-50 text-pine-800'
+                    }`}
+                  >
                     <p>{successMsg}</p>
                     <button
                       type="button"
@@ -276,7 +292,13 @@ const AuthPage = () => {
                   />
                 </div>
                 {successMsg && (
-                  <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                  <div
+                    className={`rounded-lg border px-3.5 py-3 text-xs leading-relaxed ${
+                      verificationEmailSent === false
+                        ? 'border-amber-200 bg-amber-50 text-amber-800'
+                        : 'border-pine-200 bg-pine-50 text-pine-800'
+                    }`}
+                  >
                     <p>{successMsg}</p>
                     <button
                       type="button"

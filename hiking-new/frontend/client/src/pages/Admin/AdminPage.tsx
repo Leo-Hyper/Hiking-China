@@ -9,6 +9,7 @@ import {
   ToggleLeft,
   Users,
   FileText,
+  Route as RouteIcon,
   RefreshCw,
   Search,
   ArrowUpRight,
@@ -17,8 +18,9 @@ import * as api from '@client/src/api';
 import { useAuth } from '@client/src/hooks/use-hiking';
 import { toast } from 'sonner';
 import AdminUsersPanel from './AdminUsersPanel';
+import AdminRoutesPanel from './AdminRoutesPanel';
 
-type AdminTab = 'summary' | 'reports' | 'posts' | 'comments' | 'users' | 'events' | 'audit' | 'flags';
+type AdminTab = 'summary' | 'reports' | 'posts' | 'comments' | 'users' | 'events' | 'routes' | 'audit' | 'flags';
 type Row = Record<string, unknown>;
 
 const TABS: { key: AdminTab; label: string; icon: typeof Shield }[] = [
@@ -28,6 +30,7 @@ const TABS: { key: AdminTab; label: string; icon: typeof Shield }[] = [
   { key: 'comments', label: '评论', icon: MessageSquare },
   { key: 'users', label: '用户', icon: Users },
   { key: 'events', label: '活动', icon: CalendarDays },
+  { key: 'routes', label: '路线', icon: RouteIcon },
   { key: 'audit', label: '审计', icon: ScrollText },
   { key: 'flags', label: '开关', icon: ToggleLeft },
 ];
@@ -39,6 +42,7 @@ const TAB_PATHS: Record<AdminTab, string> = {
   comments: '/admin/comments',
   users: '/admin/users',
   events: '/admin/events',
+  routes: '/admin/routes',
   audit: '/admin/audit',
   flags: '/admin/flags',
 };
@@ -87,6 +91,9 @@ const AdminPage = () => {
       } else if (tab === 'events') {
         const data = await api.listAdminEvents();
         setRows(data.events || []);
+      } else if (tab === 'routes') {
+        const data = await api.listRoutes();
+        setRows(data.routes || []);
       } else if (tab === 'audit') {
         const data = await api.listAdminAuditLogs();
         setRows(data.logs || []);
@@ -171,7 +178,7 @@ const AdminPage = () => {
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = item.key === tab;
-          const visible = ['audit', 'flags', 'users'].includes(item.key) ? user.role === 'admin' : true;
+            const visible = ['audit', 'flags', 'users', 'routes'].includes(item.key) ? user.role === 'admin' : true;
           if (!visible) return null;
           return (
             <Link
@@ -349,6 +356,9 @@ const AdminPage = () => {
             </>
           )}
         />
+      )}
+      {!loading && !error && tab === 'routes' && (
+        <AdminRoutesPanel routes={rows} onChanged={reload} />
       )}
 
       {!loading && !error && tab === 'audit' && (

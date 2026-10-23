@@ -1,11 +1,11 @@
 const express = require("express");
-const rateLimit = require("express-rate-limit");
 const { authMiddleware } = require("../middleware/auth");
 const { parseMultipartImages } = require("../middleware/image-upload");
 const { saveUpload } = require("../services/upload");
+const { createLimiter } = require("../middleware/rate-limit");
 
 const router = express.Router();
-const uploadLimiter = rateLimit({
+const uploadLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 30,
   standardHeaders: "draft-7",
