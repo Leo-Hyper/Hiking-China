@@ -23,6 +23,11 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Test artifacts
+**/.tmp/
+playwright-report/
+test-results/
+
 # Misc
 *.bak
 *.backup-*

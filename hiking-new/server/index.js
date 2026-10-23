@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
-const rateLimit = require("express-rate-limit");
 const path = require("path");
+const { createLimiter } = require("./middleware/rate-limit");
 
 // 数据库初始化
 const { initDb, get } = require("./models/db");
@@ -46,7 +46,7 @@ const { UPLOADS_DIR } = require("./services/upload");
 app.use("/uploads", express.static(UPLOADS_DIR, { immutable: true, maxAge: "365d" }));
 
 // 速率限制
-const limiter = rateLimit({
+const limiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 200,
   standardHeaders: "draft-7",
@@ -55,7 +55,7 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-const authLimiter = rateLimit({
+const authLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: "draft-7",
@@ -66,7 +66,7 @@ const authLimiter = rateLimit({
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 
-const accountActionLimiter = rateLimit({
+const accountActionLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 5,
   standardHeaders: "draft-7",
@@ -87,6 +87,7 @@ app.use("/api/upload", require("./routes/upload"));
 app.use("/api/follow", require("./routes/follow"));
 app.use("/api/bookmarks", require("./routes/bookmarks"));
 app.use("/api/events", require("./routes/events"));
+app.use("/api/routes", require("./routes/routes"));
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/notifications", require("./routes/notifications"));

@@ -27,7 +27,7 @@ const RouteCard = ({
   return (
     <article className="group relative h-full @container">
       <Link
-        to={routeData.postId ? `/post/${routeData.postId}` : '/routes'}
+        to={`/routes/${routeData.id}`}
         className="block h-full"
       >
         <div className="flex h-full flex-col">

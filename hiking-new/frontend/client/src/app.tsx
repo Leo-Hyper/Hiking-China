@@ -11,6 +11,7 @@ const loadEventsPage = () => import('./pages/Events/EventsPage');
 
 const Home = lazy(loadHome);
 const RoutesPage = lazy(loadRoutesPage);
+const RouteDetailPage = lazy(() => import('./pages/Routes/RouteDetailPage'));
 const ForumPage = lazy(loadForumPage);
 const GearPage = lazy(loadGearPage);
 const EventsPage = lazy(loadEventsPage);
@@ -66,6 +67,7 @@ const RoutesComponent = () => {
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="routes" element={<RoutesPage />} />
+          <Route path="routes/:id" element={<RouteDetailPage />} />
           <Route path="gear" element={<GearPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="events/:id" element={<EventDetailPage />} />

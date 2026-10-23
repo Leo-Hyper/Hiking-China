@@ -100,6 +100,19 @@ export interface RouteItem {
   rating: number;
   image: string;
   postId?: number;
+  content?: string;
+  tags?: string[];
+  ascent?: number | null;
+  descent?: number | null;
+  minElevation?: number | null;
+  maxElevation?: number | null;
+  startPoint?: string;
+  endPoint?: string;
+  pointCount?: number;
+  geojson?: { type: 'LineString'; coordinates: [number, number, number?][] } | null;
+  favoriteCount?: number;
+  isFavorited?: boolean;
+  authorId?: number;
 }
 
 export interface GearItem {

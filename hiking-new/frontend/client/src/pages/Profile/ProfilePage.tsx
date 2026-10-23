@@ -6,6 +6,7 @@ import {
   Bookmark,
   FileText,
   History,
+  Route as RouteIcon,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -21,13 +22,14 @@ import type { Post, UserStats } from '@client/src/data/hiking-types';
 import MyPostsTab from './MyPostsTab';
 import BookmarksTab from './BookmarksTab';
 import RecentViewsTab from './RecentViewsTab';
+import RouteFavoritesTab from './RouteFavoritesTab';
 import ProfileEditForm from './ProfileEditForm';
 import AccountSecurityPanel from './AccountSecurityPanel';
 import { toast } from 'sonner';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import Seo from '@client/src/components/Seo';
 
-type ProfileTabKey = 'posts' | 'recent' | 'bookmarks' | 'profile' | 'account';
+type ProfileTabKey = 'posts' | 'recent' | 'bookmarks' | 'routes' | 'profile' | 'account';
 
 interface ProfileTab {
   key: ProfileTabKey;
@@ -41,6 +43,7 @@ const PROFILE_TABS: ProfileTab[] = [
   { key: 'posts', label: '我的帖子', description: '管理草稿和已发布的路书、攻略与故事。', eyebrow: 'Content library', icon: FileText },
   { key: 'recent', label: '最近浏览', description: '继续阅读你近期打开过的路线和游记。', eyebrow: 'Recent trails', icon: History },
   { key: 'bookmarks', label: '我的收藏', description: '集中整理准备出发前再次查看的内容。', eyebrow: 'Saved trails', icon: Bookmark },
+  { key: 'routes', label: '路线收藏', description: '保存想走的路线，出发前快速回看。', eyebrow: 'Saved routes', icon: RouteIcon },
   { key: 'profile', label: '个人资料', description: '编辑公开身份、徒步经验和装备偏好。', eyebrow: 'Profile settings', icon: UserRound },
   { key: 'account', label: '账号与安全', description: '管理邮箱、密码、数据导出和账号状态。', eyebrow: 'Account overview', icon: ShieldCheck },
 ];
@@ -351,6 +354,7 @@ const ProfilePage = () => {
               {activeTab === 'bookmarks' && (
                 <BookmarksTab bookmarks={myBookmarks} loading={bookmarksLoading} onChanged={reloadBookmarks} />
               )}
+              {activeTab === 'routes' && <RouteFavoritesTab />}
               {activeTab === 'profile' && <ProfileEditForm user={user} />}
               {activeTab === 'account' && <AccountSecurityPanel user={user} />}
             </div>
