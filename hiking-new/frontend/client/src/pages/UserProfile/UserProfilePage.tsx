@@ -8,6 +8,7 @@ import type { FormattedPost } from './PostCard';
 import FollowButton from './FollowButton';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import EmptyState from '@client/src/components/visual/EmptyState';
+import Seo from '@client/src/components/Seo';
 import { MessageCircle } from 'lucide-react';
 
 const LEVEL_NAMES: string[] = ['', '新手', '进阶', '资深'];
@@ -100,6 +101,11 @@ const UserProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-paper">
+      <Seo
+        title={`${profileUser.username} 的主页`}
+        description={profileUser.bio || `查看 ${profileUser.username} 在徒步中国发布的公开游记、路线和户外记录。`}
+        path={`/user/${profileUser.id}`}
+      />
       <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
         {/* 用户信息卡片 */}
         <section className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-2xs">

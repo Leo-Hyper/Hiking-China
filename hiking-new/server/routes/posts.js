@@ -44,12 +44,14 @@ router.get("/", publicCache(30000), async (req, res) => {
     const { category, q, limit, offset } = req.query;
     const lim = pageLimit(limit, 50);
     const off = pageOffset(offset);
+    const normalizedCategory = category ? String(category).slice(0, 30) : "";
+    const normalizedQuery = q ? String(q).trim().slice(0, 100) : "";
 
     let posts;
-    if (category) {
-      posts = await getPostsByCategory(String(category).slice(0, 30), lim);
-    } else if (q) {
-      posts = await searchPosts(String(q).trim().slice(0, 100), lim);
+    if (normalizedCategory) {
+      posts = await getPostsByCategory(normalizedCategory, lim, off, normalizedQuery);
+    } else if (normalizedQuery) {
+      posts = await searchPosts(normalizedQuery, lim, off);
     } else {
       posts = await getAllPosts(lim, off);
     }

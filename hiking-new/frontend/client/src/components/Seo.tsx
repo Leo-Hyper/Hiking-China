@@ -6,6 +6,7 @@ interface SeoProps {
   path: string;
   type?: 'website' | 'article';
   image?: string;
+  noIndex?: boolean;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
@@ -19,7 +20,7 @@ function setMeta(selector: string, attribute: 'name' | 'property', key: string, 
   element.setAttribute('content', content);
 }
 
-const Seo = ({ title, description, path, type = 'website', image, jsonLd }: SeoProps) => {
+const Seo = ({ title, description, path, type = 'website', image, noIndex = false, jsonLd }: SeoProps) => {
   useEffect(() => {
     const fullTitle = title.includes('徒步中国') ? title : `${title} · 徒步中国`;
     const origin = window.location.origin;
@@ -41,6 +42,11 @@ const Seo = ({ title, description, path, type = 'website', image, jsonLd }: SeoP
     setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', fullTitle);
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
     setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', imageUrl);
+    if (noIndex) {
+      setMeta('meta[name="robots"]', 'name', 'robots', 'noindex, nofollow');
+    } else {
+      document.head.querySelector('meta[name="robots"]')?.remove();
+    }
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
@@ -59,7 +65,7 @@ const Seo = ({ title, description, path, type = 'website', image, jsonLd }: SeoP
       script.textContent = JSON.stringify(jsonLd);
       document.head.appendChild(script);
     }
-  }, [title, description, path, type, image, jsonLd]);
+  }, [title, description, path, type, image, noIndex, jsonLd]);
 
   return null;
 };

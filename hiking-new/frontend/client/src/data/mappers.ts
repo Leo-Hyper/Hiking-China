@@ -1,8 +1,21 @@
 import type { HikingComment, HikingEvent, HikingUser, Post } from './hiking-types';
 
 export function parseTags(raw: unknown): string[] {
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'string' && raw) return raw.split(',').filter(Boolean);
+  if (Array.isArray(raw)) return raw.map(String).map((tag) => tag.trim()).filter(Boolean);
+  if (typeof raw === 'string' && raw.trim()) {
+    const value = raw.trim();
+    if (value.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return parsed.map(String).map((tag) => tag.trim()).filter(Boolean);
+        }
+      } catch {
+        return [];
+      }
+    }
+    return value.split(',').map((tag) => tag.trim()).filter(Boolean);
+  }
   return [];
 }
 

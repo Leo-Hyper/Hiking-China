@@ -41,6 +41,9 @@ https://hiking-china.netlify.app,https://hiking-china.onrender.com,https://hikin
 
 代码中已将新站点和旧临时站点 Origin 均加入允许列表。
 
+Render API 的 `APP_BASE_URL` 应设置为 `https://hiking-china.onrender.com`，用于生成 sitemap
+和邮件中的验证/重置链接。未设置或仍为旧的 Netlify 域名时，服务端会回退到当前 Render 主站。
+
 旧站点 `hiking-china-web.onrender.com` 保留为回滚入口。
 
 ## 图片兼容

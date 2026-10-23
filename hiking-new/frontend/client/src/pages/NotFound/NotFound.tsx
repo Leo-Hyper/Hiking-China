@@ -1,10 +1,19 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import TopoBackground from '@client/src/components/visual/TopoBackground';
+import Seo from '@client/src/components/Seo';
 
 const NotFound = () => {
+  const location = useLocation();
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-paper px-6">
+      <Seo
+        title="页面不存在"
+        description="你访问的页面不存在，请返回徒步中国首页或前往论坛继续浏览。"
+        path={location.pathname}
+        noIndex
+      />
       <TopoBackground className="text-pine-200/70" />
       <div className="relative max-w-lg text-center">
         <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card shadow-sm">

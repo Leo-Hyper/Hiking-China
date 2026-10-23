@@ -1,4 +1,6 @@
-const APP_BASE_URL = (process.env.APP_BASE_URL || "https://hiking-china.netlify.app").replace(/\/+$/, "");
+const { getAppBaseUrl } = require("../utils/app-url");
+
+const APP_BASE_URL = getAppBaseUrl();
 
 function escapeHtml(value) {
   return String(value || "")

@@ -56,7 +56,7 @@ const ForumPage = () => {
     }
   }, [tabParam, isLoggedIn]);
 
-  const { data: filteredData, loading, error, reload } = useAsyncData<Post[]>(
+  const { data: filteredData, loading, refreshing, error, reload } = useAsyncData<Post[]>(
     () => viewMode === 'following'
       ? api.getPersonalizedFeed().then((result) => (result.posts || []).map(mapPost))
       : listPosts({
@@ -91,6 +91,8 @@ const ForumPage = () => {
   }, [filteredPosts, viewMode]);
   const posts: Post[] = useMemo(() => sortedPosts.slice(0, visibleCount), [sortedPosts, visibleCount]);
   const hasMore: boolean = filteredPosts.length > visibleCount;
+  const searchPending: boolean = searchQuery.trim() !== debouncedSearch;
+  const showLoading: boolean = loading || refreshing || searchPending;
 
   const selectCategory = (cat: string): void => {
     setActiveCategory(cat);
@@ -248,12 +250,14 @@ const ForumPage = () => {
         )}
       </div>
       {searchQuery && (
-        <p className="mt-4 text-xs text-muted-foreground md:mt-6">搜索「{searchQuery}」的结果</p>
+        <p className="mt-4 text-xs text-muted-foreground md:mt-6">
+          {showLoading ? `正在搜索「${searchQuery}」...` : `搜索「${searchQuery}」的结果`}
+        </p>
       )}
 
       {/* 加载中 */}
       <div className="pt-6 md:pt-10">
-        {loading ? (
+        {showLoading ? (
           <div className="py-20 text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-pine-200 border-t-pine-700"></div>
             <p className="mt-4 text-muted-foreground">加载中...</p>
@@ -371,7 +375,7 @@ const ForumPage = () => {
         )}
 
         {/* 加载更多 */}
-        {hasMore && !loading && (
+        {hasMore && !showLoading && (
           <div className="mt-10 text-center">
             <button
               onClick={loadMore}

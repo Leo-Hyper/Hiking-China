@@ -46,10 +46,18 @@ async function getAllPosts(limit = 50, offset = 0) {
 }
 
 // 按分类获取帖子
-async function getPostsByCategory(category, limit = 20) {
+async function getPostsByCategory(category, limit = 20, offset = 0, query = "") {
+  const params = [category];
+  let searchClause = "";
+  if (query) {
+    searchClause = " AND (p.title LIKE ? OR p.content LIKE ? OR p.tags LIKE ?)";
+    params.push(`%${query}%`, `%${query}%`, `%${query}%`);
+  }
+  params.push(limit, offset);
   const rows = await all(
-    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.category = ? AND p.status = 1 ORDER BY p.created_at DESC LIMIT ?`,
-    [category, limit]
+    `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
+    `WHERE p.category = ? AND p.status = 1${searchClause} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    params
   );
   return (rows || []).map(normalizePost);
 }
@@ -85,12 +93,12 @@ async function getOwnPostById(id, userId) {
 }
 
 // 搜索帖子
-async function searchPosts(query, limit = 20) {
+async function searchPosts(query, limit = 20, offset = 0) {
   const rows = await all(
     `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
     `WHERE p.status = 1 AND (p.title LIKE ? OR p.content LIKE ? OR p.tags LIKE ?) ` +
-    `ORDER BY p.created_at DESC LIMIT ?`,
-    [`%${query}%`, `%${query}%`, `%${query}%`, limit]
+    `ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    [`%${query}%`, `%${query}%`, `%${query}%`, limit, offset]
   );
   return (rows || []).map(normalizePost);
 }

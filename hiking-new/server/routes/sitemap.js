@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { all } = require("../models/db");
+const { getAppBaseUrl } = require("../utils/app-url");
 
-const BASE_URL = (process.env.APP_BASE_URL || "https://hiking-china.netlify.app").replace(/\/+$/, "");
+const BASE_URL = getAppBaseUrl();
 
 function escapeXml(value) {
   return String(value || "")
@@ -34,6 +35,9 @@ router.get("/sitemap.xml", async (_req, res) => {
       urlEntry("/privacy", null, "0.3"),
       urlEntry("/terms", null, "0.3"),
       urlEntry("/community-guidelines", null, "0.3"),
+      urlEntry("/disclaimer", null, "0.3"),
+      urlEntry("/copyright", null, "0.3"),
+      urlEntry("/contact", null, "0.3"),
     ];
     const postEntries = posts.map((post) => urlEntry(`/post/${post.id}`, post.updated_at, "0.7"));
     const eventEntries = events.map((event) => urlEntry(`/events/${event.id}`, event.updated_at, "0.7"));
