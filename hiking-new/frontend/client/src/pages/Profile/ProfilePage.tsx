@@ -49,7 +49,7 @@ const ProfilePage = () => {
     () => (user ? listBookmarkedPosts() : Promise.resolve([])),
     [user?.id]
   );
-  const { data: statsData, reload: reloadStats } = useAsyncData<UserStats>(
+  const { data: statsData, loading: statsLoading, reload: reloadStats } = useAsyncData<UserStats>(
     () =>
       user
         ? getUserStats(user.id)
@@ -82,6 +82,12 @@ const ProfilePage = () => {
   const stats: UserStats = statsData ?? { postCount: 0, followersCount: 0, followingCount: 0 };
   const profileLevel: string = LEVEL_NAMES[user.hikinglevel || 0] || '';
   const levelClass: string = LEVEL_CLASSES[user.hikinglevel || 0] || '';
+  const statsItems = [
+    { label: '帖子', value: myPosts.length, loading: myPostsLoading },
+    { label: '粉丝', value: stats.followersCount, loading: statsLoading },
+    { label: '关注', value: stats.followingCount, loading: statsLoading },
+    { label: '收藏', value: myBookmarks.length, loading: bookmarksLoading },
+  ];
 
   const confirmDelete = (post: Post): void => {
     setDeleteTarget(post);
@@ -165,15 +171,14 @@ const ProfilePage = () => {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
-            {[
-              ['帖子', myPosts.length],
-              ['粉丝', stats.followersCount],
-              ['关注', stats.followingCount],
-              ['收藏', myBookmarks.length],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="bg-card px-5 py-4 text-center">
-                <div className="font-data text-lg text-ink">{value}</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+            {statsItems.map((item) => (
+              <div key={item.label} className="bg-card px-5 py-4 text-center">
+                {item.loading ? (
+                  <div className="mx-auto h-5 w-8 animate-pulse rounded bg-muted" />
+                ) : (
+                  <div className="font-data text-lg text-ink">{item.value}</div>
+                )}
+                <div className="mt-0.5 text-xs text-muted-foreground">{item.label}</div>
               </div>
             ))}
           </div>

@@ -178,10 +178,24 @@ const UserProfilePage = () => {
               <p className="text-kicker uppercase text-ember-600">Public Journal</p>
               <h2 className="mt-1 font-display text-lg text-ink">公开游记</h2>
             </div>
-            <span className="font-data text-[11px] text-muted-foreground">{userPosts.length} 篇</span>
+            {postsLoading ? (
+              <span className="h-3 w-10 animate-pulse rounded bg-muted" />
+            ) : (
+              <span className="font-data text-[11px] text-muted-foreground">{userPosts.length} 篇</span>
+            )}
           </div>
 
-          {userPosts.length === 0 ? (
+          {postsLoading ? (
+            <div className="space-y-3" aria-label="公开游记加载中">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="rounded-xl border border-border bg-card p-5">
+                  <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                  <div className="mt-3 h-5 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          ) : userPosts.length === 0 ? (
             <EmptyState title="暂无帖子" description="这位伙伴还没有发布路书和故事" />
           ) : (
             <div className="grid gap-y-4">

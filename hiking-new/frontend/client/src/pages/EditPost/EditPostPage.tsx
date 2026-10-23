@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { getPostForEdit, updatePost } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
 import type { Post, PostExtraInfo } from '@client/src/data/hiking-types';
@@ -189,7 +189,13 @@ const EditPostPage: React.FC = () => {
       {!loading && forbidden && (
         <div className="rounded-xl border border-border bg-card py-20 text-center">
           <p className="text-lg text-muted-foreground">无权编辑此帖子</p>
-          <Link to="/profile" className="mt-4 inline-flex rounded-lg bg-pine-700 px-4 py-2 md:px-5 md:py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-pine-800">返回个人中心</Link>
+          <button
+            type="button"
+            onClick={() => window.location.assign(withBasePath('/profile?tab=posts'))}
+            className="mt-4 inline-flex rounded-lg bg-pine-700 px-4 py-2 text-sm font-semibold text-paper transition-colors hover:bg-pine-800 md:px-5 md:py-2.5"
+          >
+            返回个人中心
+          </button>
         </div>
       )}
 

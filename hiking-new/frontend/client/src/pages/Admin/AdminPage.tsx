@@ -201,7 +201,11 @@ const AdminPage = () => {
             }`}
           >
             <div>
-              <div className="font-data text-lg leading-none text-ink">{card.value}</div>
+              {loading ? (
+                <div className="h-5 w-8 animate-pulse rounded bg-muted" />
+              ) : (
+                <div className="font-data text-lg leading-none text-ink">{card.value}</div>
+              )}
               <div className="mt-1.5 text-[11px] text-muted-foreground">{card.label}</div>
             </div>
             <ArrowUpRight size={14} className="text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-pine-700" />
