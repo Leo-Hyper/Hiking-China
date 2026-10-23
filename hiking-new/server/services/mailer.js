@@ -118,6 +118,23 @@ function verificationEmail(token) {
   };
 }
 
+function verificationCodeEmail(code) {
+  const safeCode = escapeHtml(code);
+  return {
+    subject: "你的徒步中国邮箱验证码",
+    html: `
+      <div style="font-family:Arial,'Microsoft YaHei',sans-serif;line-height:1.7;color:#1f2933;max-width:560px;margin:0 auto;padding:32px 24px">
+        <p style="font-size:12px;letter-spacing:.12em;color:#2f6f55;text-transform:uppercase">徒步中国 · Trail China</p>
+        <h1 style="font-size:22px;margin:18px 0 10px">验证你的邮箱</h1>
+        <p style="color:#52606d">在注册/登录页面输入下面的 6 位验证码，即可完成邮箱验证并正常使用网站。</p>
+        <p style="margin:28px 0;padding:18px 24px;border-radius:12px;background:#f0f6f2;text-align:center;font-size:34px;letter-spacing:.35em;font-weight:700;color:#1f4d3a">${safeCode}</p>
+        <p style="font-size:12px;color:#7b8794">验证码 10 分钟内有效，最多尝试 5 次。如果不是你本人操作，请忽略这封邮件。</p>
+      </div>
+    `,
+    text: `你的徒步中国验证码是 ${code}，10 分钟内有效。`,
+  };
+}
+
 function passwordResetEmail(token) {
   const actionUrl = `${APP_BASE_URL}/reset-password?token=${encodeURIComponent(token)}`;
   return {
@@ -132,4 +149,4 @@ function passwordResetEmail(token) {
   };
 }
 
-module.exports = { sendMail, verificationEmail, passwordResetEmail };
+module.exports = { sendMail, verificationEmail, verificationCodeEmail, passwordResetEmail };

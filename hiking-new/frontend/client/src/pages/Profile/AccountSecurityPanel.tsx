@@ -15,6 +15,7 @@ import {
   logoutUser,
   requestAccountDeletion,
   sendVerificationEmail,
+  verifyEmailCode,
 } from '@client/src/data/hiking-store';
 import type { HikingUser } from '@client/src/data/hiking-types';
 import { toast } from 'sonner';
@@ -41,6 +42,8 @@ const formatDate = (value?: string): string => {
 const AccountSecurityPanel = ({ user }: AccountSecurityPanelProps) => {
   const navigate = useNavigate();
   const [sendingVerification, setSendingVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
@@ -74,12 +77,33 @@ const AccountSecurityPanel = ({ user }: AccountSecurityPanelProps) => {
   const resendVerification = async (): Promise<void> => {
     setSendingVerification(true);
     try {
-      await sendVerificationEmail();
-      toast.success('验证邮件已发送');
+      await sendVerificationEmail(user.email);
+      toast.success('验证码邮件已发送');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '验证邮件发送失败');
+      toast.error(error instanceof Error ? error.message : '验证码邮件发送失败');
     } finally {
       setSendingVerification(false);
+    }
+  };
+
+  const handleVerifyEmail = async (): Promise<void> => {
+    if (!user.email) {
+      toast.error('当前账号缺少邮箱，无法验证');
+      return;
+    }
+    if (!/^\d{6}$/.test(verificationCode)) {
+      toast.error('请输入 6 位数字验证码');
+      return;
+    }
+    setVerifyingEmail(true);
+    try {
+      await verifyEmailCode(user.email, verificationCode);
+      setVerificationCode('');
+      toast.success('邮箱验证成功');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '验证码验证失败');
+    } finally {
+      setVerifyingEmail(false);
     }
   };
 
@@ -172,7 +196,7 @@ const AccountSecurityPanel = ({ user }: AccountSecurityPanelProps) => {
                 disabled={sendingVerification}
                 className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-border px-3 text-xs font-semibold text-ink hover:border-pine-300 disabled:opacity-50"
               >
-                {sendingVerification ? '发送中...' : '发送验证邮件'}
+                {sendingVerification ? '发送中...' : '发送验证码'}
               </button>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-pine-700">
@@ -181,6 +205,39 @@ const AccountSecurityPanel = ({ user }: AccountSecurityPanelProps) => {
               </span>
             )}
           </div>
+
+          {!user.emailVerified && (
+            <div className="flex flex-col gap-3 bg-muted/20 px-5 py-4 sm:flex-row sm:items-center md:px-6">
+              <div className="flex-1">
+                <label htmlFor="account-verification-code" className="text-xs font-medium text-ink">
+                  输入邮箱验证码
+                </label>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  验证码 10 分钟内有效，最多尝试 5 次。
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="account-verification-code"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="000000"
+                  className="w-32 rounded-lg border border-border bg-card px-3 py-2 text-center font-data text-sm tracking-[0.2em] text-ink outline-none focus:border-pine-500 focus:ring-2 focus:ring-pine-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleVerifyEmail()}
+                  disabled={verifyingEmail || verificationCode.length !== 6}
+                  className="inline-flex min-h-9 items-center justify-center rounded-lg bg-pine-700 px-3 text-xs font-semibold text-paper transition-colors hover:bg-pine-800 disabled:opacity-50"
+                >
+                  {verifyingEmail ? '验证中...' : '验证'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between md:px-6">
             <div className="flex items-start gap-3">

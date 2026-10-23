@@ -17,14 +17,50 @@ const { authMiddleware, generateToken } = require("../middleware/auth");
 const { publicCache, clearPublicCache } = require("../middleware/public-cache");
 const { safeImageUrl } = require("../utils/validation");
 const { createAuthToken, consumeAuthToken } = require("../models/auth-token");
-const { sendMail, verificationEmail, passwordResetEmail } = require("../services/mailer");
+const {
+  consumeEmailCode,
+  createEmailCode,
+  RESEND_COOLDOWN_SECONDS,
+} = require("../models/email-code");
+const {
+  sendMail,
+  verificationCodeEmail,
+  passwordResetEmail,
+} = require("../services/mailer");
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^[\p{L}\p{N}_-]{2,20}$/u;
 
-async function sendVerificationEmail(user) {
-  const { token } = await createAuthToken(user.id, "email_verify", 24 * 60);
-  return sendMail({ to: user.email, ...verificationEmail(token) });
+function canExposeDevCode() {
+  return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development";
+}
+
+async function issueVerificationCode(user) {
+  const issued = await createEmailCode(user.id);
+  if (issued.reused) {
+    return {
+      sent: true,
+      reused: true,
+      retryAfter: issued.retryAfter,
+      code: null,
+    };
+  }
+  await sendMail({ to: user.email, ...verificationCodeEmail(issued.code) });
+  return {
+    sent: true,
+    reused: false,
+    retryAfter: issued.retryAfter,
+    code: issued.code,
+  };
+}
+
+function verificationPayload(issued) {
+  return {
+    verification_code_sent: issued.sent,
+    verification_email_sent: issued.sent,
+    verification_retry_after: issued.retryAfter,
+    ...(canExposeDevCode() && issued.code ? { dev_verification_code: issued.code } : {}),
+  };
 }
 
 function publicAuthUser(user) {
@@ -61,19 +97,18 @@ router.post("/register", async (req, res) => {
 
     const user = await register(username, email, password);
     const token = generateToken(user);
-    let verificationEmailSent = true;
+    let verification = { sent: false, retryAfter: RESEND_COOLDOWN_SECONDS, code: null };
     try {
-      await sendVerificationEmail(user);
+      verification = await issueVerificationCode(user);
     } catch (mailError) {
-      verificationEmailSent = false;
-      console.error("[AUTH] verification email failed:", mailError);
+      console.error("[AUTH] verification code email failed:", mailError);
     }
 
     res.status(201).json({
       message: "注册成功",
       token,
       user: publicAuthUser(user),
-      verification_email_sent: verificationEmailSent,
+      ...verificationPayload(verification),
     });
   } catch (err) {
     if (err.message === "用户名或邮箱已存在") {
@@ -97,10 +132,25 @@ router.post("/login", async (req, res) => {
     const user = await login(email, password);
     const token = generateToken(user);
 
+    let verification = null;
+    if (Number(user.email_verified) !== 1) {
+      try {
+        verification = await issueVerificationCode(user);
+      } catch (mailError) {
+        console.error("[AUTH] login verification code email failed:", mailError);
+        verification = {
+          sent: false,
+          retryAfter: RESEND_COOLDOWN_SECONDS,
+          code: null,
+        };
+      }
+    }
+
     res.json({
       message: "登录成功",
       token,
       user: publicAuthUser(user),
+      ...(verification ? verificationPayload(verification) : {}),
     });
   } catch (err) {
     if (err.message === "邮箱或密码错误") {
@@ -217,7 +267,7 @@ router.post("/logout", (req, res) => {
   res.json({ message: "已登出" });
 });
 
-// POST /api/auth/send-verification
+// POST /api/auth/send-verification (登录态，兼容个人中心)
 router.post("/send-verification", authMiddleware, async (req, res) => {
   try {
     const user = await getUserById(req.userId);
@@ -226,11 +276,103 @@ router.post("/send-verification", authMiddleware, async (req, res) => {
       return res.json({ message: "邮箱已验证", email_verified: 1 });
     }
 
-    await sendVerificationEmail(user);
-    res.json({ message: "验证邮件已发送", email_verified: 0 });
+    const issued = await issueVerificationCode(user);
+    res.json({
+      message: issued.reused ? "验证码已在有效期内，请查看最近一封邮件" : "验证码邮件已发送",
+      email_verified: 0,
+      ...verificationPayload(issued),
+    });
   } catch (err) {
     console.error("[AUTH] send verification failed:", err);
     res.status(500).json({ error: err.message || "验证邮件发送失败" });
+  }
+});
+
+// POST /api/auth/send-verification-code
+router.post("/send-verification-code", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+      return res.status(400).json({ error: "邮箱格式不正确" });
+    }
+
+    const user = await getUserByEmail(email);
+    if (!user || String(user.account_status || "active") !== "active") {
+      return res.json({
+        message: "如果该邮箱需要验证，验证码邮件会很快发送",
+        verification_code_sent: true,
+        verification_retry_after: RESEND_COOLDOWN_SECONDS,
+      });
+    }
+    if (Number(user.email_verified) === 1) {
+      return res.json({
+        message: "如果该邮箱需要验证，验证码邮件会很快发送",
+        verification_code_sent: true,
+        verification_retry_after: RESEND_COOLDOWN_SECONDS,
+      });
+    }
+
+    const issued = await issueVerificationCode(user);
+    res.json({
+      message: issued.reused ? "验证码已在有效期内，请查看最近一封邮件" : "验证码邮件已发送",
+      ...verificationPayload(issued),
+    });
+  } catch (err) {
+    console.error("[AUTH] send verification code failed:", err);
+    res.status(502).json({ error: "验证码邮件发送失败，请稍后重试" });
+  }
+});
+
+// POST /api/auth/verify-email-code
+router.post("/verify-email-code", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const code = String(req.body.code || "").trim();
+    if (!EMAIL_PATTERN.test(email) || !/^\d{6}$/.test(code)) {
+      return res.status(400).json({ error: "请输入正确的 6 位验证码" });
+    }
+
+    const user = await getUserByEmail(email);
+    if (!user || String(user.account_status || "active") !== "active") {
+      return res.status(400).json({ error: "验证码无效或已过期" });
+    }
+
+    if (Number(user.email_verified) === 1) {
+      return res.status(409).json({
+        error: "该邮箱已完成验证，请直接登录",
+        already_verified: true,
+      });
+    }
+
+    const result = await consumeEmailCode(user.id, code);
+    if (!result.ok) {
+      const messages = {
+        missing: "验证码无效或已过期，请重新获取",
+        expired: "验证码已过期，请重新获取",
+        used: "验证码已使用，请重新获取",
+        locked: "验证码错误次数过多，请重新获取",
+        invalid_format: "请输入正确的 6 位验证码",
+      };
+      const error = messages[result.reason] || "验证码无效或已过期";
+      return res.status(400).json({
+        error: result.reason === "invalid"
+          ? `验证码不正确，还可尝试 ${result.attemptsLeft} 次`
+          : error,
+        attempts_left: result.attemptsLeft,
+      });
+    }
+
+    await markEmailVerified(user.id);
+    clearPublicCache();
+    const fresh = await getUserById(user.id);
+    res.json({
+      message: "邮箱验证成功",
+      token: generateToken(fresh),
+      user: publicAuthUser(fresh),
+    });
+  } catch (err) {
+    console.error("[AUTH] verify email code failed:", err);
+    res.status(500).json({ error: "邮箱验证失败" });
   }
 });
 

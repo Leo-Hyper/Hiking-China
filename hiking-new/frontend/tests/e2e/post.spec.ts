@@ -35,4 +35,30 @@ test.describe('post lifecycle', () => {
     await page.goto('/profile?tab=bookmarks');
     await expect(page.getByText(title)).toBeVisible();
   });
+
+  test('publishes a post linked to a standard route', async ({ page }) => {
+    await login(page, USERS.user.email);
+    const title = `E2E 关联路线 ${Date.now()}`;
+    await page.goto('/publish?routeId=1');
+
+    await expect(page.getByLabel('关联路线')).toHaveValue('1');
+    await expect(page.getByText(/四姑娘山大峰 · 中级/)).toBeVisible();
+
+    await page.getByPlaceholder('请输入帖子标题').fill(title);
+    const editor = page.locator('.ql-editor');
+    await editor.click();
+    await page.keyboard.type('这篇帖子关联到四姑娘山大峰标准路线。');
+    await page.getByRole('button', { name: '从预设图片中选择 ▼' }).click();
+    await page.getByTestId('preset-image-0').click();
+    await page.getByRole('button', { name: '发布帖子' }).click();
+
+    await expect(page).toHaveURL(/\/forum/);
+    await page.getByRole('link', { name: new RegExp(title) }).first().click();
+    await expect(page).toHaveURL(/\/post\/\d+/);
+    await expect(page.getByText('标准路线')).toBeVisible();
+    await expect(page.getByRole('link', { name: /查看完整路线/ })).toHaveAttribute(
+      'href',
+      '/routes/1'
+    );
+  });
 });

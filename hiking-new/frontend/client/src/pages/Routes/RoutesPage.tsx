@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Map as MapIcon, RotateCcw, Scale, SlidersHorizontal, Users } from 'lucide-react';
-import { listRoutes } from '@client/src/api';
+import { getCompanionSummary, listRoutes, type CompanionSummary } from '@client/src/api';
 import { mapRoute } from '@client/src/data/mappers';
 import type { RouteItem } from '@client/src/data/hiking-types';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
@@ -97,6 +97,10 @@ const RoutesPage = () => {
     []
   );
   const routes: RouteItem[] = data ?? [];
+  const { data: companion } = useAsyncData<CompanionSummary>(
+    () => getCompanionSummary(),
+    []
+  );
 
   const filteredRoutes: RouteItem[] = useMemo(() => {
     const list: RouteItem[] = routes.filter((r: RouteItem) => {
@@ -405,17 +409,33 @@ const RoutesPage = () => {
                       近期结伴
                     </p>
                     <h3 className="mt-4 font-body text-xl text-ink">
-                      已有 <span className="font-data tabular-nums">6</span> 人寻找同行者
+                      {!companion ? (
+                        <>正在统计结伴数据</>
+                      ) : companion.users > 0 ? (
+                        <>
+                          近 {companion.days} 天有{' '}
+                          <span className="font-data tabular-nums">{companion.users}</span>{' '}
+                          人寻找同行者
+                        </>
+                      ) : (
+                        <>近 30 天还没有结伴帖</>
+                      )}
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      按日期、路线和集合地点匹配，减少私聊确认成本。
+                      {!companion ? (
+                        <>基于近 30 天发布的结伴帖实时计算。</>
+                      ) : companion.posts > 0 ? (
+                        <>共 {companion.posts} 条结伴帖，按日期、路线和集合地点匹配。</>
+                      ) : (
+                        <>成为第一个发起同行的人，约上同路人一起出发。</>
+                      )}
                     </p>
                   </div>
                   <Link
-                    to="/forum?q=结伴"
+                    to={companion && companion.posts > 0 ? '/forum?q=结伴' : '/publish'}
                     className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-pine-700 px-5 text-sm font-semibold text-paper transition-colors hover:bg-pine-800"
                   >
-                    查看结伴
+                    {companion && companion.posts > 0 ? '查看结伴' : '发起结伴'}
                   </Link>
                 </aside>
               </section>

@@ -13,6 +13,7 @@ export {
   sendVerificationEmail,
   updateProfile,
   verifyEmail,
+  verifyEmailCode,
 } from './session-store';
 export {
   createPost,

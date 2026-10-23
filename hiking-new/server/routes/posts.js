@@ -23,6 +23,16 @@ const { pageLimit, pageOffset, safeImageUrls } = require("../utils/validation");
 const { createNotification } = require("../models/notification");
 const { get } = require("../models/db");
 
+async function resolveRouteId(value) {
+  if (value === undefined) return undefined;
+  if (value === null || value === "" || Number(value) === 0) return null;
+  const routeId = Number(value);
+  if (!Number.isInteger(routeId) || routeId <= 0) throw new Error("关联路线无效");
+  const route = await get("SELECT id FROM routes WHERE id = ? AND status = 1", [routeId]);
+  if (!route) throw new Error("关联路线不存在");
+  return routeId;
+}
+
 // GET /api/posts/my - 获取我的帖子（需登录）
 router.get("/my", authMiddleware, async (req, res) => {
   try {
@@ -109,6 +119,7 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const { title, category, tags, imageUrls, extrainfo } = req.body;
+    const routeId = await resolveRouteId(req.body.routeId);
     const content = req.body.content === undefined ? undefined : sanitizeRichText(req.body.content);
 
     if (title && title.length > 100) {
@@ -128,13 +139,20 @@ router.put("/:id", authMiddleware, async (req, res) => {
       tags,
       imageUrls: imageUrls === undefined ? undefined : safeImageUrls(imageUrls),
       extrainfo: extrainfo || undefined,
+      routeId,
     });
 
     clearPublicCache();
     res.json({ message: "更新成功" });
   } catch (err) {
     console.error("[ERROR] PUT /api/posts/:id:", err);
-    const status = err.message === "帖子不存在" ? 404 : err.message === "无权编辑" ? 403 : 500;
+    const status = err.message === "帖子不存在"
+      ? 404
+      : err.message === "无权编辑"
+        ? 403
+        : /关联路线/.test(err.message)
+          ? 400
+          : 500;
     res.status(status).json({ error: status === 500 ? "编辑失败" : err.message });
   }
 });
@@ -146,6 +164,7 @@ router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
     const content = sanitizeRichText(req.body.content);
     const { category, tags, extrainfo } = req.body;
     const imageUrls = safeImageUrls(req.body.imageUrls);
+    const routeId = await resolveRouteId(req.body.routeId);
 
     if (!title || !content) {
       return res.status(400).json({ error: "标题和内容不能为空" });
@@ -167,6 +186,7 @@ router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
       tags: tags || [],
       imageUrls,
       extrainfo: extrainfo || undefined,
+      routeId,
     });
 
     clearPublicCache();
@@ -176,6 +196,9 @@ router.post("/", authMiddleware, requireVerifiedEmail, async (req, res) => {
     });
   } catch (err) {
     console.error("[ERROR] POST /api/posts:", err);
+    if (/关联路线/.test(err.message)) {
+      return res.status(400).json({ error: err.message });
+    }
     res.status(500).json({ error: "发布失败" });
   }
 });

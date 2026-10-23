@@ -76,7 +76,9 @@ const accountActionLimiter = createLimiter({
 app.use("/api/auth/forgot-password", accountActionLimiter);
 app.use("/api/auth/reset-password", accountActionLimiter);
 app.use("/api/auth/send-verification", accountActionLimiter);
+app.use("/api/auth/send-verification-code", accountActionLimiter);
 app.use("/api/auth/verify-email", accountActionLimiter);
+app.use("/api/auth/verify-email-code", accountActionLimiter);
 
 // API 路由
 app.use("/api/auth", require("./routes/auth"));

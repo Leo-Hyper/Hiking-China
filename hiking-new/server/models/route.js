@@ -22,6 +22,7 @@ function normalizeRoute(row) {
     max_elevation: row.max_elevation == null ? null : Number(row.max_elevation),
     point_count: Number(row.point_count || 0),
     favorite_count: Number(row.favorite_count || 0),
+    is_sample: Number(row.is_sample || 0) === 1,
   };
 }
 
@@ -67,6 +68,34 @@ async function listRoutes(filters = {}) {
 async function countRoutes() {
   const row = await get("SELECT COUNT(*) AS count FROM routes WHERE status = 1");
   return Number(row?.count || 0);
+}
+
+async function getCompanionSummary(days = 30) {
+  const windowDays = Math.max(1, Math.min(365, Number(days) || 30));
+  const row = await get(
+    `SELECT
+       COUNT(*) AS post_count,
+       COUNT(DISTINCT p.user_id) AS user_count
+     FROM posts p
+     WHERE p.status = 1
+       AND p.created_at >= datetime('now', ?)
+       AND (
+         p.title LIKE '%结伴%'
+         OR p.tags LIKE '%结伴%'
+         OR p.content LIKE '%结伴%'
+         OR p.title LIKE '%搭子%'
+         OR p.tags LIKE '%搭子%'
+         OR p.content LIKE '%搭子%'
+         OR p.title LIKE '%同行%'
+         OR p.tags LIKE '%同行%'
+       )`,
+    [`-${windowDays} days`]
+  );
+  return {
+    days: windowDays,
+    posts: Number(row?.post_count || 0),
+    users: Number(row?.user_count || 0),
+  };
 }
 
 async function getRouteById(id) {
@@ -210,6 +239,7 @@ module.exports = {
   countRoutes,
   createRoute,
   deleteRoute,
+  getCompanionSummary,
   getRouteById,
   getRouteRow,
   isFavorite,

@@ -13,13 +13,13 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import { checkRouteFavorite, getRoute, toggleRouteFavorite } from '@client/src/api';
-import { mapRoute } from '@client/src/data/mappers';
-import type { RouteItem } from '@client/src/data/hiking-types';
+import { checkRouteFavorite, getRoute, listRoutePosts, toggleRouteFavorite } from '@client/src/api';
+import { mapPost, mapRoute } from '@client/src/data/mappers';
+import type { Post, RouteItem } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { apiUrl } from '@client/src/utils/http';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
-import { withBasePath } from '@client/src/utils/base-path';
+import { resolveImageUrl, withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
 import RouteTrackMap from '@client/src/components/RouteTrackMap';
 import ElevationProfile from '@client/src/components/ElevationProfile';
@@ -34,12 +34,17 @@ const RouteDetailPage = () => {
   const [favorited, setFavorited] = useState<boolean>(false);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
+  const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
 
   const { data, loading, error, reload } = useAsyncData<RouteItem>(
     async () => mapRoute((await getRoute(routeId)).route),
     [routeId]
   );
   const route = data;
+  const { data: relatedPosts } = useAsyncData<Post[]>(
+    async () => (await listRoutePosts(routeId)).posts.map(mapPost),
+    [routeId]
+  );
   const coordinates = route?.geojson?.coordinates ?? [];
   const content = useMemo(
     () => sanitizeRichText(route?.content || route?.description || ''),
@@ -148,6 +153,11 @@ const RouteDetailPage = () => {
                   <span className="rounded-full bg-ember-500/90 px-2.5 py-1 text-[11px] font-medium text-white">
                     {route.difficulty}
                   </span>
+                  {route.isSample && (
+                    <span className="rounded-full bg-amber-100/95 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                      示例轨迹 · 非实测
+                    </span>
+                  )}
                   {route.tags?.map((tag: string) => (
                     <span key={tag} className="rounded-full bg-paper/10 px-2.5 py-1 text-[11px] text-paper/85 backdrop-blur">
                       {tag}
@@ -193,6 +203,11 @@ const RouteDetailPage = () => {
                   <div>
                     <p className="text-xs uppercase tracking-wider text-ember-600">Track</p>
                     <h2 className="mt-1 font-display text-lg text-ink">路线轨迹</h2>
+                    {route.isSample && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        用于演示地图与海拔交互，不代表真实 GPS 测量
+                      </p>
+                    )}
                   </div>
                   {route.geojson && (
                     <a
@@ -204,13 +219,22 @@ const RouteDetailPage = () => {
                     </a>
                   )}
                 </div>
-                <RouteTrackMap coordinates={coordinates} className="h-[360px]" />
+                <RouteTrackMap
+                  coordinates={coordinates}
+                  className="h-[360px]"
+                  activePointIndex={activePointIndex}
+                  onHoverIndex={setActivePointIndex}
+                />
               </section>
 
               <section className="rounded-xl border border-border bg-card p-5">
                 <p className="text-xs uppercase tracking-wider text-ember-600">Elevation</p>
                 <h2 className="mb-4 mt-1 font-display text-lg text-ink">海拔剖面</h2>
-                <ElevationProfile points={coordinates} className="h-[220px]" />
+                <ElevationProfile
+                  points={coordinates}
+                  activePointIndex={activePointIndex}
+                  onHoverIndex={setActivePointIndex}
+                />
               </section>
 
               <section className="rounded-xl border border-border bg-card p-6">
@@ -220,6 +244,52 @@ const RouteDetailPage = () => {
                   dangerouslySetInnerHTML={{ __html: content }}
                 />
               </section>
+
+              {relatedPosts && relatedPosts.length > 0 && (
+                <section className="rounded-xl border border-border bg-card p-5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-ember-600">Stories</p>
+                      <h2 className="mt-1 font-display text-lg text-ink">相关游记</h2>
+                    </div>
+                    <Link
+                      to="/publish"
+                      className="text-xs font-semibold text-pine-700 transition-colors hover:text-pine-800"
+                    >
+                      写一篇
+                    </Link>
+                  </div>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    {relatedPosts.slice(0, 4).map((post: Post) => (
+                      <Link
+                        key={post.id}
+                        to={`/post/${post.id}`}
+                        className="group flex gap-3 rounded-lg border border-border/70 p-2.5 transition-colors hover:border-pine-200 hover:bg-pine-50/40"
+                      >
+                        {post.imageUrls[0] ? (
+                          <Image
+                            src={resolveImageUrl(post.imageUrls[0])}
+                            alt=""
+                            className="h-16 w-20 shrink-0 rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="grid h-16 w-20 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
+                            <RouteIcon size={16} />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-sm font-medium text-ink group-hover:text-pine-700">
+                            {post.title}
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {post.authorName} · {new Date(post.createdAt).toLocaleDateString('zh-CN')}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             <aside className="space-y-4">
@@ -239,7 +309,7 @@ const RouteDetailPage = () => {
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {favoriteCount} 人收藏
                 </p>
-                {route.postId && (
+                {route.postId && (!relatedPosts || relatedPosts.length === 0) && (
                   <Link
                     to={`/post/${route.postId}`}
                     className="mt-4 flex min-h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium text-ink transition-colors hover:border-pine-300 hover:text-pine-700"

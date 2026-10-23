@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   loginUser,
   registerUser,
   sendVerificationEmail,
+  verifyEmailCode,
 } from '@client/src/data/hiking-store';
 import { withBasePath } from '@client/src/utils/base-path';
 import TopoBackground from '@client/src/components/visual/TopoBackground';
@@ -11,6 +12,7 @@ import { Image } from '@client/src/components/ui/image';
 import { trackEvent } from '@client/src/utils/analytics';
 
 type AuthMode = 'login' | 'register';
+type AuthStep = 'form' | 'verify';
 
 interface AuthFormState {
   username: string;
@@ -36,9 +38,20 @@ const AuthPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
-  const [verificationEmailSent, setVerificationEmailSent] = useState<boolean | null>(null);
+  const [step, setStep] = useState<AuthStep>('form');
+  const [verificationCode, setVerificationCode] = useState<string>('');
+  const [verificationCodeSent, setVerificationCodeSent] = useState<boolean>(false);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
   const [sendingVerification, setSendingVerification] = useState<boolean>(false);
   const [form, setForm] = useState<AuthFormState>({ username: '', email: '', password: '' });
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setResendCooldown((value: number) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCooldown > 0]);
 
   const goBackOrHome = (): void => {
     const state: LocationState | null = location.state as LocationState | null;
@@ -50,12 +63,20 @@ const AuthPage = () => {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
-    setVerificationEmailSent(null);
     try {
-      const user = await loginUser(form.email, form.password);
+      const result = await loginUser(form.email, form.password);
+      const user = result.user;
       trackEvent('login_success');
       if (!user.emailVerified) {
-        setSuccessMsg('登录成功。请先完成邮箱验证后再发帖、评论或报名活动。');
+        setStep('verify');
+        setVerificationCode('');
+        setVerificationCodeSent(result.verificationSent);
+        setResendCooldown(result.verificationSent ? result.retryAfter : 0);
+        setSuccessMsg(
+          result.verificationSent
+            ? '请输入发送到邮箱的 6 位验证码，验证后即可正常使用。'
+            : '登录成功，但验证码邮件发送失败。请点击“重新发送验证码”。'
+        );
         return;
       }
       goBackOrHome();
@@ -70,15 +91,17 @@ const AuthPage = () => {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
-    setVerificationEmailSent(null);
     try {
       const result = await registerUser(form.username, form.email, form.password);
       trackEvent('register_success', { verification_email_sent: result.verificationEmailSent });
-      setVerificationEmailSent(result.verificationEmailSent);
+      setStep('verify');
+      setVerificationCode('');
+      setVerificationCodeSent(result.verificationEmailSent);
+      setResendCooldown(result.verificationEmailSent ? result.retryAfter : 0);
       setSuccessMsg(
         result.verificationEmailSent
-          ? '注册成功。验证邮件已发送，请查收后再发帖、评论或报名活动。'
-          : '注册成功，但验证邮件发送失败。请稍后点击“重新发送验证邮件”，或联系管理员。'
+          ? '注册成功。请输入发送到邮箱的 6 位验证码，验证后即可正常使用。'
+          : '注册成功，但验证码邮件发送失败。请点击“重新发送验证码”，或联系管理员。'
       );
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '注册失败，请重试');
@@ -88,18 +111,46 @@ const AuthPage = () => {
   };
 
   const resendVerification = async (): Promise<void> => {
+    if (resendCooldown > 0 || sendingVerification) return;
     setSendingVerification(true);
     setErrorMsg('');
     try {
-      await sendVerificationEmail();
-      setVerificationEmailSent(true);
-      setSuccessMsg('验证邮件已重新发送，请查收。');
+      const retryAfter = await sendVerificationEmail(form.email);
+      setVerificationCodeSent(true);
+      setResendCooldown(retryAfter || 60);
+      setSuccessMsg('新的验证码已发送，请查收。');
     } catch (err) {
-      setVerificationEmailSent(false);
-      setErrorMsg(err instanceof Error ? err.message : '验证邮件发送失败');
+      setVerificationCodeSent(false);
+      setErrorMsg(err instanceof Error ? err.message : '验证码发送失败');
     } finally {
       setSendingVerification(false);
     }
+  };
+
+  const handleVerifyCode = async (): Promise<void> => {
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setErrorMsg('请输入 6 位数字验证码');
+      return;
+    }
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      await verifyEmailCode(form.email, verificationCode);
+      trackEvent('email_verified');
+      setSuccessMsg('邮箱验证成功，正在进入网站...');
+      window.setTimeout(goBackOrHome, 500);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : '验证码验证失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backToForm = (): void => {
+    setStep('form');
+    setVerificationCode('');
+    setErrorMsg('');
+    setSuccessMsg('');
   };
 
   return (
@@ -145,6 +196,7 @@ const AuthPage = () => {
             <p className="mt-1 text-sm text-muted-foreground">加入徒步爱好者社区</p>
 
             {/* 登录 / 注册 Tab */}
+            {step === 'form' && (
             <div className="mt-6 mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
               <button
                 type="button"
@@ -169,8 +221,84 @@ const AuthPage = () => {
                 注册
               </button>
             </div>
+            )}
 
-            {mode === 'login' ? (
+            {step === 'verify' ? (
+              <form
+                onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+                  e.preventDefault();
+                  handleVerifyCode();
+                }}
+                className="space-y-4"
+              >
+                <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                  <p className="font-semibold">验证邮箱</p>
+                  <p className="mt-1 break-all">
+                    {verificationCodeSent ? (
+                      <>验证码已发送至 <span className="font-medium">{form.email}</span></>
+                    ) : (
+                      <>验证码邮件暂未发出，请点击下方重新发送</>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>6 位验证码</label>
+                  <input
+                    value={verificationCode}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                    }
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    required
+                    autoFocus
+                    placeholder="000000"
+                    className={`${INPUT_CLS} text-center font-data text-2xl tracking-[0.45em]`}
+                  />
+                </div>
+                {successMsg && (
+                  <div className="rounded-lg border border-pine-200 bg-pine-50 px-3.5 py-3 text-xs leading-relaxed text-pine-800">
+                    {successMsg}
+                  </div>
+                )}
+                {errorMsg && <p className="text-xs text-destructive mt-1.5">{errorMsg}</p>}
+                <button
+                  type="submit"
+                  disabled={loading || verificationCode.length !== 6}
+                  className="w-full bg-pine-700 hover:bg-pine-800 text-paper rounded-lg px-4 py-2 md:px-5 md:py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? '验证中...' : '验证并进入'}
+                </button>
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={backToForm}
+                    className="font-medium text-muted-foreground transition-colors hover:text-ink"
+                  >
+                    返回修改邮箱
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resendVerification}
+                    disabled={sendingVerification || resendCooldown > 0}
+                    className="font-medium text-pine-700 transition-colors hover:text-pine-800 disabled:text-muted-foreground disabled:opacity-70"
+                  >
+                    {sendingVerification
+                      ? '发送中...'
+                      : resendCooldown > 0
+                        ? `${resendCooldown}s 后重发`
+                        : '重新发送验证码'}
+                  </button>
+                </div>
+                {!verificationCodeSent && (
+                  <p className="text-xs leading-relaxed text-amber-700">
+                    验证码邮件未能发送，请先点击“重新发送验证码”。
+                  </p>
+                )}
+              </form>
+            ) : mode === 'login' ? (
               <form
                 onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
                   e.preventDefault();
@@ -212,25 +340,6 @@ const AuthPage = () => {
                     忘记密码？
                   </Link>
                 </div>
-                {successMsg && (
-                  <div
-                    className={`rounded-lg border px-3.5 py-3 text-xs leading-relaxed ${
-                      verificationEmailSent === false
-                        ? 'border-amber-200 bg-amber-50 text-amber-800'
-                        : 'border-pine-200 bg-pine-50 text-pine-800'
-                    }`}
-                  >
-                    <p>{successMsg}</p>
-                    <button
-                      type="button"
-                      onClick={resendVerification}
-                      disabled={sendingVerification}
-                      className="mt-2 font-semibold underline decoration-pine-400 underline-offset-2 disabled:opacity-50"
-                    >
-                      {sendingVerification ? '发送中...' : '重新发送验证邮件'}
-                    </button>
-                  </div>
-                )}
                 {errorMsg && <p className="text-xs text-destructive mt-1.5">{errorMsg}</p>}
                 <button
                   type="submit"
@@ -291,25 +400,6 @@ const AuthPage = () => {
                     className={INPUT_CLS}
                   />
                 </div>
-                {successMsg && (
-                  <div
-                    className={`rounded-lg border px-3.5 py-3 text-xs leading-relaxed ${
-                      verificationEmailSent === false
-                        ? 'border-amber-200 bg-amber-50 text-amber-800'
-                        : 'border-pine-200 bg-pine-50 text-pine-800'
-                    }`}
-                  >
-                    <p>{successMsg}</p>
-                    <button
-                      type="button"
-                      onClick={resendVerification}
-                      disabled={sendingVerification}
-                      className="mt-2 font-semibold underline decoration-pine-400 underline-offset-2 disabled:opacity-50"
-                    >
-                      {sendingVerification ? '发送中...' : '重新发送验证邮件'}
-                    </button>
-                  </div>
-                )}
                 {errorMsg && <p className="text-xs text-destructive mt-1.5">{errorMsg}</p>}
                 <button
                   type="submit"

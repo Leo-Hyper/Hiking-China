@@ -2,6 +2,7 @@ const express = require("express");
 const { authMiddleware, requireVerifiedEmail } = require("../middleware/auth");
 const { publicCache, clearPublicCache } = require("../middleware/public-cache");
 const routeModel = require("../models/route");
+const postModel = require("../models/post");
 const { parseGpx } = require("../utils/gpx");
 const {
   calculateStats,
@@ -72,6 +73,17 @@ router.get("/favorites", authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/routes/companions/summary?days=30
+router.get("/companions/summary", publicCache(30000), async (req, res) => {
+  try {
+    const summary = await routeModel.getCompanionSummary(req.query.days);
+    res.json(summary);
+  } catch (error) {
+    console.error("[ROUTES] companion summary failed:", error);
+    res.status(500).json({ error: "结伴数据加载失败" });
+  }
+});
+
 // POST /api/routes/parse-gpx  (text/plain GPX body)
 router.post("/parse-gpx", authMiddleware, requireVerifiedEmail, gpxBody, async (req, res) => {
   try {
@@ -104,7 +116,8 @@ router.get("/:id/export.gpx", async (req, res) => {
 
     res.set("Content-Type", "application/gpx+xml; charset=utf-8");
     res.set("Content-Disposition", `attachment; filename="route-${route.id}.gpx"`);
-    res.send(pointsToGpx(points, route.name));
+    const exportName = route.is_sample ? `${route.name}（示例轨迹，非实测）` : route.name;
+    res.send(pointsToGpx(points, exportName));
   } catch (error) {
     console.error("[ROUTES] export failed:", error);
     res.status(500).json({ error: "GPX 导出失败" });
@@ -119,6 +132,25 @@ router.get("/:id/favorite", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("[ROUTES] favorite check failed:", error);
     res.status(500).json({ error: "收藏状态加载失败" });
+  }
+});
+
+// GET /api/routes/:id/posts - 关联到该路线的游记
+router.get("/:id/posts", publicCache(30000), async (req, res) => {
+  try {
+    const routeId = Number(req.params.id);
+    const route = await routeModel.getRouteById(routeId);
+    if (!route) return res.status(404).json({ error: "路线不存在" });
+
+    const posts = await postModel.getPostsByRouteId(routeId, 6);
+    if (route.post_id && !posts.some((post) => Number(post.id) === Number(route.post_id))) {
+      const legacyPosts = await postModel.getPostsByIds([Number(route.post_id)]);
+      posts.push(...legacyPosts);
+    }
+    res.json({ posts });
+  } catch (error) {
+    console.error("[ROUTES] related posts failed:", error);
+    res.status(500).json({ error: "相关游记加载失败" });
   }
 });
 

@@ -83,7 +83,10 @@ const RouteMap: React.FC<RouteMapProps> = ({ coordinates, title = '路线轨迹'
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <h3 className="text-sm font-bold text-charcoal">{title}</h3>
+        <div>
+          <h3 className="text-sm font-bold text-charcoal">{title}</h3>
+          <p className="text-[11px] text-slate-500">游记轨迹 · 仅用于本帖展示，未进入路线库</p>
+        </div>
       </div>
       <div ref={mapContainerRef} className="w-full h-[400px]" />
     </div>

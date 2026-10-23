@@ -31,10 +31,10 @@ async function insertUser(username, email, role) {
   return get("SELECT * FROM users WHERE email = ?", [email]);
 }
 
-async function insertPost(userId, title, content, category, tags, status = 1) {
+async function insertPost(userId, title, content, category, tags, status = 1, routeId = null) {
   const result = await run(
-    `INSERT INTO posts (user_id, title, content, category, tags, image_urls, extrainfo, status, views)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO posts (user_id, title, content, category, tags, image_urls, extrainfo, status, views, route_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       userId,
       title,
@@ -45,6 +45,7 @@ async function insertPost(userId, title, content, category, tags, status = 1) {
       JSON.stringify({ route: {} }),
       status,
       12,
+      routeId,
     ]
   );
   return Number(result.lastInsertRowid);
@@ -69,7 +70,16 @@ async function seed() {
     "E2E 测试路线帖",
     "<p>这是一条 E2E 测试帖子，用于验证发布、评论、点赞和收藏流程。</p>",
     "徒步路线",
-    "测试,自动化"
+    "测试,自动化",
+    1,
+    1
+  );
+  await insertPost(
+    other.id,
+    "E2E 周末结伴同行",
+    "<p>周末想去西山走一圈，寻找同行者，路线轻松。</p>",
+    "结伴同行",
+    "结伴,周末"
   );
   await insertPost(
     user.id,

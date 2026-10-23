@@ -70,6 +70,7 @@ export async function createPost(input: PostInput): Promise<Post> {
     tags: input.tags,
     imageUrls: input.imageUrls,
     extrainfo: input.extrainfo ? JSON.stringify(input.extrainfo) : undefined,
+    routeId: input.routeId,
     status: input.status,
   });
   const post = await getPostForEdit(data.postId);
@@ -86,6 +87,7 @@ export async function updatePost(id: number, patch: Partial<PostInput>): Promise
   if (patch.tags !== undefined) body.tags = patch.tags;
   if (patch.imageUrls !== undefined) body.imageUrls = patch.imageUrls;
   if (patch.extrainfo !== undefined) body.extrainfo = patch.extrainfo ? JSON.stringify(patch.extrainfo) : '';
+  if (patch.routeId !== undefined) body.routeId = patch.routeId;
   if (patch.status !== undefined) body.status = patch.status;
   await api.updatePost(id, body);
   const post = await getPostForEdit(id);

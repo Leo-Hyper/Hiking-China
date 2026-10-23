@@ -81,6 +81,7 @@ export function mapPost(raw: Record<string, unknown>): Post {
     status: Number(raw.status ?? 1),
     createdAt: raw.created_at ? String(raw.created_at) : new Date().toISOString(),
     extrainfo: parseExtrainfo(raw.extrainfo),
+    routeId: raw.route_id == null ? undefined : Number(raw.route_id),
     isUserPost: false,
   };
 }
@@ -142,6 +143,7 @@ export function mapRoute(raw: Record<string, unknown>): RouteItem {
     geojson: parseGeojson(raw.geojson),
     favoriteCount: Number(raw.favorite_count ?? 0),
     isFavorited: Boolean(raw.is_favorited),
+    isSample: Boolean(raw.is_sample),
     authorId: raw.user_id == null ? undefined : Number(raw.user_id),
   };
 }

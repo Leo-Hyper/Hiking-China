@@ -60,6 +60,7 @@ export interface Post {
   status: number;
   createdAt: string;
   extrainfo?: PostExtraInfo;
+  routeId?: number;
   isUserPost?: boolean;
 }
 
@@ -70,6 +71,7 @@ export interface PostInput {
   tags: string[];
   imageUrls: string[];
   extrainfo?: PostExtraInfo;
+  routeId?: number | null;
   status: number;
 }
 
@@ -112,6 +114,7 @@ export interface RouteItem {
   geojson?: { type: 'LineString'; coordinates: [number, number, number?][] } | null;
   favoriteCount?: number;
   isFavorited?: boolean;
+  isSample?: boolean;
   authorId?: number;
 }
 

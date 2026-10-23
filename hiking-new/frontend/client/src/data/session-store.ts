@@ -15,6 +15,7 @@ function saveSessionUser(user: HikingUser): void {
 export interface RegisterResult {
   user: HikingUser;
   verificationEmailSent: boolean;
+  retryAfter: number;
 }
 
 export async function registerUser(
@@ -31,16 +32,27 @@ export async function registerUser(
   return {
     user,
     verificationEmailSent: data.verification_email_sent !== false,
+    retryAfter: Number(data.verification_retry_after ?? 60),
   };
 }
 
-export async function loginUser(email: string, password: string): Promise<HikingUser> {
+export interface LoginResult {
+  user: HikingUser;
+  verificationSent: boolean;
+  retryAfter: number;
+}
+
+export async function loginUser(email: string, password: string): Promise<LoginResult> {
   const data = await api.login({ email, password });
   setToken(data.token);
   const user = mapUser(data.user);
   saveSessionUser(user);
   notify();
-  return user;
+  return {
+    user,
+    verificationSent: data.verification_code_sent !== false,
+    retryAfter: Number(data.verification_retry_after ?? 60),
+  };
 }
 
 export function logoutUser(): void {
@@ -72,8 +84,23 @@ export async function updateProfile(
   return user;
 }
 
-export async function sendVerificationEmail(): Promise<void> {
+export async function sendVerificationEmail(email?: string): Promise<number> {
+  if (email) {
+    const data = await api.sendVerificationCode(email);
+    return Number(data.verification_retry_after ?? 60);
+  }
   await api.sendVerification();
+  return 60;
+}
+
+export async function verifyEmailCode(email: string, code: string): Promise<HikingUser> {
+  const data = await api.verifyEmailCode(email, code);
+  setToken(data.token);
+  const user = mapUser(data.user);
+  saveSessionUser(user);
+  invalidateGetCache('/api/auth/users');
+  notify();
+  return user;
 }
 
 export async function verifyEmail(token: string): Promise<void> {

@@ -9,6 +9,9 @@ export interface AuthResponse {
   token: string;
   user: Record<string, unknown>;
   verification_email_sent?: boolean;
+  verification_code_sent?: boolean;
+  verification_retry_after?: number;
+  dev_verification_code?: string;
 }
 
 export function register(input: { username: string; email: string; password: string }): Promise<AuthResponse> {
@@ -25,6 +28,28 @@ export function getMe(): Promise<{ user: Record<string, unknown> }> {
 
 export function sendVerification(): Promise<{ message: string; email_verified: number }> {
   return http.post<{ message: string; email_verified: number }>('/api/auth/send-verification');
+}
+
+export interface SendVerificationCodeResponse {
+  message: string;
+  verification_code_sent: boolean;
+  verification_retry_after?: number;
+  already_verified?: boolean;
+  dev_verification_code?: string;
+}
+
+export function sendVerificationCode(email: string): Promise<SendVerificationCodeResponse> {
+  return http.post<SendVerificationCodeResponse>('/api/auth/send-verification-code', { email });
+}
+
+export interface VerifyEmailCodeResponse {
+  message: string;
+  token: string;
+  user: Record<string, unknown>;
+}
+
+export function verifyEmailCode(email: string, code: string): Promise<VerifyEmailCodeResponse> {
+  return http.post<VerifyEmailCodeResponse>('/api/auth/verify-email-code', { email, code });
 }
 
 export function verifyEmail(token: string): Promise<{ message: string; email_verified: number }> {
@@ -425,6 +450,20 @@ export function listRoutes(query: RouteQuery = {}): Promise<{ routes: Record<str
 
 export function getRoute(routeId: number): Promise<{ route: Record<string, unknown> }> {
   return http.get<{ route: Record<string, unknown> }>(`/api/routes/${routeId}`);
+}
+
+export interface CompanionSummary {
+  days: number;
+  posts: number;
+  users: number;
+}
+
+export function getCompanionSummary(): Promise<CompanionSummary> {
+  return http.get<CompanionSummary>('/api/routes/companions/summary');
+}
+
+export function listRoutePosts(routeId: number): Promise<{ posts: Record<string, unknown>[] }> {
+  return http.get<{ posts: Record<string, unknown>[] }>(`/api/routes/${routeId}/posts`);
 }
 
 export function toggleRouteFavorite(routeId: number): Promise<{ favorited: boolean }> {

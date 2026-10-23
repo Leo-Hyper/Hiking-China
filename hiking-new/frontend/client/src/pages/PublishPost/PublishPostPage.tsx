@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import FormTopBar from '@client/src/components/FormTopBar';
 import { createPost } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
-import type { PostExtraInfo } from '@client/src/data/hiking-types';
+import type { PostExtraInfo, RouteItem } from '@client/src/data/hiking-types';
+import { listRoutes } from '@client/src/api';
+import { mapRoute } from '@client/src/data/mappers';
+import { useAsyncData } from '@client/src/hooks/use-hiking';
 import RichTextEditor from '@client/src/components/RichTextEditor';
 import MapPicker from '@client/src/components/MapPicker';
 import ImageUrlPicker from '@client/src/pages/PostDetail/ImageUrlPicker';
@@ -47,6 +50,7 @@ interface DraftPayload {
   tagsStr: string;
   imageUrls: string[];
   extra: ExtraFormState;
+  routeId?: number | null;
   timestamp: number;
 }
 
@@ -60,6 +64,7 @@ const DEFAULT_EXTRA: ExtraFormState = {
 
 const PublishPostPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -68,6 +73,14 @@ const PublishPostPage: React.FC = () => {
   const [draftAvailable, setDraftAvailable] = useState<boolean>(false);
   const [form, setForm] = useState<PublishFormState>(DEFAULT_FORM);
   const [extra, setExtra] = useState<ExtraFormState>(DEFAULT_EXTRA);
+  const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
+  const { data: routeData, loading: routesLoading } = useAsyncData<RouteItem[]>(
+    async () => (await listRoutes()).routes.map(mapRoute),
+    []
+  );
+  const routes: RouteItem[] = routeData ?? [];
+  const selectedRoute: RouteItem | null =
+    routes.find((route: RouteItem) => route.id === selectedRouteId) ?? null;
 
   const tags: string[] = useMemo(() => {
     if (!form.tagsStr.trim()) return [];
@@ -75,7 +88,7 @@ const PublishPostPage: React.FC = () => {
   }, [form.tagsStr]);
 
   const buildExtrainfo = (): PostExtraInfo | undefined => {
-    if (form.category === '路线攻略') {
+    if (form.category === '路线攻略' && !selectedRouteId) {
       const coords: [number, number][] = (extra.routeCoordinates || []).map(
         (c: [number, number]) => [c[0], c[1]] as [number, number]
       );
@@ -105,6 +118,7 @@ const PublishPostPage: React.FC = () => {
       tagsStr: form.tagsStr,
       imageUrls,
       extra,
+      routeId: selectedRouteId,
       timestamp: Date.now(),
     };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -122,6 +136,7 @@ const PublishPostPage: React.FC = () => {
         tagsStr: draft.tagsStr || '',
       });
       setImageUrls(draft.imageUrls || []);
+      setSelectedRouteId(draft.routeId ?? null);
       if (draft.extra) {
         setExtra({
           route: { ...DEFAULT_EXTRA.route, ...(draft.extra.route || {}) },
@@ -167,6 +182,7 @@ const PublishPostPage: React.FC = () => {
         tags,
         imageUrls,
         extrainfo: buildExtrainfo(),
+        routeId: selectedRouteId,
         status: 0,
       });
       localStorage.removeItem(DRAFT_KEY);
@@ -182,9 +198,14 @@ const PublishPostPage: React.FC = () => {
 
   // watch(form) → 自动保存草稿
   useEffect(() => {
+    const routeId = Number(searchParams.get('routeId'));
+    if (Number.isInteger(routeId) && routeId > 0) setSelectedRouteId(routeId);
+  }, [searchParams]);
+
+  useEffect(() => {
     saveDraftToStorage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.title, form.content, form.category, form.tagsStr, imageUrls]);
+  }, [form.title, form.content, form.category, form.tagsStr, imageUrls, selectedRouteId]);
 
   useEffect(() => {
     checkDraft();
@@ -216,6 +237,7 @@ const PublishPostPage: React.FC = () => {
         tags,
         imageUrls,
         extrainfo: buildExtrainfo(),
+        routeId: selectedRouteId,
         status: 1,
       });
       localStorage.removeItem(DRAFT_KEY);
@@ -234,6 +256,7 @@ const PublishPostPage: React.FC = () => {
     setImageUrls([]);
     setErrorMsg('');
     setSuccessMsg('');
+    setSelectedRouteId(null);
     setExtra(JSON.parse(JSON.stringify(DEFAULT_EXTRA)) as ExtraFormState);
   };
 
@@ -297,6 +320,47 @@ const PublishPostPage: React.FC = () => {
           </select>
         </div>
 
+        <div className="rounded-xl border border-border bg-muted/40 p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              <MapPin size={16} className="text-pine-600" />
+              关联路线（推荐）
+            </p>
+            <Link to="/routes" className="text-xs text-muted-foreground transition-colors hover:text-pine-700">
+              浏览路线库
+            </Link>
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            关联标准路线后，帖子会出现在路线详情页的“相关游记”中；地图、海拔和 GPX 由路线页统一维护，读者也能一键跳转完整路线。
+          </p>
+          <select
+            aria-label="关联路线"
+            value={selectedRouteId == null ? '' : String(selectedRouteId)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              setSelectedRouteId(e.target.value ? Number(e.target.value) : null)
+            }
+            className={`${inputCls} mt-3`}
+          >
+            <option value="">{routesLoading ? '路线加载中...' : '不关联路线'}</option>
+            {routes.map((route: RouteItem) => (
+              <option key={route.id} value={route.id}>
+                {route.name} · {route.region} · {route.distance}km
+              </option>
+            ))}
+          </select>
+          {selectedRoute && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-pine-200 bg-pine-50 px-3 py-2 text-xs text-pine-800">
+              <span>
+                {selectedRoute.name} · {selectedRoute.difficulty} · 爬升{' '}
+                {selectedRoute.ascent == null ? '—' : `${selectedRoute.ascent}m`}
+              </span>
+              <Link to={`/routes/${selectedRoute.id}`} className="font-semibold underline underline-offset-2">
+                查看路线
+              </Link>
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="text-sm font-medium text-ink mb-1.5 block">标签（用逗号分隔）</label>
           <input
@@ -313,11 +377,14 @@ const PublishPostPage: React.FC = () => {
         </div>
 
         {/* === 附加信息表单（按分类动态展示） === */}
-        {form.category === '路线攻略' && (
+        {form.category === '路线攻略' && !selectedRouteId && (
           <div className="rounded-xl border border-border bg-muted/50 p-5 space-y-4">
             <p className="text-sm font-semibold text-ink flex items-center gap-1.5">
               <MapPin size={16} className="text-pine-600" />
-              路线信息
+              游记轨迹（可选）
+            </p>
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+              这里记录的轨迹仅随本帖展示，不会进入路线库。若希望沉淀为标准路线，请优先在上方关联已有路线，或联系管理员录入 GPX。
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>

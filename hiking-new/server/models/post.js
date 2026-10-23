@@ -4,7 +4,7 @@ const LIST_COLUMNS = `
   p.id, p.user_id, p.title, substr(p.content, 1, 600) AS content,
   p.category, p.tags, p.image_urls, p.views, p.created_at, p.updated_at,
   substr(p.extrainfo, 1, 1000) AS extrainfo, p.status, p.comment_closed,
-  p.likes_count, u.username, u.avatar AS author_avatar,
+  p.likes_count, p.route_id, u.username, u.avatar AS author_avatar,
   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
 `;
 
@@ -26,12 +26,22 @@ function normalizePost(row) {
 }
 
 // 创建帖子
-async function createPost(userId, { title, content, category, tags, imageUrls, extrainfo, status }) {
+async function createPost(userId, { title, content, category, tags, imageUrls, extrainfo, status, routeId }) {
   const tagsStr = Array.isArray(tags) ? tags.join(",") : (tags || "");
   const imagesStr = Array.isArray(imageUrls) ? JSON.stringify(imageUrls) : "";
   const res = await run(
-    "INSERT INTO posts (user_id, title, content, category, tags, image_urls, extrainfo, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [userId, title, content, category || "其他", tagsStr, imagesStr, extrainfo ? JSON.stringify(extrainfo) : "", status !== undefined ? status : 1]
+    "INSERT INTO posts (user_id, title, content, category, tags, image_urls, extrainfo, status, route_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      userId,
+      title,
+      content,
+      category || "其他",
+      tagsStr,
+      imagesStr,
+      extrainfo ? JSON.stringify(extrainfo) : "",
+      status !== undefined ? status : 1,
+      routeId == null ? null : Number(routeId),
+    ]
   );
   return { id: res.lastInsertRowid };
 }
@@ -118,7 +128,7 @@ async function deletePost(id, userId) {
 }
 
 // 更新帖子
-async function updatePost(id, userId, { title, content, category, tags, imageUrls, extrainfo, status }) {
+async function updatePost(id, userId, { title, content, category, tags, imageUrls, extrainfo, status, routeId }) {
   const post = await get("SELECT user_id FROM posts WHERE id = ?", [id]);
   if (!post) throw new Error("帖子不存在");
   if (post.user_id !== userId) throw new Error("无权编辑");
@@ -132,6 +142,7 @@ async function updatePost(id, userId, { title, content, category, tags, imageUrl
   if (imageUrls !== undefined) { fields.push("image_urls = ?"); params.push(JSON.stringify(imageUrls)); }
   if (extrainfo !== undefined) { fields.push("extrainfo = ?"); params.push(JSON.stringify(extrainfo)); }
   if (status !== undefined) { fields.push("status = ?"); params.push(status); }
+  if (routeId !== undefined) { fields.push("route_id = ?"); params.push(routeId == null ? null : Number(routeId)); }
   fields.push("updated_at = CURRENT_TIMESTAMP");
   params.push(id);
 
@@ -154,6 +165,17 @@ async function getPublicPostsByUser(userId, limit = 50, offset = 0) {
     `SELECT ${LIST_COLUMNS} FROM posts p LEFT JOIN users u ON p.user_id = u.id ` +
     `WHERE p.user_id = ? AND p.status = 1 ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [userId, limit, offset]
+  );
+  return (rows || []).map(normalizePost);
+}
+
+async function getPostsByRouteId(routeId, limit = 6) {
+  const rows = await all(
+    `SELECT ${LIST_COLUMNS} FROM posts p
+     LEFT JOIN users u ON p.user_id = u.id
+     WHERE p.status = 1 AND p.route_id = ?
+     ORDER BY p.created_at DESC LIMIT ?`,
+    [routeId, Math.max(1, Math.min(20, Number(limit) || 6))]
   );
   return (rows || []).map(normalizePost);
 }
@@ -216,6 +238,7 @@ module.exports = {
   getMyPostCount,
   getPublicPostsByUser,
   getPostsByIds,
+  getPostsByRouteId,
   togglePostLike,
   isPostLiked,
 };

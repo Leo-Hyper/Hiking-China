@@ -14,6 +14,23 @@
 - 可选采样率：`SENTRY_TRACES_SAMPLE_RATE`、`VITE_SENTRY_TRACES_SAMPLE_RATE`
 - 每个 API 响应包含 `X-Request-Id`，错误响应包含 `request_id`。
 
+## 邮箱验证码
+
+- 注册、未验证账号登录、个人中心重发都会走 6 位邮箱验证码。
+- 验证码有效期 10 分钟，最多尝试 5 次，同一账号 60 秒内只能重发一次。
+- 数据库只保存 `HMAC-SHA256(user_id + code)`，不保存明文验证码。
+- 生产环境使用 `EMAIL_CODE_SECRET`；未配置时回退到 `JWT_SECRET`。两者都未配置时服务会在生产启动阶段拒绝启动。
+- 邮件通过 Brevo HTTPS API 发送，需要 `BREVO_API_KEY` 与已验证的 `MAIL_FROM`。
+- `dev_verification_code` 只在 `NODE_ENV=development|test` 时返回，生产环境不会返回。
+- 旧的 `/verify-email?token=...` 链接仍保留兼容，但新流程不再生成链接。
+
+## 示例轨迹
+
+- 路线 1、2、5、6 内置示例轨迹，用于演示 GPX、地形图和海拔剖面。
+- `routes.is_sample = 1` 时前端显示“示例轨迹 · 非实测”；导出的 GPX 名称也会带同样提示。
+- `routes.sample_version` 控制一次性升级，避免每次启动覆盖管理员后续编辑。
+- 用管理员路线编辑器上传真实 GPX 后，会把样例替换为真实数据；如仍显示示例标记，可在数据库中把该路线的 `is_sample` 置为 0。
+
 ## 备份
 
 环境变量：

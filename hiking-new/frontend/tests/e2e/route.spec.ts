@@ -23,10 +23,17 @@ test.describe('route detail and GPX', () => {
     await expect(page.getByRole('heading', { name: '四姑娘山大峰' })).toBeVisible();
     await expect(page.getByText('路线轨迹')).toBeVisible();
     await expect(page.getByText('海拔剖面')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '相关游记' })).toBeVisible();
+    await expect(page.getByText('示例轨迹 · 非实测')).toBeVisible();
     await expect(page.getByRole('link', { name: '导出 GPX' })).toHaveAttribute(
       'href',
       /\/api\/routes\/1\/export\.gpx/
     );
+
+    const elevation = page.getByRole('img', { name: '路线海拔剖面图' });
+    await expect(elevation).toBeVisible();
+    await elevation.hover({ position: { x: 420, y: 120 } });
+    await expect(page.getByText(/坡度/)).toBeVisible();
 
     await page.getByRole('button', { name: '收藏路线' }).click();
     await expect(page.getByRole('button', { name: '已收藏' })).toBeVisible();
@@ -87,6 +94,12 @@ test.describe('route detail and GPX', () => {
     });
 
     expect(response.status()).toBe(400);
+  });
+
+  test('shows a real companion count instead of a hard-coded number', async ({ page }) => {
+    await page.goto('/routes');
+    await expect(page.getByText(/近 30 天有\s*[1-9]\d*\s*人寻找同行者/)).toBeVisible();
+    await expect(page.getByText('已有 6 人寻找同行者')).toHaveCount(0);
   });
 
 });

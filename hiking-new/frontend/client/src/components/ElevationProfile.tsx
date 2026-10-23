@@ -1,13 +1,28 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 
 interface ElevationProfileProps {
   points: [number, number, number?][];
   className?: string;
+  activePointIndex?: number | null;
+  onHoverIndex?: (index: number | null) => void;
 }
 
-const WIDTH = 800;
-const HEIGHT = 220;
-const PADDING = { top: 24, right: 18, bottom: 32, left: 48 };
+interface Sample {
+  distance: number;
+  elevation: number;
+  sourceIndex: number;
+  grade: number;
+}
+
+const WIDTH = 900;
+const HEIGHT = 260;
+const PADDING = { top: 32, right: 24, bottom: 38, left: 56 };
+const SLOPE_COLORS = {
+  descent: '#3b82f6',
+  gentle: '#2f6f55',
+  moderate: '#d97706',
+  steep: '#c2410c',
+};
 
 function haversineKm(a: [number, number, number], b: [number, number, number]): number {
   const radius = 6371.0088;
@@ -21,29 +36,120 @@ function haversineKm(a: [number, number, number], b: [number, number, number]): 
   return 2 * radius * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-const ElevationProfile = ({ points, className = '' }: ElevationProfileProps) => {
+function niceStep(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return 1;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const normalized = raw / power;
+  const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return step * power;
+}
+
+function slopeColor(grade: number): string {
+  if (grade <= -3) return SLOPE_COLORS.descent;
+  if (grade < 5) return SLOPE_COLORS.gentle;
+  if (grade < 12) return SLOPE_COLORS.moderate;
+  return SLOPE_COLORS.steep;
+}
+
+function formatDistance(value: number): string {
+  if (value >= 100) return value.toFixed(0);
+  if (value >= 10) return value.toFixed(1).replace(/\.0$/, '');
+  return value.toFixed(1);
+}
+
+const ElevationProfile = ({
+  points,
+  className = '',
+  activePointIndex = null,
+  onHoverIndex,
+}: ElevationProfileProps) => {
   const gradientId = `elevation-${useId().replace(/:/g, '')}`;
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [hoverSample, setHoverSample] = useState<number | null>(null);
+  const lastEmittedRef = useRef<number | null>(null);
 
-  const samples = useMemo(() => {
-    const withElevation = points.filter(
-      (point): point is [number, number, number] => point[2] != null && Number.isFinite(Number(point[2]))
-    );
-    if (withElevation.length < 2) return [];
+  const data = useMemo(() => {
+    const withElevation = points
+      .map((point, sourceIndex) => ({ point, sourceIndex }))
+      .filter(
+        (entry): entry is { point: [number, number, number]; sourceIndex: number } =>
+          entry.point[2] != null && Number.isFinite(Number(entry.point[2]))
+      );
+    if (withElevation.length < 2) return null;
 
-    const stride = Math.max(1, Math.ceil(withElevation.length / 240));
+    const cumulativeDistance: number[] = [0];
+    let ascent = 0;
+    let descent = 0;
+    for (let index = 1; index < withElevation.length; index += 1) {
+      const previousPoint = withElevation[index - 1].point;
+      const currentPoint = withElevation[index].point;
+      cumulativeDistance[index] = cumulativeDistance[index - 1] + haversineKm(previousPoint, currentPoint);
+      const delta = currentPoint[2] - previousPoint[2];
+      if (delta > 3) ascent += delta;
+      if (delta < -3) descent += Math.abs(delta);
+    }
+    const totalDistance = cumulativeDistance[cumulativeDistance.length - 1] || 0;
+
+    const stride = Math.max(1, Math.ceil(withElevation.length / 260));
     const sampled = withElevation.filter(
       (_, index) => index % stride === 0 || index === withElevation.length - 1
     );
 
-    let distance = 0;
-    return sampled.map((point, index) => {
-      if (index > 0) distance += haversineKm(sampled[index - 1], point);
-      return { distance, elevation: Number(point[2]) };
-    });
+    const samples: Sample[] = [];
+
+    for (let index = 0; index < sampled.length; index += 1) {
+      const { point, sourceIndex } = sampled[index];
+      let grade = 0;
+      if (index > 0) {
+        const previous = sampled[index - 1];
+        const segmentKm = cumulativeDistance[sourceIndex] - cumulativeDistance[previous.sourceIndex];
+        const delta = point[2] - previous.point[2];
+        if (segmentKm > 0.0005) grade = (delta / (segmentKm * 1000)) * 100;
+      }
+      samples.push({
+        distance: cumulativeDistance[sourceIndex],
+        elevation: Number(point[2]),
+        sourceIndex,
+        grade,
+      });
+    }
+
+    const elevations = withElevation.map((entry) => entry.point[2]);
+    const minElevation = Math.min(...elevations);
+    const maxElevation = Math.max(...elevations);
+    const highest = samples.find((sample) => sample.elevation === maxElevation)
+      ?? samples.reduce((best, sample) => (sample.elevation > best.elevation ? sample : best), samples[0]);
+    const lowest = samples.find((sample) => sample.elevation === minElevation)
+      ?? samples.reduce((best, sample) => (sample.elevation < best.elevation ? sample : best), samples[0]);
+
+    return {
+      samples,
+      totalDistance,
+      ascent: Math.round(ascent),
+      descent: Math.round(descent),
+      minElevation,
+      maxElevation,
+      highest,
+      lowest,
+    };
   }, [points]);
 
-  if (samples.length < 2) {
+  const activeFromParent = useMemo(() => {
+    if (!data || activePointIndex == null) return null;
+    let nearest = 0;
+    let nearestDelta = Infinity;
+    data.samples.forEach((sample, index) => {
+      const delta = Math.abs(sample.sourceIndex - activePointIndex);
+      if (delta < nearestDelta) {
+        nearestDelta = delta;
+        nearest = index;
+      }
+    });
+    return nearest;
+  }, [data, activePointIndex]);
+
+  const activeIndex = hoverSample ?? activeFromParent;
+
+  if (!data) {
     return (
       <div className={`grid place-items-center rounded-xl border border-dashed border-border bg-muted/30 px-6 py-12 text-sm text-muted-foreground ${className}`}>
         该路线暂无海拔数据
@@ -51,96 +157,250 @@ const ElevationProfile = ({ points, className = '' }: ElevationProfileProps) => 
     );
   }
 
-  const minElevation = Math.min(...samples.map((sample) => sample.elevation));
-  const maxElevation = Math.max(...samples.map((sample) => sample.elevation));
-  const elevationRange = Math.max(1, maxElevation - minElevation);
+  const { samples, totalDistance, ascent, descent, minElevation, maxElevation, highest, lowest } = data;
   const innerWidth = WIDTH - PADDING.left - PADDING.right;
   const innerHeight = HEIGHT - PADDING.top - PADDING.bottom;
+  const elevationStep = niceStep(Math.max(10, (maxElevation - minElevation) / 4));
+  const yMin = Math.floor(minElevation / elevationStep) * elevationStep;
+  const yMax = Math.ceil(maxElevation / elevationStep) * elevationStep;
+  const yRange = Math.max(1, yMax - yMin);
 
-  const xFor = (index: number) => PADDING.left + (index / (samples.length - 1)) * innerWidth;
-  const yFor = (elevation: number) => PADDING.top + (1 - (elevation - minElevation) / elevationRange) * innerHeight;
+  const xForDistance = (distance: number) =>
+    PADDING.left + (totalDistance <= 0 ? 0 : distance / totalDistance) * innerWidth;
+  const xFor = (index: number) => xForDistance(samples[index].distance);
+  const yFor = (elevation: number) =>
+    PADDING.top + (1 - (elevation - yMin) / yRange) * innerHeight;
 
-  const linePath = samples.map((sample, index) => `${index === 0 ? 'M' : 'L'}${xFor(index).toFixed(1)},${yFor(sample.elevation).toFixed(1)}`).join(' ');
+  const linePath = samples
+    .map((sample, index) => `${index === 0 ? 'M' : 'L'}${xFor(index).toFixed(1)},${yFor(sample.elevation).toFixed(1)}`)
+    .join(' ');
   const areaPath = `${linePath} L${xFor(samples.length - 1).toFixed(1)},${HEIGHT - PADDING.bottom} L${xFor(0).toFixed(1)},${HEIGHT - PADDING.bottom} Z`;
-  const active = hoverIndex == null ? null : samples[hoverIndex];
+
+  const yTicks: number[] = [];
+  for (let value = yMin; value <= yMax + elevationStep / 2; value += elevationStep) {
+    yTicks.push(value);
+  }
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ratio * totalDistance);
+
+  const active = activeIndex == null ? null : samples[activeIndex];
 
   const handleMove = (event: React.MouseEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const viewX = ((event.clientX - rect.left) / rect.width) * WIDTH;
     const ratio = (viewX - PADDING.left) / innerWidth;
-    const index = Math.round(ratio * (samples.length - 1));
-    setHoverIndex(Math.max(0, Math.min(samples.length - 1, index)));
+    const targetDistance = Math.max(0, Math.min(totalDistance, ratio * totalDistance));
+    let nearest = 0;
+    let nearestDelta = Infinity;
+    samples.forEach((sample, index) => {
+      const delta = Math.abs(sample.distance - targetDistance);
+      if (delta < nearestDelta) {
+        nearestDelta = delta;
+        nearest = index;
+      }
+    });
+    setHoverSample(nearest);
+    if (lastEmittedRef.current !== samples[nearest].sourceIndex) {
+      lastEmittedRef.current = samples[nearest].sourceIndex;
+      onHoverIndex?.(samples[nearest].sourceIndex);
+    }
+  };
+
+  const handleLeave = () => {
+    setHoverSample(null);
+    lastEmittedRef.current = null;
+    onHoverIndex?.(null);
   };
 
   return (
     <div className={className}>
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[
+          { label: '总距离', value: `${formatDistance(totalDistance)} km` },
+          { label: '累计爬升', value: `${ascent} m` },
+          { label: '累计下降', value: `${descent} m` },
+          { label: '海拔区间', value: `${Math.round(minElevation)}–${Math.round(maxElevation)} m` },
+        ].map((item) => (
+          <div key={item.label} className="rounded-lg bg-muted/50 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">{item.label}</p>
+            <p className="mt-0.5 font-data text-sm tabular-nums text-ink">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="h-full w-full"
+        className="block h-auto w-full min-w-[620px]"
         role="img"
         aria-label="路线海拔剖面图"
         onMouseMove={handleMove}
-        onMouseLeave={() => setHoverIndex(null)}
+        onMouseLeave={handleLeave}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2f6f55" stopOpacity="0.32" />
+            <stop offset="0%" stopColor="#2f6f55" stopOpacity="0.28" />
             <stop offset="100%" stopColor="#2f6f55" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
-        {[0, 0.5, 1].map((ratio) => {
-          const y = PADDING.top + ratio * innerHeight;
+        {yTicks.map((tick) => {
+          const y = yFor(tick);
           return (
-            <line
-              key={ratio}
-              x1={PADDING.left}
-              y1={y}
-              x2={WIDTH - PADDING.right}
-              y2={y}
-              stroke="currentColor"
-              strokeOpacity="0.12"
-              strokeDasharray="4 6"
-            />
+            <g key={`y-${tick}`}>
+              <line
+                x1={PADDING.left}
+                y1={y}
+                x2={WIDTH - PADDING.right}
+                y2={y}
+                stroke="currentColor"
+                strokeOpacity="0.1"
+                strokeDasharray="4 6"
+              />
+              <text
+                x={PADDING.left - 10}
+                y={y + 4}
+                textAnchor="end"
+                className="fill-muted-foreground text-[11px]"
+              >
+                {Math.round(tick)}m
+              </text>
+            </g>
+          );
+        })}
+
+        {xTicks.map((tick, index) => {
+          const x = xForDistance(tick);
+          return (
+            <g key={`x-${index}`}>
+              <line
+                x1={x}
+                y1={PADDING.top}
+                x2={x}
+                y2={HEIGHT - PADDING.bottom}
+                stroke="currentColor"
+                strokeOpacity="0.06"
+              />
+              <text
+                x={x}
+                y={HEIGHT - 14}
+                textAnchor={index === 0 ? 'start' : index === xTicks.length - 1 ? 'end' : 'middle'}
+                className="fill-muted-foreground text-[11px]"
+              >
+                {formatDistance(tick)}km
+              </text>
+            </g>
           );
         })}
 
         <path d={areaPath} fill={`url(#${gradientId})`} />
-        <path d={linePath} fill="none" stroke="#2f6f55" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
 
-        <text x={PADDING.left - 8} y={PADDING.top + 4} textAnchor="end" className="fill-muted-foreground text-[11px]">
-          {Math.round(maxElevation)}m
-        </text>
-        <text x={PADDING.left - 8} y={HEIGHT - PADDING.bottom} textAnchor="end" className="fill-muted-foreground text-[11px]">
-          {Math.round(minElevation)}m
-        </text>
-        <text x={PADDING.left} y={HEIGHT - 8} className="fill-muted-foreground text-[11px]">0km</text>
-        <text x={WIDTH - PADDING.right} y={HEIGHT - 8} textAnchor="end" className="fill-muted-foreground text-[11px]">
-          {samples[samples.length - 1].distance.toFixed(1)}km
-        </text>
+        {samples.slice(1).map((sample, index) => (
+          <path
+            key={`segment-${index}`}
+            d={`M${xFor(index).toFixed(1)},${yFor(samples[index].elevation).toFixed(1)} L${xFor(index + 1).toFixed(1)},${yFor(sample.elevation).toFixed(1)}`}
+            fill="none"
+            stroke={slopeColor(sample.grade)}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+          />
+        ))}
 
-        {active && hoverIndex != null && (
-          <>
+        {highest && (
+          <g>
+            <circle cx={xForDistance(highest.distance)} cy={yFor(highest.elevation)} r="4" fill="#c96a3d" stroke="#fff" strokeWidth="2" />
+            <text
+              x={xForDistance(highest.distance)}
+              y={Math.max(12, yFor(highest.elevation) - 10)}
+              textAnchor="middle"
+              className="fill-ink text-[11px] font-semibold"
+            >
+              最高 {Math.round(highest.elevation)}m
+            </text>
+          </g>
+        )}
+
+        {lowest && (() => {
+          const lowestX = xForDistance(lowest.distance);
+          const anchor = lowestX < PADDING.left + 70
+            ? 'start'
+            : lowestX > WIDTH - PADDING.right - 70
+              ? 'end'
+              : 'middle';
+          const labelX = anchor === 'start' ? lowestX + 8 : anchor === 'end' ? lowestX - 8 : lowestX;
+          const labelY = Math.max(PADDING.top + 12, yFor(lowest.elevation) - 8);
+          return (
+            <g>
+              <circle cx={lowestX} cy={yFor(lowest.elevation)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
+              <text
+                x={labelX}
+                y={labelY}
+                textAnchor={anchor}
+                className="fill-muted-foreground text-[11px]"
+              >
+                最低 {Math.round(lowest.elevation)}m
+              </text>
+            </g>
+          );
+        })()}
+
+        <circle cx={xFor(0)} cy={yFor(samples[0].elevation)} r="4.5" fill="#2f6f55" stroke="#fff" strokeWidth="2" />
+        <circle
+          cx={xFor(samples.length - 1)}
+          cy={yFor(samples[samples.length - 1].elevation)}
+          r="4.5"
+          fill="#c96a3d"
+          stroke="#fff"
+          strokeWidth="2"
+        />
+
+        {active && activeIndex != null && (
+          <g>
             <line
-              x1={xFor(hoverIndex)}
+              x1={xFor(activeIndex)}
               y1={PADDING.top}
-              x2={xFor(hoverIndex)}
+              x2={xFor(activeIndex)}
               y2={HEIGHT - PADDING.bottom}
-              stroke="#2f6f55"
+              stroke="#1f4d3a"
               strokeOpacity="0.35"
               strokeDasharray="3 4"
             />
-            <circle cx={xFor(hoverIndex)} cy={yFor(active.elevation)} r="4" fill="#2f6f55" stroke="#fff" strokeWidth="2" />
-            <text
-              x={Math.min(WIDTH - PADDING.right - 90, Math.max(PADDING.left, xFor(hoverIndex) - 42))}
-              y={PADDING.top + 12}
-              className="fill-ink text-[11px] font-medium"
-            >
-              {active.distance.toFixed(1)}km · {Math.round(active.elevation)}m
-            </text>
-          </>
+            <circle
+              cx={xFor(activeIndex)}
+              cy={yFor(active.elevation)}
+              r="5"
+              fill="#fff"
+              stroke="#1f4d3a"
+              strokeWidth="2.5"
+            />
+            {(() => {
+              const tooltipWidth = 136;
+              const tooltipHeight = 42;
+              const rawX = xFor(activeIndex) - tooltipWidth / 2;
+              const x = Math.max(PADDING.left, Math.min(WIDTH - PADDING.right - tooltipWidth, rawX));
+              const y = Math.max(PADDING.top, Math.min(HEIGHT - PADDING.bottom - tooltipHeight - 6, yFor(active.elevation) - tooltipHeight - 12));
+              return (
+                <g>
+                  <rect x={x} y={y} width={tooltipWidth} height={tooltipHeight} rx="7" fill="#1f2933" opacity="0.94" />
+                  <text x={x + 10} y={y + 17} className="fill-white text-[11px] font-medium">
+                    {formatDistance(active.distance)}km · {Math.round(active.elevation)}m
+                  </text>
+                  <text x={x + 10} y={y + 32} className="fill-white/75 text-[10px]">
+                    坡度 {active.grade > 0 ? '+' : ''}{active.grade.toFixed(1)}%
+                  </text>
+                </g>
+              );
+            })()}
+          </g>
         )}
       </svg>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-[#2f6f55]" />平缓 / 上坡</span>
+        <span className="inline-flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-[#d97706]" />较陡</span>
+        <span className="inline-flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-[#c2410c]" />陡坡</span>
+        <span className="inline-flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-[#3b82f6]" />下坡</span>
+      </div>
     </div>
   );
 };

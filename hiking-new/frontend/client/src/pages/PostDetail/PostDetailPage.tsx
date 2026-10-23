@@ -17,6 +17,7 @@ import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import CommentSection from './CommentSection';
 import RelatedPosts from './RelatedPosts';
 import RouteMap from './RouteMap';
+import RouteEmbedCard from '@client/src/components/RouteEmbedCard';
 import { toast } from 'sonner';
 import { Image } from '@client/src/components/ui/image';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
@@ -380,8 +381,10 @@ const PostDetailPage: React.FC = () => {
               dangerouslySetInnerHTML={{ __html: safeContent }} />
           </div>
 
-          {/* 路线地图 */}
-          {routeData && (
+          {/* 关联标准路线：紧凑卡片 + 小地图，详情跳路线页 */}
+          {post.routeId ? (
+            <RouteEmbedCard routeId={post.routeId} className="mb-10" />
+          ) : routeData && (
             <RouteMap coordinates={routeData.coordinates} title={routeData.title} routeInfo={routeData.info} />
           )}
 

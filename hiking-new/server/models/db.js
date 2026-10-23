@@ -113,6 +113,7 @@ const SCHEMA_STATEMENTS = [
   `ALTER TABLE posts ADD COLUMN status INTEGER DEFAULT 1`,
   `ALTER TABLE posts ADD COLUMN comment_closed INTEGER DEFAULT 0`,
   `ALTER TABLE posts ADD COLUMN likes_count INTEGER DEFAULT 0`,
+  `ALTER TABLE posts ADD COLUMN route_id INTEGER`,
 
   // Comments
   `CREATE TABLE IF NOT EXISTS comments (
@@ -138,6 +139,15 @@ const SCHEMA_STATEMENTS = [
     type TEXT NOT NULL,
     token_hash TEXT NOT NULL UNIQUE,
     expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS email_verification_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    code_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER DEFAULT 0,
     used_at TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`,
@@ -329,10 +339,14 @@ const SCHEMA_STATEMENTS = [
     start_point TEXT DEFAULT '',
     end_point TEXT DEFAULT '',
     point_count INTEGER DEFAULT 0,
+    is_sample INTEGER DEFAULT 0,
+    sample_version INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL)`,
+  `ALTER TABLE routes ADD COLUMN is_sample INTEGER DEFAULT 0`,
+  `ALTER TABLE routes ADD COLUMN sample_version INTEGER DEFAULT 0`,
   `CREATE TABLE IF NOT EXISTS route_favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -354,6 +368,7 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_status_created ON posts(status, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_posts_route_id ON posts(route_id)`,
   `CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id)`,
   `CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id)`,
@@ -363,6 +378,7 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_event_regs_event ON event_registrations(event_id)`,
   `CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_type ON auth_tokens(user_id, type)`,
+  `CREATE INDEX IF NOT EXISTS idx_email_codes_user ON email_verification_codes(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_reports_status_created ON reports(status, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`,
@@ -418,8 +434,9 @@ async function initDb() {
         `INSERT INTO routes (
           id, name, region, difficulty, description, content, distance, duration,
           rating, image, post_id, tags, geojson, ascent_m, descent_m,
-          min_elevation, max_elevation, start_point, end_point, point_count, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+          min_elevation, max_elevation, start_point, end_point, point_count,
+          is_sample, sample_version, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [
           route.id,
           route.name,
@@ -441,9 +458,44 @@ async function initDb() {
           route.startPoint,
           route.endPoint,
           route.pointCount,
+          route.isSample ? 1 : 0,
+          route.isSample ? 1 : 0,
         ]
       );
     }
+  }
+  await upgradeSampleRoutes();
+}
+
+async function upgradeSampleRoutes() {
+  const { ROUTE_SEEDS } = require("./seed-routes");
+  for (const route of ROUTE_SEEDS) {
+    if (!route.isSample) continue;
+    const existing = await get(
+      "SELECT id, geojson, point_count, is_sample, sample_version FROM routes WHERE id = ?",
+      [route.id]
+    );
+    if (!existing) continue;
+    if (Number(existing.sample_version || 0) >= 1) continue;
+    // 只升级空白轨迹或早期手写的极简样例，避免覆盖管理员后来上传的真实 GPX。
+    if (existing.geojson && Number(existing.point_count || 0) > 20) continue;
+    await run(
+      `UPDATE routes SET
+         geojson = ?, distance = ?, ascent_m = ?, descent_m = ?,
+         min_elevation = ?, max_elevation = ?, point_count = ?,
+         is_sample = 1, sample_version = 1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [
+        route.geojson,
+        route.distance,
+        route.ascentM,
+        route.descentM,
+        route.minElevation,
+        route.maxElevation,
+        route.pointCount,
+        route.id,
+      ]
+    );
   }
 }
 

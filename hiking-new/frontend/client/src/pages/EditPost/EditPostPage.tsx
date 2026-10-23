@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPostForEdit, updatePost } from '@client/src/data/hiking-store';
 import { POST_CATEGORIES } from '@client/src/data/hiking-data';
-import type { Post, PostExtraInfo } from '@client/src/data/hiking-types';
+import type { Post, PostExtraInfo, RouteItem } from '@client/src/data/hiking-types';
+import { listRoutes } from '@client/src/api';
+import { mapRoute } from '@client/src/data/mappers';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl, withBasePath } from '@client/src/utils/base-path';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
@@ -58,12 +60,20 @@ const EditPostPage: React.FC = () => {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<string[]>([]);
   const [editRouteCoordinates, setEditRouteCoordinates] = useState<[number, number][]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
   const [form, setForm] = useState<EditFormState>({ title: '', content: '', category: '其他', tagsStr: '' });
   const [extra, setExtra] = useState<ExtraFormState>(DEFAULT_EXTRA);
 
   const { data: postData, loading } = useAsyncData<Post | undefined>(() => getPostForEdit(postId), [
     postId,
   ]);
+  const { data: routeData } = useAsyncData<RouteItem[]>(
+    async () => (await listRoutes()).routes.map(mapRoute),
+    []
+  );
+  const routes: RouteItem[] = routeData ?? [];
+  const selectedRoute: RouteItem | null =
+    routes.find((route: RouteItem) => route.id === selectedRouteId) ?? null;
 
   const tags: string[] = useMemo(() => {
     if (!form.tagsStr.trim()) return [];
@@ -98,6 +108,7 @@ const EditPostPage: React.FC = () => {
       tagsStr: (Array.isArray(p.tags) ? p.tags : []).join(', '),
     });
     setExistingImages(Array.isArray(p.imageUrls) ? p.imageUrls : []);
+    setSelectedRouteId(p.routeId ?? null);
 
     // 恢复 extrainfo
     const ei: PostExtraInfo | undefined = p.extrainfo;
@@ -121,7 +132,7 @@ const EditPostPage: React.FC = () => {
   }, [postData, loading, user]);
 
   const buildExtrainfo = (): PostExtraInfo | undefined => {
-    if (form.category === '路线攻略') {
+    if (form.category === '路线攻略' && !selectedRouteId) {
       const coords: [number, number][] = (editRouteCoordinates || []).map(
         (c: [number, number]) => [c[0], c[1]] as [number, number]
       );
@@ -160,6 +171,7 @@ const EditPostPage: React.FC = () => {
         tags,
         imageUrls: allImages,
         extrainfo: buildExtrainfo(),
+        routeId: selectedRouteId,
         status: 1,
       });
       setSuccessMsg('保存成功！即将返回...');
@@ -231,6 +243,34 @@ const EditPostPage: React.FC = () => {
             </select>
           </div>
 
+          <div className="rounded-xl border border-border bg-muted/40 p-5">
+            <p className="text-sm font-semibold text-ink">关联路线</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              关联标准路线后，帖子会展示在路线详情页的“相关游记”中；地图、海拔和 GPX 由路线页统一维护。
+            </p>
+            <select
+              aria-label="关联路线"
+              value={selectedRouteId == null ? '' : String(selectedRouteId)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSelectedRouteId(e.target.value ? Number(e.target.value) : null)
+              }
+              className={`${inputCls} mt-3`}
+            >
+              <option value="">不关联路线</option>
+              {routes.map((route: RouteItem) => (
+                <option key={route.id} value={route.id}>
+                  {route.name} · {route.region} · {route.distance}km
+                </option>
+              ))}
+            </select>
+            {selectedRoute && (
+              <p className="mt-2 text-xs text-pine-700">
+                {selectedRoute.name} · {selectedRoute.difficulty} · 爬升{' '}
+                {selectedRoute.ascent == null ? '—' : `${selectedRoute.ascent}m`}
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium text-ink mb-1.5 block">标签（用逗号分隔）</label>
             <input
@@ -262,9 +302,12 @@ const EditPostPage: React.FC = () => {
           </div>
 
           {/* === 附加信息表单 === */}
-          {form.category === '路线攻略' && (
+          {form.category === '路线攻略' && !selectedRouteId && (
             <div className="rounded-xl border border-border bg-muted/50 p-5 space-y-4">
-              <p className="text-sm font-semibold text-ink">路线信息</p>
+              <p className="text-sm font-semibold text-ink">游记轨迹（可选）</p>
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+                这里记录的轨迹仅随本帖展示，不会进入路线库。若希望沉淀为标准路线，请在上方关联已有路线，或联系管理员录入 GPX。
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls}>难度 (1-5星)</label>
