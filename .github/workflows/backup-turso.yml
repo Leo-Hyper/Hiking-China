@@ -19,7 +19,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: hiking-new/server/package-lock.json
-      - run: npm ci --omit=optional
+      - run: npm ci
       - run: npm run backup:turso
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
