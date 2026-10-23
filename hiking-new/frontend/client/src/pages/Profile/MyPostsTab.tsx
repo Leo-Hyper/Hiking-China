@@ -6,6 +6,7 @@ import TrailTag from '@client/src/components/visual/TrailTag';
 
 interface MyPostsTabProps {
   posts: Post[];
+  loading?: boolean;
   onDeleteRequest: (post: Post) => void;
 }
 
@@ -14,7 +15,21 @@ const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString('zh-CN');
 };
 
-const MyPostsTab = ({ posts, onDeleteRequest }: MyPostsTabProps) => {
+const MyPostsTab = ({ posts, loading = false, onDeleteRequest }: MyPostsTabProps) => {
+  if (loading) {
+    return (
+      <div className="space-y-3" aria-label="帖子加载中">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="rounded-xl border border-border bg-card p-5">
+            <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+            <div className="mt-3 h-5 w-2/3 animate-pulse rounded bg-muted" />
+            <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const draftPosts: Post[] = posts.filter((p: Post) => p.status === 0);
   const publishedPosts: Post[] = posts.filter((p: Post) => p.status !== 0);
 

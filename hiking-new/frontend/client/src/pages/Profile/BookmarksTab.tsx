@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 
 interface BookmarksTabProps {
   bookmarks: Post[];
+  loading?: boolean;
   onChanged: () => void;
 }
 
-const BookmarksTab = ({ bookmarks, onChanged }: BookmarksTabProps) => {
+const BookmarksTab = ({ bookmarks, loading = false, onChanged }: BookmarksTabProps) => {
   const removeBookmark = async (postId: number): Promise<void> => {
     try {
       await toggleBookmark(postId);
@@ -20,6 +21,19 @@ const BookmarksTab = ({ bookmarks, onChanged }: BookmarksTabProps) => {
       toast(err instanceof Error ? err.message : '操作失败');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-3" aria-label="收藏加载中">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="rounded-xl border border-border bg-card p-5">
+            <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+            <div className="mt-3 h-5 w-2/3 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (bookmarks.length === 0) {
     return (

@@ -41,11 +41,11 @@ const ProfilePage = () => {
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
   const [sendingVerification, setSendingVerification] = useState(false);
 
-  const { data: myPostsData, reload: reloadPosts } = useAsyncData<Post[]>(
+  const { data: myPostsData, loading: myPostsLoading, reload: reloadPosts } = useAsyncData<Post[]>(
     () => (user ? listMyPosts() : Promise.resolve([])),
     [user?.id]
   );
-  const { data: bookmarksData, reload: reloadBookmarks } = useAsyncData<Post[]>(
+  const { data: bookmarksData, loading: bookmarksLoading, reload: reloadBookmarks } = useAsyncData<Post[]>(
     () => (user ? listBookmarkedPosts() : Promise.resolve([])),
     [user?.id]
   );
@@ -198,10 +198,10 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {activeTab === 'posts' && <MyPostsTab posts={myPosts} onDeleteRequest={confirmDelete} />}
+        {activeTab === 'posts' && <MyPostsTab posts={myPosts} loading={myPostsLoading} onDeleteRequest={confirmDelete} />}
         {activeTab === 'recent' && <RecentViewsTab />}
         {activeTab === 'bookmarks' && (
-          <BookmarksTab bookmarks={myBookmarks} onChanged={reloadBookmarks} />
+          <BookmarksTab bookmarks={myBookmarks} loading={bookmarksLoading} onChanged={reloadBookmarks} />
         )}
         {activeTab === 'profile' && <ProfileEditForm user={user} />}
       </div>

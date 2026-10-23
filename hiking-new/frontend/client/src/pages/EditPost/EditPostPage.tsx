@@ -164,7 +164,7 @@ const EditPostPage: React.FC = () => {
         status: 1,
       });
       setSuccessMsg('保存成功！即将返回...');
-      setTimeout(() => navigate('/profile'), 1000);
+      setTimeout(() => navigate('/profile?tab=posts'), 1000);
     } catch (err) {
       setErrorMsg((err as Error).message);
     } finally {
@@ -361,7 +361,13 @@ const EditPostPage: React.FC = () => {
               className="flex-1 rounded-lg bg-pine-700 px-4 py-2 md:px-5 md:py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-pine-800 disabled:opacity-50">
               {saving ? '保存中...' : '保存修改'}
             </button>
-            <Link to="/profile" className="rounded-lg border border-border bg-card px-4 py-2 md:px-5 md:py-2.5 text-sm font-medium text-ink transition-colors hover:border-pine-300 text-center">取消</Link>
+            <button
+              type="button"
+              onClick={() => navigate('/profile?tab=posts')}
+              className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-pine-300 md:px-5 md:py-2.5"
+            >
+              取消
+            </button>
           </div>
         </form>
       )}
