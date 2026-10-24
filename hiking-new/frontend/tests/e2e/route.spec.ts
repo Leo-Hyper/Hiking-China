@@ -33,6 +33,13 @@ test.describe('route detail and GPX', () => {
     await expect(fullscreenButton).toBeVisible();
     await fullscreenButton.click();
     await expect(page.getByText(/当前剖面严格使用这份 GPX/)).toBeVisible();
+    const chartOverflow = await page.evaluate(() => {
+      const charts = document.querySelectorAll('svg[aria-label="路线海拔剖面图"]');
+      const chart = charts[charts.length - 1];
+      const panel = chart?.closest('.overflow-y-auto') as HTMLElement | null;
+      return panel ? panel.scrollWidth - panel.clientWidth : 0;
+    });
+    expect(chartOverflow).toBeLessThanOrEqual(1);
     await page.getByRole('button', { name: '关闭' }).first().click();
 
     const elevation = page.getByRole('img', { name: '路线海拔剖面图' });

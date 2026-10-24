@@ -62,12 +62,12 @@ const ElevationProfile = ({
   activePointIndex = null,
   onHoverIndex,
   compact = false,
-  minWidth = 620,
+  minWidth = 0,
 }: ElevationProfileProps) => {
   const chartWidth = compact ? 480 : 900;
   const chartHeight = compact ? 220 : 260;
   const padding = compact
-    ? { top: 28, right: 16, bottom: 30, left: 42 }
+    ? { top: 28, right: 18, bottom: 30, left: 58 }
     : { top: 32, right: 24, bottom: 38, left: 56 };
   const gradientId = `elevation-${useId().replace(/:/g, '')}`;
   const [hoverSample, setHoverSample] = useState<number | null>(null);
@@ -220,7 +220,7 @@ const ElevationProfile = ({
 
   return (
     <div className={className}>
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className={`mb-3 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}>
         {[
           { label: '总距离', value: `${formatDistance(totalDistance)} km` },
           { label: '累计爬升', value: `${ascent} m` },
@@ -238,7 +238,7 @@ const ElevationProfile = ({
       <svg
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         className="block h-auto w-full"
-        style={{ minWidth }}
+        style={minWidth > 0 ? { minWidth } : undefined}
         role="img"
         aria-label="路线海拔剖面图"
         onMouseMove={handleMove}

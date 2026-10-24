@@ -118,7 +118,7 @@ const RouteProfilePanel = ({ route, coordinates, className = '', actions }: Rout
       </section>
 
       {fullscreen && (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-paper p-3 md:p-6">
+        <div className="fixed inset-0 z-[80] flex h-dvh flex-col overflow-hidden bg-paper p-3 md:p-6">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span className="font-display text-lg text-ink">{route.name}</span>
             <span className="rounded-full bg-pine-50 px-2 py-0.5 text-[10px] font-semibold text-pine-700">
@@ -136,7 +136,7 @@ const RouteProfilePanel = ({ route, coordinates, className = '', actions }: Rout
             </button>
           </div>
           <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[58%_42%]">
-            <div className="min-h-[280px] overflow-hidden rounded-xl border border-border bg-card">
+            <div className="min-h-[280px] min-w-0 overflow-hidden rounded-xl border border-border bg-card">
               <RouteTrackMap
                 coordinates={coordinates}
                 className="h-full min-h-[280px] w-full rounded-none border-0"
@@ -144,13 +144,12 @@ const RouteProfilePanel = ({ route, coordinates, className = '', actions }: Rout
                 onHoverIndex={setActivePointIndex}
               />
             </div>
-            <div className="min-h-0 overflow-auto rounded-xl border border-border bg-card p-4">
+            <div className="min-h-0 min-w-0 overflow-y-auto rounded-xl border border-border bg-card p-4">
               <ElevationProfile
                 points={coordinates}
                 activePointIndex={activePointIndex}
                 onHoverIndex={setActivePointIndex}
                 compact
-                minWidth={620}
               />
               <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 text-xs">
                 <div>
