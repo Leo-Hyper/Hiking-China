@@ -5,7 +5,7 @@ import { mapRoute } from '@client/src/data/mappers';
 import type { RouteItem } from '@client/src/data/hiking-types';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
 import { withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import EmptyState from '@client/src/components/visual/EmptyState';
 
 const RouteFavoritesTab = () => {
@@ -76,13 +76,13 @@ const RouteFavoritesTab = () => {
           to={`/routes/${route.id}`}
           className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-pine-300 hover:shadow-md"
         >
-          <div className="aspect-[16/10] overflow-hidden bg-muted">
-            <Image
-              src={withCardImage(route.image)}
-              alt={route.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            />
-          </div>
+          <MediaFrame
+            src={withCardImage(route.image)}
+            alt={route.name}
+            ratioClassName="aspect-[16/10]"
+            position="center 42%"
+            imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
+          />
           <div className="p-4">
             <h3 className="line-clamp-1 font-display text-base text-ink group-hover:text-pine-700">
               {route.name}

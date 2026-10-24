@@ -3,7 +3,7 @@ import { Backpack, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-reac
 import { GEAR_ITEMS } from '@client/src/data/hiking-data';
 import type { GearItem } from '@client/src/data/hiking-types';
 import { withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import ListPagination from '@client/src/components/visual/ListPagination';
 import EmptyState from '@client/src/components/visual/EmptyState';
@@ -187,17 +187,18 @@ const GearPage = () => {
             {pagedGearItems.map((item: GearItem) => (
               <div key={item.id} className="group @container">
                 <div>
-                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-                    <Image
-                      src={withCardImage(item.image)}
-                      alt={item.name}
-                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                      loading="lazy"
-                    />
+                  <MediaFrame
+                    src={withCardImage(item.image)}
+                    alt={item.name}
+                    ratioClassName="aspect-square"
+                    className="w-full rounded-lg"
+                    position="center 45%"
+                    imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  >
                     <span className="absolute left-1.5 top-1.5">
                       <TrailTag tone="pine">{item.category}</TrailTag>
                     </span>
-                  </div>
+                  </MediaFrame>
                   <div className="mt-2 min-w-0">
                     <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-ink transition-colors group-hover:text-pine-700">
                       {item.name}

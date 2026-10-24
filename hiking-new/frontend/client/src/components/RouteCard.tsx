@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Check, Clock, MapPin, Route as RouteIcon, Scale, Star } from 'lucide-react';
 import type { RouteItem } from '@client/src/data/hiking-types';
 import { withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 
 interface RouteCardProps {
@@ -31,13 +31,14 @@ const RouteCard = ({
         className="block h-full"
       >
         <div className="flex h-full flex-col">
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-            <Image
-              src={withCardImage(routeData.image)}
-              alt={routeData.name}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-              loading="lazy"
-            />
+          <MediaFrame
+            src={withCardImage(routeData.image)}
+            alt={routeData.name}
+            ratioClassName="aspect-[16/10]"
+            position="center 42%"
+            className="w-full rounded-lg"
+            imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+          >
             <span className="absolute left-1.5 top-1.5">
               <TrailTag tone={getDifficultyTone(routeData.difficulty)}>{routeData.difficulty}</TrailTag>
             </span>
@@ -55,7 +56,7 @@ const RouteCard = ({
                 {routeData.rating}
               </span>
             </div>
-          </div>
+          </MediaFrame>
 
           <div className="mt-2 min-w-0">
             <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-ink transition-colors group-hover:text-pine-700">

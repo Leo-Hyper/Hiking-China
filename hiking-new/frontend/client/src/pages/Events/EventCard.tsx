@@ -68,11 +68,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, signedUp, onSignup }) => {
       className="group block overflow-hidden rounded-xl border border-border bg-card shadow-2xs transition-all duration-300 ease-out hover:border-pine-300 hover:shadow-md md:flex md:items-stretch"
     >
       {event.imageUrl && (
-        <div className="aspect-[21/9] shrink-0 overflow-hidden bg-muted md:aspect-auto md:w-52">
+        <div className="aspect-[16/10] shrink-0 overflow-hidden bg-muted md:aspect-auto md:w-52">
           <Image
             src={withCardImage(event.imageUrl)}
             alt={event.title}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="h-full w-full object-cover object-[center_35%] transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             loading="lazy"
           />
         </div>

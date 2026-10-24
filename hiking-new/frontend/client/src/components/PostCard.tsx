@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import type { Post } from '@client/src/data/hiking-types';
 import { stripHtml, withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import { AuthorLink, CommentCount } from '@client/src/components/PostStats';
 
@@ -24,13 +24,14 @@ const PostCard = ({ post }: PostCardProps) => {
   return (
     <Link to={`/post/${post.id}`} className="group block @container">
       <article className="@md:flex @md:items-center @md:gap-5">
-        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-lg bg-muted @md:aspect-auto @md:h-40 @md:w-64">
-          <Image
-            src={image}
-            alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-            loading="lazy"
-          />
+        <MediaFrame
+          src={image}
+          alt={post.title}
+          ratioClassName="aspect-[16/10] @md:aspect-auto"
+          className="w-full shrink-0 rounded-lg @md:h-40 @md:w-64"
+          position="center 42%"
+          imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+        >
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-black/55 to-transparent px-2 pb-1.5 pt-6 font-data text-[10px] text-white @md:hidden">
             <span className="flex items-center gap-1">
               <PlayCircle size={12} />
@@ -38,7 +39,7 @@ const PostCard = ({ post }: PostCardProps) => {
             </span>
             <CommentCount postId={post.id} count={post.commentCount} />
           </div>
-        </div>
+        </MediaFrame>
 
         <div className="mt-2 min-w-0 flex-1 @md:mt-0">
           <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-ink transition-colors group-hover:text-pine-700 @md:line-clamp-1 @md:font-display @md:text-lg">

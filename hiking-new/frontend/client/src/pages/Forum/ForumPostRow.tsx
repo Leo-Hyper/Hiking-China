@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import type { Post } from '@client/src/data/hiking-types';
 import { stripHtml, withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import { AuthorLink, CommentCount } from '@client/src/components/PostStats';
 
@@ -20,14 +20,14 @@ const ForumPostRow = ({ post }: ForumPostRowProps) => {
       to={`/post/${post.id}`}
       className="group grid grid-cols-[96px_minmax(0,1fr)] gap-3 border-b border-border py-4 transition-colors last:border-b-0 hover:bg-pine-50/35 md:grid-cols-[150px_minmax(0,1fr)] md:gap-5 md:px-3"
     >
-      <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted">
-        <Image
-          src={image}
-          alt={post.title}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-          loading="lazy"
-        />
-      </div>
+      <MediaFrame
+        src={image}
+        alt={post.title}
+        ratioClassName="aspect-[4/3]"
+        className="rounded-lg"
+        position="center 42%"
+        imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+      />
       <div className="min-w-0">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <TrailTag tone="neutral">{post.category}</TrailTag>

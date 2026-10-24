@@ -19,7 +19,7 @@ import RelatedPosts from './RelatedPosts';
 import RouteMap from './RouteMap';
 import RouteEmbedCard from '@client/src/components/RouteEmbedCard';
 import { toast } from 'sonner';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import { UserAvatar } from '@client/src/components/ui/user-avatar';
 import ReportButton from '@client/src/components/ReportButton';
 import Seo from '@client/src/components/Seo';
@@ -370,9 +370,14 @@ const PostDetailPage: React.FC = () => {
 
           {/* 封面图 */}
           {coverImage && (
-            <div className="rounded-xl overflow-hidden mb-8 img-container aspect-21/9">
-              <Image src={resolveImageUrl(coverImage)} alt={post.title} className="w-full h-full object-cover" loading="eager" />
-            </div>
+            <MediaFrame
+              src={resolveImageUrl(coverImage)}
+              alt={post.title}
+              ratioClassName="aspect-[4/5] md:aspect-[16/9]"
+              position="center 35%"
+              className="mb-8 rounded-xl"
+              loading="eager"
+            />
           )}
 
           {/* 正文 */}

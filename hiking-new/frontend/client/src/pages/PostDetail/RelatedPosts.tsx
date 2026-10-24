@@ -4,7 +4,7 @@ import { PlayCircle } from 'lucide-react';
 import { listPosts } from '@client/src/data/hiking-store';
 import type { Post } from '@client/src/data/hiking-types';
 import { withCardImage } from '@client/src/utils/base-path';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import { AuthorLink, CommentCount } from '@client/src/components/PostStats';
 import { useAsyncData } from '@client/src/hooks/use-hiking';
@@ -34,13 +34,14 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentId }) => {
           const author: string = p.authorName || '匿名';
           return (
             <Link key={p.id} to={`/post/${p.id}`} className="group block">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-muted">
-                <Image
-                  src={withCardImage(p.imageUrls[0] || '/img/徒步装备.avif')}
-                  alt={p.title}
-                  className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                  loading="lazy"
-                />
+              <MediaFrame
+                src={withCardImage(p.imageUrls[0] || '/img/徒步装备.avif')}
+                alt={p.title}
+                ratioClassName="aspect-[16/10]"
+                className="rounded-lg"
+                position="center 42%"
+                imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              >
                 <div className="absolute left-2 top-2">
                   <TrailTag tone="pine">{p.category}</TrailTag>
                 </div>
@@ -51,7 +52,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentId }) => {
                   </span>
                   <CommentCount postId={p.id} count={p.commentCount} />
                 </div>
-              </div>
+              </MediaFrame>
               <h4 className="mt-2 line-clamp-2 text-[13px] font-medium leading-snug text-ink transition-colors group-hover:text-pine-700">
                 {p.title}
               </h4>

@@ -11,7 +11,7 @@ import type { HikingEvent } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
-import { Image } from '@client/src/components/ui/image';
+import MediaFrame from '@client/src/components/MediaFrame';
 import TrailTag from '@client/src/components/visual/TrailTag';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import { formatEventDate, getDisplaySignupCount, isEventEnded } from './EventCard';
@@ -52,7 +52,7 @@ const EventDetailPage = () => {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-20 lg:px-8">
-        <div className="animate-pulse rounded-xl bg-muted aspect-[16/10] md:aspect-[21/9]" />
+        <div className="animate-pulse rounded-xl bg-muted aspect-[4/5] md:aspect-[16/9]" />
         <div className="mt-6 h-8 w-1/2 animate-pulse rounded bg-muted" />
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           {[0, 1, 2, 3].map((i: number) => (
@@ -160,16 +160,16 @@ const EventDetailPage = () => {
       </Link>
 
       {event.imageUrl ? (
-        <div className="aspect-[16/10] overflow-hidden rounded-xl bg-muted md:aspect-[21/9]">
-          <Image
-            src={resolveImageUrl(event.imageUrl)}
-            alt={event.title}
-            className="h-full w-full object-cover"
-            loading="eager"
-          />
-        </div>
+        <MediaFrame
+          src={resolveImageUrl(event.imageUrl)}
+          alt={event.title}
+          ratioClassName="aspect-[4/5] md:aspect-[16/9]"
+          position="center 30%"
+          className="rounded-xl"
+          loading="eager"
+        />
       ) : (
-        <div className="flex aspect-[16/10] items-center justify-center rounded-xl bg-gradient-to-br from-pine-700 to-pine-900 md:aspect-[21/9]">
+        <div className="flex aspect-[4/5] items-center justify-center rounded-xl bg-gradient-to-br from-pine-700 to-pine-900 md:aspect-[16/9]">
           <CalendarDays size={48} className="text-paper/40" />
         </div>
       )}
