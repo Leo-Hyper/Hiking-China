@@ -48,6 +48,23 @@ async function main() {
     console.log(`${value ? "PASS" : "WARN"} header ${header}${value ? "" : " - missing"}`);
   }
 
+  const homeResponse = await fetch(SITE);
+  const homeCache = homeResponse.headers.get("cache-control") || "";
+  console.log(`${homeCache.includes("no-cache") ? "PASS" : "WARN"} home cache-control${homeCache ? ` - ${homeCache}` : " - missing"}`);
+
+  const assetPath = ((await homeResponse.text()).match(/assets\/index-[A-Za-z0-9_-]+\.js/) || [])[0];
+  if (assetPath) {
+    const assetResponse = await fetch(new URL(assetPath, SITE), { method: "HEAD" });
+    const assetCache = assetResponse.headers.get("cache-control") || "";
+    console.log(`${assetCache.includes("immutable") ? "PASS" : "WARN"} asset cache-control${assetCache ? ` - ${assetCache}` : " - missing"}`);
+  } else {
+    console.log("WARN asset cache-control - bundle not referenced in HTML");
+  }
+
+  const imageResponse = await fetch(new URL("/img/routes/huangshan.card.webp", SITE), { method: "HEAD" });
+  const imageCache = imageResponse.headers.get("cache-control") || "";
+  console.log(`${imageCache.includes("max-age=2592000") ? "PASS" : "WARN"} image cache-control${imageCache ? ` - ${imageCache}` : " - missing"}`);
+
   const failed = results.filter((ok) => !ok).length;
   if (failed > 0) {
     console.error(`\n${failed} check(s) failed.`);
