@@ -61,4 +61,62 @@ test.describe('post lifecycle', () => {
       '/routes/1'
     );
   });
+
+  test('renders an embedded route map at the stored coordinates', async ({ page, request }) => {
+    await login(page, USERS.user.email);
+    const token = await page.evaluate(() => localStorage.getItem('hiking_token'));
+    const title = `E2E 游记地图 ${Date.now()}`;
+
+    const response = await request.post('http://127.0.0.1:3101/api/posts', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        title,
+        content: '<p>内嵌轨迹地图。</p>',
+        category: '路线攻略',
+        extrainfo: {
+          route: {
+            difficulty: 2,
+            duration: '1天',
+            elevationGain: '300m',
+            distance: 1.2,
+            start: '甲',
+            end: '乙',
+            coordinates: [[30.6468, 104.395], [30.6321, 104.4194]],
+          },
+        },
+      },
+    });
+    expect(response.status()).toBe(201);
+    const { postId } = await response.json();
+
+    await page.goto(`/post/${postId}`);
+    const map = page.locator('.leaflet-container');
+    await expect(map).toBeVisible();
+    await page.waitForFunction(
+      () => document.querySelectorAll('.leaflet-marker-icon').length >= 2
+    );
+
+    const markers = page.locator('.leaflet-marker-icon');
+    await expect(markers).toHaveCount(2);
+    const box = await map.boundingBox();
+    for (const marker of await markers.all()) {
+      const markerBox = await marker.boundingBox();
+      expect(markerBox!.x).toBeGreaterThan(box!.x);
+      expect(markerBox!.y).toBeGreaterThan(box!.y);
+      expect(markerBox!.x + markerBox!.width).toBeLessThan(box!.x + box!.width);
+      expect(markerBox!.y + markerBox!.height).toBeLessThan(box!.y + box!.height);
+    }
+
+    const maxTileZoom = await page.evaluate(() => {
+      const zooms = Array.from(document.querySelectorAll('.leaflet-tile')).map((tile) => {
+        const match = (tile as HTMLImageElement).src.match(/\/(\d+)\/\d+\/\d+\.png/);
+        return match ? Number(match[1]) : 0;
+      });
+      return Math.max(0, ...zooms);
+    });
+    expect(maxTileZoom).toBeGreaterThanOrEqual(8);
+  });
 });

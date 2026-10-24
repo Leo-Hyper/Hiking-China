@@ -29,6 +29,7 @@ export interface RouteExtra {
   distance: number;
   start: string;
   end: string;
+  /** Stored in [lat, lng] order because the publish map picker writes it that way. */
   coordinates: [number, number][];
 }
 

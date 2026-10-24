@@ -2,33 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { RouteExtra } from '@client/src/data/hiking-types';
+import { baseRasterLayer } from '@client/src/utils/map-tiles';
 
 interface RouteMapProps {
+  /** [lng, lat] pairs, matching GeoJSON order. */
   coordinates: [number, number][];
   title?: string;
   routeInfo?: RouteExtra | null;
-}
-
-const MAPTILER_KEY = String(import.meta.env.VITE_MAPTILER_KEY || '').trim();
-
-function baseLayer(): L.TileLayer {
-  if (!MAPTILER_KEY) {
-    return L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Humanitarian OpenStreetMap Team',
-      maxZoom: 19,
-      subdomains: 'abc',
-    });
-  }
-  return L.tileLayer(
-    `https://api.maptiler.com/maps/outdoor-v2/{z}/{x}/{y}.png?key=${encodeURIComponent(MAPTILER_KEY)}`,
-    {
-      attribution:
-        '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-      crossOrigin: true,
-    }
-  );
 }
 
 const RouteMap: React.FC<RouteMapProps> = ({ coordinates, title = '路线轨迹' }) => {
@@ -51,8 +31,20 @@ const RouteMap: React.FC<RouteMapProps> = ({ coordinates, title = '路线轨迹'
 
     const map: L.Map = L.map(container).setView([centerLat, centerLng], zoom);
 
-    baseLayer().addTo(map);
+    baseRasterLayer().addTo(map);
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+
+    if (path.length > 0) {
+      const start: [number, number] = path[0];
+      L.marker(start, {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="background:#2f6f55;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,.3)">起</div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        }),
+      }).addTo(map);
+    }
 
     if (path.length > 1) {
       const outline: L.Polyline = L.polyline(path, {
@@ -66,19 +58,8 @@ const RouteMap: React.FC<RouteMapProps> = ({ coordinates, title = '路线轨迹'
         opacity: 0.95,
       }).addTo(map);
 
-      const start: [number, number] = path[0];
       const end: [number, number] = path[path.length - 1];
 
-      if (start) {
-        L.marker(start, {
-          icon: L.divIcon({
-            className: '',
-            html: '<div style="background:#2f6f55;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,.3)">起</div>',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-          }),
-        }).addTo(map);
-      }
       if (end) {
         L.marker(end, {
           icon: L.divIcon({
@@ -91,6 +72,8 @@ const RouteMap: React.FC<RouteMapProps> = ({ coordinates, title = '路线轨迹'
       }
 
       map.fitBounds(outline.getBounds(), { padding: [40, 40], maxZoom: 16 });
+    } else if (path.length === 1) {
+      map.setView(path[0], 13);
     }
 
     return () => {

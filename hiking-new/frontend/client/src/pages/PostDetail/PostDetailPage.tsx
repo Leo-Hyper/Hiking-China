@@ -13,6 +13,7 @@ import {
 import type { GearExtra, Post, RouteExtra } from '@client/src/data/hiking-types';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import { resolveImageUrl } from '@client/src/utils/base-path';
+import { latLngToLngLat } from '@client/src/utils/geo';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import CommentSection from './CommentSection';
 import RelatedPosts from './RelatedPosts';
@@ -217,7 +218,7 @@ const PostDetailPage: React.FC = () => {
       const r: RouteExtra = ei.route;
       if (!r.coordinates || r.coordinates.length === 0) return null;
       return {
-        coordinates: r.coordinates,
+        coordinates: latLngToLngLat(r.coordinates),
         title: r.start && r.end ? r.start + ' -> ' + r.end : '路线轨迹',
         info: r,
       };
