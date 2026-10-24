@@ -47,7 +47,7 @@ function withTrackData(input) {
 }
 
 // GET /api/routes?region=&difficulty=&distance=&sort=
-router.get("/", publicCache(30000), async (req, res) => {
+router.get("/", publicCache(120000), async (req, res) => {
   try {
     const routes = await routeModel.listRoutes({
       region: req.query.region,
@@ -140,7 +140,7 @@ router.get("/:id/favorite", authMiddleware, async (req, res) => {
 });
 
 // GET /api/routes/:id/posts - 关联到该路线的游记
-router.get("/:id/posts", publicCache(30000), async (req, res) => {
+router.get("/:id/posts", publicCache(60000), async (req, res) => {
   try {
     const routeId = Number(req.params.id);
     const route = await routeModel.getRouteById(routeId);
@@ -159,7 +159,7 @@ router.get("/:id/posts", publicCache(30000), async (req, res) => {
 });
 
 // GET /api/routes/:id
-router.get("/:id", async (req, res) => {
+router.get("/:id", publicCache(60000), async (req, res) => {
   try {
     const route = await routeModel.getRouteById(Number(req.params.id));
     if (!route) return res.status(404).json({ error: "路线不存在" });

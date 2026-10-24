@@ -3,7 +3,8 @@ const cache = new Map();
 
 function publicCache(ttlMs = 30000) {
   return (req, res, next) => {
-    if (req.method !== "GET") return next();
+    const cacheable = req.method === "GET" || req.method === "HEAD";
+    if (!cacheable) return next();
 
     const key = req.originalUrl;
     const now = Date.now();
@@ -13,8 +14,9 @@ function publicCache(ttlMs = 30000) {
       res.set("Age", String(Math.floor((now - hit.createdAt) / 1000)));
       res.set("Cache-Control", `public, max-age=${Math.floor(ttlMs / 1000)}, stale-while-revalidate=120`);
       res.set("Netlify-CDN-Cache-Control", "public, max-age=120, stale-while-revalidate=600");
-      return res.json(hit.body);
+      return req.method === "HEAD" ? res.end() : res.json(hit.body);
     }
+    if (req.method === "HEAD") return next();
 
     const originalJson = res.json.bind(res);
     res.json = (body) => {

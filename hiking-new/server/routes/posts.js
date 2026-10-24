@@ -104,7 +104,7 @@ router.get("/:id/manage", authMiddleware, async (req, res) => {
 });
 
 // GET /api/posts/:id - 获取单个帖子
-router.get("/:id", async (req, res) => {
+router.get("/:id", publicCache(30000), async (req, res) => {
   try {
     const post = await getPostById(req.params.id);
     if (!post) return res.status(404).json({ error: "帖子不存在" });
