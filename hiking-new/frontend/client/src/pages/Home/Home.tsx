@@ -184,7 +184,7 @@ const Home = () => {
         {/* 通栏特色大卡 */}
         {featured && (
           <Link
-            to={`/post/${featured.id}`}
+            to={`/routes/${featured.id}`}
             className="group relative block h-[240px] md:h-[420px] overflow-hidden rounded-xl"
           >
             <Image
