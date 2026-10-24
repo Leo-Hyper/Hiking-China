@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SEARCH_INDEX } from '@client/src/data/hiking-data';
+import { GEAR_ITEMS } from '@client/src/data/hiking-data';
 import type { SearchItem } from '@client/src/data/hiking-types';
 import * as api from '@client/src/api';
 
@@ -24,10 +24,22 @@ function expandTokens(tokens: string[]): string[] {
   return [...expanded];
 }
 
+const GEAR_SEARCH: SearchItem[] = GEAR_ITEMS.map((item) => ({
+  id: item.id,
+  type: 'gear',
+  title: item.name,
+  category: item.category,
+  date: '',
+  author: '',
+  tags: [item.category],
+  excerpt: item.desc,
+  route: '/gear',
+}));
+
 function toSearchItem(r: api.SearchResult): SearchItem {
   return {
     id: r.id,
-    type: 'post',
+    type: r.type === 'route' ? 'route' : 'post',
     title: r.title,
     category: r.category,
     date: (r.created_at || '').split('T')[0],
@@ -75,8 +87,10 @@ export function useSearch() {
         .then((res: { results: api.SearchResult[] }) => (res.results || []).map(toSearchItem))
         .catch(() => [] as SearchItem[]);
       if (cancelled) return;
-      const apiIds: Set<number> = new Set(apiItems.map((i: SearchItem) => i.id));
-      const staticItems: SearchItem[] = SEARCH_INDEX.filter((item: SearchItem) => !apiIds.has(item.id));
+      const apiKeys: Set<string> = new Set(apiItems.map((i: SearchItem) => `${i.type}-${i.id}`));
+      const staticItems: SearchItem[] = GEAR_SEARCH.filter(
+        (item: SearchItem) => !apiKeys.has(`${item.type}-${item.id}`)
+      );
       const matched: SearchItem[] = [
         ...apiItems,
         ...staticItems
