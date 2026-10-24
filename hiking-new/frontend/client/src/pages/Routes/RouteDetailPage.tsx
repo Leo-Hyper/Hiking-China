@@ -50,6 +50,17 @@ const RouteDetailPage = () => {
     () => sanitizeRichText(route?.content || route?.description || ''),
     [route?.content, route?.description]
   );
+  const displayTags = useMemo(() => {
+    const blocked = new Set(
+      [route?.region, route?.difficulty].filter((value): value is string => Boolean(value))
+    );
+    const seen = new Set<string>();
+    return (route?.tags || []).filter((tag: string) => {
+      if (blocked.has(tag) || seen.has(tag)) return false;
+      seen.add(tag);
+      return true;
+    });
+  }, [route?.tags, route?.region, route?.difficulty]);
 
   useEffect(() => {
     setFavoriteCount(route?.favoriteCount || 0);
@@ -158,7 +169,17 @@ const RouteDetailPage = () => {
                       示例轨迹 · 非实测
                     </span>
                   )}
-                  {route.tags?.map((tag: string) => (
+                  {route.dataSource === 'osm+srtm' && (
+                    <span className="rounded-full bg-sky-100/95 px-2.5 py-1 text-[11px] font-semibold text-sky-800">
+                      OSM 路径 · SRTM 高程
+                    </span>
+                  )}
+                  {route.dataSource === 'gpx' && (
+                    <span className="rounded-full bg-pine-100/95 px-2.5 py-1 text-[11px] font-semibold text-pine-800">
+                      上传 GPX
+                    </span>
+                  )}
+                  {displayTags.map((tag: string) => (
                     <span key={tag} className="rounded-full bg-paper/10 px-2.5 py-1 text-[11px] text-paper/85 backdrop-blur">
                       {tag}
                     </span>
@@ -177,7 +198,7 @@ const RouteDetailPage = () => {
               </div>
             </div>
 
-            <section className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-4">
+            <section className="grid grid-cols-2 gap-3">
               {[
                 { label: '累计爬升', value: route.ascent == null ? '—' : `${route.ascent}m`, icon: TrendingUp },
                 { label: '累计下降', value: route.descent == null ? '—' : `${route.descent}m`, icon: TrendingDown },
@@ -206,6 +227,25 @@ const RouteDetailPage = () => {
                     {route.isSample && (
                       <p className="mt-1 text-[11px] text-muted-foreground">
                         用于演示地图与海拔交互，不代表真实 GPS 测量
+                      </p>
+                    )}
+                    {route.dataSource === 'osm+srtm' && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        路径来自{' '}
+                        <a
+                          href="https://www.openstreetmap.org/copyright"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline underline-offset-2 hover:text-pine-700"
+                        >
+                          OpenStreetMap
+                        </a>
+                        （ODbL），高程来自 SRTM 30m DEM
+                      </p>
+                    )}
+                    {route.dataSource === 'gpx' && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        由管理员或路线作者上传的 GPX 轨迹
                       </p>
                     )}
                   </div>

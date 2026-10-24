@@ -115,6 +115,8 @@ export interface RouteItem {
   favoriteCount?: number;
   isFavorited?: boolean;
   isSample?: boolean;
+  dataSource?: string;
+  dataVersion?: number;
   authorId?: number;
 }
 

@@ -23,6 +23,8 @@ function normalizeRoute(row) {
     point_count: Number(row.point_count || 0),
     favorite_count: Number(row.favorite_count || 0),
     is_sample: Number(row.is_sample || 0) === 1,
+    data_source: String(row.data_source || ""),
+    data_version: Number(row.data_version || 0),
   };
 }
 
@@ -118,8 +120,9 @@ async function createRoute(userId, data = {}) {
     `INSERT INTO routes (
       user_id, name, region, difficulty, description, content, distance, duration,
       rating, image, post_id, tags, geojson, ascent_m, descent_m,
-      min_elevation, max_elevation, start_point, end_point, point_count, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      min_elevation, max_elevation, start_point, end_point, point_count,
+      data_source, data_version, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     [
       userId,
       String(data.name || "").trim(),
@@ -141,6 +144,8 @@ async function createRoute(userId, data = {}) {
       String(data.startPoint || ""),
       String(data.endPoint || ""),
       Number(data.pointCount || 0),
+      data.geojson ? "gpx" : "",
+      data.geojson ? 1 : 0,
     ]
   );
   return { id: Number(result.lastInsertRowid) };
@@ -177,6 +182,11 @@ async function updateRoute(id, data = {}) {
     let value = data[key];
     if (key === "tags" && Array.isArray(value)) value = value.join(",");
     if (key === "geojson" && value && typeof value !== "string") value = JSON.stringify(value);
+    if (key === "geojson" && value) {
+      sets.push("data_source = 'gpx'");
+      sets.push("is_sample = 0");
+      sets.push("sample_version = 2");
+    }
     sets.push(`${column} = ?`);
     params.push(value);
   }

@@ -13,17 +13,19 @@ import {
   RefreshCw,
   Search,
   ArrowUpRight,
+  Link2,
 } from 'lucide-react';
 import * as api from '@client/src/api';
 import { useAuth } from '@client/src/hooks/use-hiking';
 import { toast } from 'sonner';
 import AdminUsersPanel from './AdminUsersPanel';
 import AdminRoutesPanel from './AdminRoutesPanel';
+import AdminRouteLinksPanel from './AdminRouteLinksPanel';
 
-type AdminTab = 'summary' | 'reports' | 'posts' | 'comments' | 'users' | 'events' | 'routes' | 'audit' | 'flags';
+type AdminTab = 'summary' | 'reports' | 'posts' | 'comments' | 'users' | 'events' | 'routes' | 'route-links' | 'audit' | 'flags';
 type Row = Record<string, unknown>;
 
-const TABS: { key: AdminTab; label: string; icon: typeof Shield }[] = [
+const TABS: { key: AdminTab; label: string; icon: typeof Shield; adminOnly?: boolean }[] = [
   { key: 'summary', label: '概览', icon: Shield },
   { key: 'reports', label: '举报', icon: Flag },
   { key: 'posts', label: '帖子', icon: FileText },
@@ -31,6 +33,7 @@ const TABS: { key: AdminTab; label: string; icon: typeof Shield }[] = [
   { key: 'users', label: '用户', icon: Users },
   { key: 'events', label: '活动', icon: CalendarDays },
   { key: 'routes', label: '路线', icon: RouteIcon },
+  { key: 'route-links', label: '路线归属', icon: Link2, adminOnly: true },
   { key: 'audit', label: '审计', icon: ScrollText },
   { key: 'flags', label: '开关', icon: ToggleLeft },
 ];
@@ -43,6 +46,7 @@ const TAB_PATHS: Record<AdminTab, string> = {
   users: '/admin/users',
   events: '/admin/events',
   routes: '/admin/routes',
+  'route-links': '/admin/route-links',
   audit: '/admin/audit',
   flags: '/admin/flags',
 };
@@ -94,6 +98,8 @@ const AdminPage = () => {
       } else if (tab === 'routes') {
         const data = await api.listRoutes();
         setRows(data.routes || []);
+      } else if (tab === 'route-links') {
+        setRows([]);
       } else if (tab === 'audit') {
         const data = await api.listAdminAuditLogs();
         setRows(data.logs || []);
@@ -178,7 +184,9 @@ const AdminPage = () => {
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = item.key === tab;
-            const visible = ['audit', 'flags', 'users', 'routes'].includes(item.key) ? user.role === 'admin' : true;
+          const visible = item.adminOnly || ['audit', 'flags', 'users', 'routes'].includes(item.key)
+            ? user.role === 'admin'
+            : true;
           if (!visible) return null;
           return (
             <Link
@@ -220,7 +228,7 @@ const AdminPage = () => {
         ))}
       </div>
 
-      {tab !== 'summary' && tab !== 'users' && (
+      {tab !== 'summary' && tab !== 'users' && tab !== 'route-links' && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="relative w-full max-w-sm">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -360,6 +368,8 @@ const AdminPage = () => {
       {!loading && !error && tab === 'routes' && (
         <AdminRoutesPanel routes={rows} onChanged={reload} />
       )}
+
+      {!loading && !error && tab === 'route-links' && <AdminRouteLinksPanel />}
 
       {!loading && !error && tab === 'audit' && (
         <AdminTable

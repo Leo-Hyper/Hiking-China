@@ -14,21 +14,21 @@ const SAMPLE_GPX = `<?xml version="1.0" encoding="UTF-8"?>
 </gpx>`;
 
 test.describe('route detail and GPX', () => {
-  test('opens a route, shows track data and persists favorite', async ({ page }) => {
+  test('opens an OSM route, shows real track data and persists favorite', async ({ page }) => {
     await login(page, USERS.user.email);
     await page.goto('/routes');
 
-    await page.getByRole('link', { name: /四姑娘山大峰/ }).first().click();
-    await expect(page).toHaveURL(/\/routes\/1/);
-    await expect(page.getByRole('heading', { name: '四姑娘山大峰' })).toBeVisible();
+    await page.getByRole('link', { name: /虎跳峡高路徒步/ }).first().click();
+    await expect(page).toHaveURL(/\/routes\/2/);
+    await expect(page.getByRole('heading', { name: '虎跳峡高路徒步' })).toBeVisible();
     await expect(page.getByText('路线轨迹')).toBeVisible();
     await expect(page.getByText('海拔剖面')).toBeVisible();
-    await expect(page.getByRole('heading', { name: '相关游记' })).toBeVisible();
-    await expect(page.getByText('示例轨迹 · 非实测')).toBeVisible();
+    await expect(page.getByText('OSM 路径 · SRTM 高程')).toBeVisible();
     await expect(page.getByRole('link', { name: '导出 GPX' })).toHaveAttribute(
       'href',
-      /\/api\/routes\/1\/export\.gpx/
+      /\/api\/routes\/2\/export\.gpx/
     );
+    await expect(page.locator('.maplibregl-canvas')).toBeVisible();
 
     const elevation = page.getByRole('img', { name: '路线海拔剖面图' });
     await expect(elevation).toBeVisible();
@@ -39,7 +39,16 @@ test.describe('route detail and GPX', () => {
     await expect(page.getByRole('button', { name: '已收藏' })).toBeVisible();
 
     await page.goto('/profile?tab=routes');
-    await expect(page.getByText('四姑娘山大峰')).toBeVisible();
+    await expect(page.getByText('虎跳峡高路徒步')).toBeVisible();
+  });
+
+  test('shows an honest empty state when a route has no GPX', async ({ page }) => {
+    await page.goto('/routes/1');
+    await expect(page.getByRole('heading', { name: '四姑娘山大峰' })).toBeVisible();
+    await expect(page.getByText('该路线暂未上传 GPX 轨迹')).toBeVisible();
+    await expect(page.getByText('该路线暂无海拔数据')).toBeVisible();
+    await expect(page.getByText('示例轨迹 · 非实测')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: '导出 GPX' })).toHaveCount(0);
   });
 
   test('parses a GPX upload and returns route statistics', async ({ page, request }) => {

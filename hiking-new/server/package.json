@@ -11,6 +11,7 @@
     "migrate:apply": "node scripts/migrate-local-to-turso.cjs --apply",
     "migrate:merge:check": "node scripts/migrate-local-to-turso.cjs --merge-content --check",
     "migrate:merge:apply": "node scripts/migrate-local-to-turso.cjs --merge-content --apply",
+    "routes:osm": "node scripts/build-osm-routes.cjs",
     "admin:grant": "node scripts/set-admin.cjs",
     "backup:turso": "node scripts/backup-turso.cjs",
     "accounts:process-deletions": "node scripts/process-account-deletions.cjs"

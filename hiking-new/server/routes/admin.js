@@ -23,7 +23,13 @@ const {
   setEventStatus,
   listFeatureFlags,
   setFeatureFlag,
+  writeAuditLog,
 } = require("../models/moderation");
+const {
+  backfillRouteLinks,
+  listPendingRouteLinks,
+  setPostRoute,
+} = require("../models/route-link");
 const { createAuthToken } = require("../models/auth-token");
 const { sendMail, passwordResetEmail } = require("../services/mailer");
 
@@ -342,6 +348,65 @@ router.put("/feature-flags/:key", requireRole("admin"), async (req, res) => {
     res.json({ message: "功能开关已更新", result });
   } catch (error) {
     res.status(400).json({ error: error.message || "功能开关更新失败" });
+  }
+});
+
+router.get("/route-links", requireRole("admin"), async (req, res) => {
+  try {
+    const result = await listPendingRouteLinks(req.query.limit);
+    res.json(result);
+  } catch (error) {
+    console.error("[ADMIN] route links failed:", error);
+    res.status(500).json({ error: "路线归属数据加载失败" });
+  }
+});
+
+router.post("/route-links/backfill", requireRole("admin"), async (req, res) => {
+  try {
+    const linked = await backfillRouteLinks();
+    if (linked > 0) clearPublicCache();
+    await writeAuditLog({
+      actorId: req.userId,
+      action: "route_link_backfill",
+      targetType: "post",
+      metadata: { linked },
+      req,
+    });
+    res.json({
+      linked,
+      message: linked > 0 ? `已从路线库回填 ${linked} 条帖子关联` : "没有可回填的帖子",
+    });
+  } catch (error) {
+    console.error("[ADMIN] route link backfill failed:", error);
+    res.status(500).json({ error: "路线关联回填失败" });
+  }
+});
+
+router.put("/posts/:id/route-link", requireRole("admin"), async (req, res) => {
+  try {
+    const postId = Number(req.params.id);
+    const routeId = Number(req.body.routeId);
+    if (!Number.isInteger(postId) || postId <= 0) {
+      return res.status(400).json({ error: "帖子 ID 无效" });
+    }
+    if (!Number.isInteger(routeId) || routeId <= 0) {
+      return res.status(400).json({ error: "路线 ID 无效" });
+    }
+    await setPostRoute(postId, routeId);
+    clearPublicCache();
+    await writeAuditLog({
+      actorId: req.userId,
+      action: "route_link_set",
+      targetType: "post",
+      targetId: postId,
+      metadata: { routeId },
+      req,
+    });
+    res.json({ message: "路线关联已保存", postId, routeId });
+  } catch (error) {
+    console.error("[ADMIN] route link set failed:", error);
+    const status = error.message === "帖子不存在" || error.message === "路线不存在" ? 404 : 500;
+    res.status(status).json({ error: error.message || "路线关联保存失败" });
   }
 });
 

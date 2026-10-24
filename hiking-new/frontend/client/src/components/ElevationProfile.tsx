@@ -89,7 +89,7 @@ const ElevationProfile = ({
     }
     const totalDistance = cumulativeDistance[cumulativeDistance.length - 1] || 0;
 
-    const stride = Math.max(1, Math.ceil(withElevation.length / 260));
+    const stride = Math.max(1, Math.ceil(withElevation.length / 480));
     const sampled = withElevation.filter(
       (_, index) => index % stride === 0 || index === withElevation.length - 1
     );
@@ -305,19 +305,29 @@ const ElevationProfile = ({
           />
         ))}
 
-        {highest && (
-          <g>
-            <circle cx={xForDistance(highest.distance)} cy={yFor(highest.elevation)} r="4" fill="#c96a3d" stroke="#fff" strokeWidth="2" />
-            <text
-              x={xForDistance(highest.distance)}
-              y={Math.max(12, yFor(highest.elevation) - 10)}
-              textAnchor="middle"
-              className="fill-ink text-[11px] font-semibold"
-            >
-              最高 {Math.round(highest.elevation)}m
-            </text>
-          </g>
-        )}
+        {highest && (() => {
+          const highestX = xForDistance(highest.distance);
+          const anchor = highestX < PADDING.left + 70
+            ? 'start'
+            : highestX > WIDTH - PADDING.right - 70
+              ? 'end'
+              : 'middle';
+          const labelX = anchor === 'start' ? highestX + 8 : anchor === 'end' ? highestX - 8 : highestX;
+          const labelY = Math.max(PADDING.top + 12, yFor(highest.elevation) - 10);
+          return (
+            <g>
+              <circle cx={highestX} cy={yFor(highest.elevation)} r="4" fill="#c96a3d" stroke="#fff" strokeWidth="2" />
+              <text
+                x={labelX}
+                y={labelY}
+                textAnchor={anchor}
+                className="fill-ink text-[11px] font-semibold"
+              >
+                最高 {Math.round(highest.elevation)}m
+              </text>
+            </g>
+          );
+        })()}
 
         {lowest && (() => {
           const lowestX = xForDistance(lowest.distance);

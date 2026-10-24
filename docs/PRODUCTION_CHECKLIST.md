@@ -46,7 +46,7 @@
 当前 `client/public/_headers` 是 Netlify 格式，Render 不会自动应用。需要在 Render Static Site 的 Headers 配置或前置 Cloudflare 中设置：
 
 ```text
-Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cloud.umami.is; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://tile.openstreetmap.fr https://*.tile.openstreetmap.fr https://tile.openstreetmap.org https://*.tile.openstreetmap.org; media-src 'self' https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://hiking-china-api-sg.onrender.com https://cloud.umami.is https://gateway.umami.is https://*.sentry.io https://*.ingest.sentry.io; upgrade-insecure-requests
+Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cloud.umami.is; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://api.maptiler.com https://tile.openstreetmap.fr https://*.tile.openstreetmap.fr https://tile.openstreetmap.org https://*.tile.openstreetmap.org; media-src 'self' https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://hiking-china-api-sg.onrender.com https://api.maptiler.com https://cloud.umami.is https://gateway.umami.is https://*.sentry.io https://*.ingest.sentry.io; worker-src 'self' blob:; upgrade-insecure-requests
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin

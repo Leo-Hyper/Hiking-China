@@ -82,6 +82,13 @@ async function seed() {
     "结伴,周末"
   );
   await insertPost(
+    other.id,
+    "雨崩冰湖线徒步记录",
+    "<p>从雨崩上村出发往返冰湖，记录沿途牧场和冰川。</p>",
+    "徒步路线",
+    "雨崩,冰湖"
+  );
+  await insertPost(
     user.id,
     "E2E 装备测试帖",
     "<p>装备测试内容。</p>",

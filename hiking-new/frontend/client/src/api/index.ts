@@ -378,6 +378,37 @@ export function setAdminFeatureFlag(key: string, enabled: boolean): Promise<{ me
   return http.put<{ message: string }>(`/api/admin/feature-flags/${encodeURIComponent(key)}`, { enabled });
 }
 
+export interface AdminRouteSuggestion {
+  routeId: number;
+  name: string;
+  score: number;
+  confidence: '高' | '中' | '低';
+  reason: string;
+}
+
+export interface AdminRouteLinkPost {
+  id: number;
+  title: string;
+  author?: string;
+  category?: string;
+  tags?: string;
+  content?: string;
+  created_at?: string;
+  suggestions: AdminRouteSuggestion[];
+}
+
+export function listAdminRouteLinks(): Promise<{ pending: number; posts: AdminRouteLinkPost[] }> {
+  return http.get<{ pending: number; posts: AdminRouteLinkPost[] }>('/api/admin/route-links');
+}
+
+export function backfillAdminRouteLinks(): Promise<{ linked: number; message: string }> {
+  return http.post<{ linked: number; message: string }>('/api/admin/route-links/backfill');
+}
+
+export function setAdminPostRoute(postId: number, routeId: number): Promise<{ message: string }> {
+  return http.put<{ message: string }>(`/api/admin/posts/${postId}/route-link`, { routeId });
+}
+
 // ---------- notifications ----------
 export function listNotifications(): Promise<{ notifications: Record<string, unknown>[]; unread: number }> {
   return http.get<{ notifications: Record<string, unknown>[]; unread: number }>('/api/notifications');

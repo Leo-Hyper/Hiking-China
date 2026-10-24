@@ -17,6 +17,7 @@
 
 ```text
 VITE_API_BASE_URL=https://hiking-china-api-sg.onrender.com
+VITE_MAPTILER_KEY=你的 MapTiler API Key
 CLIENT_BASE_PATH=/
 NODE_VERSION=22.22.0
 ```
@@ -29,6 +30,27 @@ Redirects/Rewrites:
 Source: /*
 Destination: /index.html
 Action: Rewrite
+```
+
+## CSP
+
+地图使用 MapTiler Outdoor + MapLibre GL，需要在
+`Content-Security-Policy` 中允许：
+
+```text
+img-src https://api.maptiler.com
+connect-src https://api.maptiler.com
+worker-src 'self' blob:
+```
+
+MapTiler Key 的允许域名同时保留当前 Render 生产域名和仍可访问的 Netlify 旧域名：
+
+```text
+hiking-china.onrender.com
+hiking-china-web.onrender.com
+hiking-china.netlify.app
+localhost
+127.0.0.1
 ```
 
 ## 后端 CORS

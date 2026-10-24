@@ -144,6 +144,8 @@ export function mapRoute(raw: Record<string, unknown>): RouteItem {
     favoriteCount: Number(raw.favorite_count ?? 0),
     isFavorited: Boolean(raw.is_favorited),
     isSample: Boolean(raw.is_sample),
+    dataSource: String(raw.data_source || ''),
+    dataVersion: Number(raw.data_version ?? 0),
     authorId: raw.user_id == null ? undefined : Number(raw.user_id),
   };
 }

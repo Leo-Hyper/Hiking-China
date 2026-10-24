@@ -24,12 +24,14 @@
 - `dev_verification_code` 只在 `NODE_ENV=development|test` 时返回，生产环境不会返回。
 - 旧的 `/verify-email?token=...` 链接仍保留兼容，但新流程不再生成链接。
 
-## 示例轨迹
+## 路线轨迹与数据来源
 
-- 路线 1、2、5、6 内置示例轨迹，用于演示 GPX、地形图和海拔剖面。
-- `routes.is_sample = 1` 时前端显示“示例轨迹 · 非实测”；导出的 GPX 名称也会带同样提示。
-- `routes.sample_version` 控制一次性升级，避免每次启动覆盖管理员后续编辑。
-- 用管理员路线编辑器上传真实 GPX 后，会把样例替换为真实数据；如仍显示示例标记，可在数据库中把该路线的 `is_sample` 置为 0。
+- `routes.data_source`：`''` 表示未上传轨迹，`osm+srtm` 表示 OSM 路径 + SRTM 30m 高程，`gpx` 表示管理员/作者上传的 GPX。
+- 没有轨迹的路线（例如四姑娘山大峰）显示“该路线暂未上传 GPX 轨迹”，不再生成示例轨迹。
+- OSM 数据由 `scripts/fetch-osm-cache.ps1` 缓存原始 relation，再由 `scripts/build-osm-routes.cjs` 聚合并采样高程，最终写入 `models/osm-routes.json`。
+- 服务启动时 `applyOsmRoutes()` 按路线名称导入或更新，`data_version=1` 后不会重复覆盖；如需重新导入，把对应路线的 `data_version` 置为 0。
+- OSM 路径遵循 ODbL，页面与地图保留 OpenStreetMap 署名；底图使用 MapTiler Outdoor，需配置 `VITE_MAPTILER_KEY`。
+- `routes.is_sample` 仅作为历史兼容字段保留，新数据不再使用示例轨迹。
 
 ## 备份
 

@@ -54,5 +54,8 @@ test-results/
 hiking-new/data/*.db
 hiking-new/data/*.db-journal
 
+# OSM raw cache (generated locally; committed result is models/osm-routes.json)
+hiking-new/server/data/osm-cache/
+
 # Backups
 hiking-new/hiking-new_*/

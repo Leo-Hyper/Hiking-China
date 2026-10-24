@@ -341,12 +341,16 @@ const SCHEMA_STATEMENTS = [
     point_count INTEGER DEFAULT 0,
     is_sample INTEGER DEFAULT 0,
     sample_version INTEGER DEFAULT 0,
+    data_source TEXT DEFAULT '',
+    data_version INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL)`,
   `ALTER TABLE routes ADD COLUMN is_sample INTEGER DEFAULT 0`,
   `ALTER TABLE routes ADD COLUMN sample_version INTEGER DEFAULT 0`,
+  `ALTER TABLE routes ADD COLUMN data_source TEXT DEFAULT ''`,
+  `ALTER TABLE routes ADD COLUMN data_version INTEGER DEFAULT 0`,
   `CREATE TABLE IF NOT EXISTS route_favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -435,8 +439,8 @@ async function initDb() {
           id, name, region, difficulty, description, content, distance, duration,
           rating, image, post_id, tags, geojson, ascent_m, descent_m,
           min_elevation, max_elevation, start_point, end_point, point_count,
-          is_sample, sample_version, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+          is_sample, sample_version, data_source, data_version, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [
           route.id,
           route.name,
@@ -460,42 +464,124 @@ async function initDb() {
           route.pointCount,
           route.isSample ? 1 : 0,
           route.isSample ? 1 : 0,
+          String(route.dataSource || ""),
+          Number(route.dataVersion || 0),
         ]
       );
     }
   }
-  await upgradeSampleRoutes();
+  await removeDeprecatedSampleTracks();
+  await applyOsmRoutes();
 }
 
-async function upgradeSampleRoutes() {
-  const { ROUTE_SEEDS } = require("./seed-routes");
-  for (const route of ROUTE_SEEDS) {
-    if (!route.isSample) continue;
-    const existing = await get(
-      "SELECT id, geojson, point_count, is_sample, sample_version FROM routes WHERE id = ?",
-      [route.id]
+async function removeDeprecatedSampleTracks() {
+  // 只清理此前由程序生成的 4 条示例轨迹，避免误删管理员后来上传的真实 GPX。
+  const deprecated = [
+    { id: 1, pointCount: 720 },
+    { id: 2, pointCount: 337 },
+    { id: 5, pointCount: 365 },
+    { id: 6, pointCount: 261 },
+  ];
+  for (const item of deprecated) {
+    const row = await get(
+      "SELECT id, is_sample, point_count FROM routes WHERE id = ?",
+      [item.id]
     );
-    if (!existing) continue;
-    if (Number(existing.sample_version || 0) >= 1) continue;
-    // 只升级空白轨迹或早期手写的极简样例，避免覆盖管理员后来上传的真实 GPX。
-    if (existing.geojson && Number(existing.point_count || 0) > 20) continue;
+    if (!row) continue;
+    if (Number(row.is_sample || 0) !== 1) continue;
+    if (Number(row.point_count || 0) !== item.pointCount) continue;
     await run(
       `UPDATE routes SET
-         geojson = ?, distance = ?, ascent_m = ?, descent_m = ?,
-         min_elevation = ?, max_elevation = ?, point_count = ?,
-         is_sample = 1, sample_version = 1, updated_at = CURRENT_TIMESTAMP
+         geojson = '', ascent_m = NULL, descent_m = NULL,
+         min_elevation = NULL, max_elevation = NULL, point_count = 0,
+         is_sample = 0, sample_version = 2, data_source = '', data_version = 0,
+         updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [
-        route.geojson,
-        route.distance,
-        route.ascentM,
-        route.descentM,
-        route.minElevation,
-        route.maxElevation,
-        route.pointCount,
-        route.id,
-      ]
+      [item.id]
     );
+    console.log(`[DB] removed deprecated sample track from route ${item.id}`);
+  }
+}
+
+async function applyOsmRoutes() {
+  const { routes } = require("./osm-routes.json");
+  const { calculateStats, toLineString } = require("../utils/geo");
+
+  for (const item of routes) {
+    const existing = await get(
+      "SELECT id, data_version FROM routes WHERE name = ? LIMIT 1",
+      [item.name]
+    );
+    if (existing && Number(existing.data_version || 0) >= 1) continue;
+
+    const points = (item.points || []).map((point) => [
+      Number(point[0]),
+      Number(point[1]),
+      Number(point[2]),
+    ]);
+    if (points.length < 2) continue;
+    const stats = calculateStats(points);
+    const geojson = JSON.stringify(toLineString(points));
+
+    if (existing) {
+      await run(
+        `UPDATE routes SET
+           geojson = ?, distance = ?, ascent_m = ?, descent_m = ?,
+           min_elevation = ?, max_elevation = ?, point_count = ?,
+           content = ?, description = ?, start_point = ?, end_point = ?,
+           is_sample = 0, sample_version = 2, data_source = 'osm+srtm',
+           data_version = 1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [
+          geojson,
+          stats.distance,
+          stats.ascentM,
+          stats.descentM,
+          stats.minElevation,
+          stats.maxElevation,
+          stats.pointCount,
+          item.content,
+          item.description,
+          item.startPoint,
+          item.endPoint,
+          existing.id,
+        ]
+      );
+      console.log(`[DB] applied OSM track to route ${existing.id} (${item.name})`);
+    } else {
+      const result = await run(
+        `INSERT INTO routes (
+           name, region, difficulty, description, content, distance, duration,
+           rating, image, post_id, tags, geojson, ascent_m, descent_m,
+           min_elevation, max_elevation, start_point, end_point, point_count,
+           is_sample, sample_version, data_source, data_version, status
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 2, 'osm+srtm', 1, 1)`,
+        [
+          item.name,
+          item.region,
+          item.difficulty,
+          item.description,
+          item.content,
+          stats.distance,
+          item.duration,
+          item.rating,
+          item.image,
+          item.postId == null ? null : Number(item.postId),
+          item.tags,
+          geojson,
+          stats.ascentM,
+          stats.descentM,
+          stats.minElevation,
+          stats.maxElevation,
+          item.startPoint,
+          item.endPoint,
+          stats.pointCount,
+        ]
+      );
+      console.log(
+        `[DB] created OSM route ${Number(result.lastInsertRowid)} (${item.name})`
+      );
+    }
   }
 }
 

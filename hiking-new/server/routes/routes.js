@@ -116,7 +116,11 @@ router.get("/:id/export.gpx", async (req, res) => {
 
     res.set("Content-Type", "application/gpx+xml; charset=utf-8");
     res.set("Content-Disposition", `attachment; filename="route-${route.id}.gpx"`);
-    const exportName = route.is_sample ? `${route.name}（示例轨迹，非实测）` : route.name;
+    const exportName = route.is_sample
+      ? `${route.name}（示例轨迹，非实测）`
+      : route.data_source === "osm+srtm"
+        ? `${route.name}（OSM 路径 / SRTM 高程）`
+        : route.name;
     res.send(pointsToGpx(points, exportName));
   } catch (error) {
     console.error("[ROUTES] export failed:", error);
