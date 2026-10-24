@@ -21,14 +21,19 @@ test.describe('route detail and GPX', () => {
     await page.getByRole('link', { name: /虎跳峡高路徒步/ }).first().click();
     await expect(page).toHaveURL(/\/routes\/2/);
     await expect(page.getByRole('heading', { name: '虎跳峡高路徒步' })).toBeVisible();
-    await expect(page.getByText('路线轨迹')).toBeVisible();
-    await expect(page.getByText('海拔剖面')).toBeVisible();
+    await expect(page.getByText('轨迹与剖面')).toBeVisible();
     await expect(page.getByText('OSM 路径 · SRTM 高程')).toBeVisible();
     await expect(page.getByRole('link', { name: '导出 GPX' })).toHaveAttribute(
       'href',
       /\/api\/routes\/2\/export\.gpx/
     );
     await expect(page.locator('.maplibregl-canvas')).toBeVisible();
+
+    const fullscreenButton = page.getByRole('button', { name: '全屏并排' });
+    await expect(fullscreenButton).toBeVisible();
+    await fullscreenButton.click();
+    await expect(page.getByText(/当前剖面严格使用这份 GPX/)).toBeVisible();
+    await page.getByRole('button', { name: '关闭' }).first().click();
 
     const elevation = page.getByRole('img', { name: '路线海拔剖面图' });
     await expect(elevation).toBeVisible();
@@ -46,9 +51,20 @@ test.describe('route detail and GPX', () => {
     await page.goto('/routes/1');
     await expect(page.getByRole('heading', { name: '四姑娘山大峰' })).toBeVisible();
     await expect(page.getByText('该路线暂未上传 GPX 轨迹')).toBeVisible();
-    await expect(page.getByText('该路线暂无海拔数据')).toBeVisible();
+    await expect(page.getByText('上传或关联真实 GPX 后')).toBeVisible();
     await expect(page.getByText('示例轨迹 · 非实测')).toHaveCount(0);
     await expect(page.getByRole('link', { name: '导出 GPX' })).toHaveCount(0);
+  });
+
+  test('mobile keeps the map and opens the full elevation sheet', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/routes/12');
+    await expect(page.locator('.maplibregl-canvas')).toBeVisible();
+    await expect(page.getByRole('button', { name: '展开完整剖面' })).toBeVisible();
+    await page.getByRole('button', { name: '展开完整剖面' }).click();
+    await expect(page.getByText('完整海拔剖面')).toBeVisible();
+    await page.getByRole('button', { name: '关闭' }).last().click();
+    await expect(page.getByText('完整海拔剖面')).toHaveCount(0);
   });
 
   test('parses a GPX upload and returns route statistics', async ({ page, request }) => {

@@ -5,6 +5,8 @@ interface ElevationProfileProps {
   className?: string;
   activePointIndex?: number | null;
   onHoverIndex?: (index: number | null) => void;
+  compact?: boolean;
+  minWidth?: number;
 }
 
 interface Sample {
@@ -14,9 +16,6 @@ interface Sample {
   grade: number;
 }
 
-const WIDTH = 900;
-const HEIGHT = 260;
-const PADDING = { top: 32, right: 24, bottom: 38, left: 56 };
 const SLOPE_COLORS = {
   descent: '#3b82f6',
   gentle: '#2f6f55',
@@ -62,7 +61,14 @@ const ElevationProfile = ({
   className = '',
   activePointIndex = null,
   onHoverIndex,
+  compact = false,
+  minWidth = 620,
 }: ElevationProfileProps) => {
+  const chartWidth = compact ? 480 : 900;
+  const chartHeight = compact ? 220 : 260;
+  const padding = compact
+    ? { top: 28, right: 16, bottom: 30, left: 42 }
+    : { top: 32, right: 24, bottom: 38, left: 56 };
   const gradientId = `elevation-${useId().replace(/:/g, '')}`;
   const [hoverSample, setHoverSample] = useState<number | null>(null);
   const lastEmittedRef = useRef<number | null>(null);
@@ -158,36 +164,37 @@ const ElevationProfile = ({
   }
 
   const { samples, totalDistance, ascent, descent, minElevation, maxElevation, highest, lowest } = data;
-  const innerWidth = WIDTH - PADDING.left - PADDING.right;
-  const innerHeight = HEIGHT - PADDING.top - PADDING.bottom;
-  const elevationStep = niceStep(Math.max(10, (maxElevation - minElevation) / 4));
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const elevationStep = niceStep(Math.max(10, (maxElevation - minElevation) / (compact ? 2 : 4)));
   const yMin = Math.floor(minElevation / elevationStep) * elevationStep;
   const yMax = Math.ceil(maxElevation / elevationStep) * elevationStep;
   const yRange = Math.max(1, yMax - yMin);
 
   const xForDistance = (distance: number) =>
-    PADDING.left + (totalDistance <= 0 ? 0 : distance / totalDistance) * innerWidth;
+    padding.left + (totalDistance <= 0 ? 0 : distance / totalDistance) * innerWidth;
   const xFor = (index: number) => xForDistance(samples[index].distance);
   const yFor = (elevation: number) =>
-    PADDING.top + (1 - (elevation - yMin) / yRange) * innerHeight;
+    padding.top + (1 - (elevation - yMin) / yRange) * innerHeight;
 
   const linePath = samples
     .map((sample, index) => `${index === 0 ? 'M' : 'L'}${xFor(index).toFixed(1)},${yFor(sample.elevation).toFixed(1)}`)
     .join(' ');
-  const areaPath = `${linePath} L${xFor(samples.length - 1).toFixed(1)},${HEIGHT - PADDING.bottom} L${xFor(0).toFixed(1)},${HEIGHT - PADDING.bottom} Z`;
+  const areaPath = `${linePath} L${xFor(samples.length - 1).toFixed(1)},${chartHeight - padding.bottom} L${xFor(0).toFixed(1)},${chartHeight - padding.bottom} Z`;
 
   const yTicks: number[] = [];
   for (let value = yMin; value <= yMax + elevationStep / 2; value += elevationStep) {
     yTicks.push(value);
   }
-  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ratio * totalDistance);
+  const xTicks = (compact ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1])
+    .map((ratio) => ratio * totalDistance);
 
   const active = activeIndex == null ? null : samples[activeIndex];
 
   const handleMove = (event: React.MouseEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const viewX = ((event.clientX - rect.left) / rect.width) * WIDTH;
-    const ratio = (viewX - PADDING.left) / innerWidth;
+    const viewX = ((event.clientX - rect.left) / rect.width) * chartWidth;
+    const ratio = (viewX - padding.left) / innerWidth;
     const targetDistance = Math.max(0, Math.min(totalDistance, ratio * totalDistance));
     let nearest = 0;
     let nearestDelta = Infinity;
@@ -229,8 +236,9 @@ const ElevationProfile = ({
 
       <div className="overflow-x-auto">
       <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="block h-auto w-full min-w-[620px]"
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        className="block h-auto w-full"
+        style={{ minWidth }}
         role="img"
         aria-label="路线海拔剖面图"
         onMouseMove={handleMove}
@@ -248,19 +256,19 @@ const ElevationProfile = ({
           return (
             <g key={`y-${tick}`}>
               <line
-                x1={PADDING.left}
+                x1={padding.left}
                 y1={y}
-                x2={WIDTH - PADDING.right}
+                x2={chartWidth - padding.right}
                 y2={y}
                 stroke="currentColor"
                 strokeOpacity="0.1"
                 strokeDasharray="4 6"
               />
               <text
-                x={PADDING.left - 10}
+                x={padding.left - 10}
                 y={y + 4}
                 textAnchor="end"
-                className="fill-muted-foreground text-[11px]"
+                className={`fill-muted-foreground ${compact ? 'text-[13px]' : 'text-[11px]'}`}
               >
                 {Math.round(tick)}m
               </text>
@@ -274,17 +282,17 @@ const ElevationProfile = ({
             <g key={`x-${index}`}>
               <line
                 x1={x}
-                y1={PADDING.top}
+                y1={padding.top}
                 x2={x}
-                y2={HEIGHT - PADDING.bottom}
+                y2={chartHeight - padding.bottom}
                 stroke="currentColor"
                 strokeOpacity="0.06"
               />
               <text
                 x={x}
-                y={HEIGHT - 14}
+                y={chartHeight - 14}
                 textAnchor={index === 0 ? 'start' : index === xTicks.length - 1 ? 'end' : 'middle'}
-                className="fill-muted-foreground text-[11px]"
+                className={`fill-muted-foreground ${compact ? 'text-[13px]' : 'text-[11px]'}`}
               >
                 {formatDistance(tick)}km
               </text>
@@ -307,48 +315,52 @@ const ElevationProfile = ({
 
         {highest && (() => {
           const highestX = xForDistance(highest.distance);
-          const anchor = highestX < PADDING.left + 70
+          const anchor = highestX < padding.left + 70
             ? 'start'
-            : highestX > WIDTH - PADDING.right - 70
+            : highestX > chartWidth - padding.right - 70
               ? 'end'
               : 'middle';
           const labelX = anchor === 'start' ? highestX + 8 : anchor === 'end' ? highestX - 8 : highestX;
-          const labelY = Math.max(PADDING.top + 12, yFor(highest.elevation) - 10);
+          const labelY = Math.max(padding.top + 12, yFor(highest.elevation) - 10);
           return (
             <g>
               <circle cx={highestX} cy={yFor(highest.elevation)} r="4" fill="#c96a3d" stroke="#fff" strokeWidth="2" />
-              <text
-                x={labelX}
-                y={labelY}
-                textAnchor={anchor}
-                className="fill-ink text-[11px] font-semibold"
-              >
-                最高 {Math.round(highest.elevation)}m
-              </text>
+              {!compact && (
+                <text
+                  x={labelX}
+                  y={labelY}
+                  textAnchor={anchor}
+                  className="fill-ink text-[11px] font-semibold"
+                >
+                  最高 {Math.round(highest.elevation)}m
+                </text>
+              )}
             </g>
           );
         })()}
 
         {lowest && (() => {
           const lowestX = xForDistance(lowest.distance);
-          const anchor = lowestX < PADDING.left + 70
+          const anchor = lowestX < padding.left + 70
             ? 'start'
-            : lowestX > WIDTH - PADDING.right - 70
+            : lowestX > chartWidth - padding.right - 70
               ? 'end'
               : 'middle';
           const labelX = anchor === 'start' ? lowestX + 8 : anchor === 'end' ? lowestX - 8 : lowestX;
-          const labelY = Math.max(PADDING.top + 12, yFor(lowest.elevation) - 8);
+          const labelY = Math.max(padding.top + 12, yFor(lowest.elevation) - 8);
           return (
             <g>
               <circle cx={lowestX} cy={yFor(lowest.elevation)} r="4" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-              <text
-                x={labelX}
-                y={labelY}
-                textAnchor={anchor}
-                className="fill-muted-foreground text-[11px]"
-              >
-                最低 {Math.round(lowest.elevation)}m
-              </text>
+              {!compact && (
+                <text
+                  x={labelX}
+                  y={labelY}
+                  textAnchor={anchor}
+                  className="fill-muted-foreground text-[11px]"
+                >
+                  最低 {Math.round(lowest.elevation)}m
+                </text>
+              )}
             </g>
           );
         })()}
@@ -367,9 +379,9 @@ const ElevationProfile = ({
           <g>
             <line
               x1={xFor(activeIndex)}
-              y1={PADDING.top}
+              y1={padding.top}
               x2={xFor(activeIndex)}
-              y2={HEIGHT - PADDING.bottom}
+              y2={chartHeight - padding.bottom}
               stroke="#1f4d3a"
               strokeOpacity="0.35"
               strokeDasharray="3 4"
@@ -386,8 +398,8 @@ const ElevationProfile = ({
               const tooltipWidth = 136;
               const tooltipHeight = 42;
               const rawX = xFor(activeIndex) - tooltipWidth / 2;
-              const x = Math.max(PADDING.left, Math.min(WIDTH - PADDING.right - tooltipWidth, rawX));
-              const y = Math.max(PADDING.top, Math.min(HEIGHT - PADDING.bottom - tooltipHeight - 6, yFor(active.elevation) - tooltipHeight - 12));
+              const x = Math.max(padding.left, Math.min(chartWidth - padding.right - tooltipWidth, rawX));
+              const y = Math.max(padding.top, Math.min(chartHeight - padding.bottom - tooltipHeight - 6, yFor(active.elevation) - tooltipHeight - 12));
               return (
                 <g>
                   <rect x={x} y={y} width={tooltipWidth} height={tooltipHeight} rx="7" fill="#1f2933" opacity="0.94" />

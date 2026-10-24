@@ -178,6 +178,20 @@ const RouteTrackMap = ({
       [Math.min(...lngs), Math.min(...lats)],
       [Math.max(...lngs), Math.max(...lats)],
     ];
+    const fitRoute = () => {
+      map.fitBounds(bounds, {
+        padding: compact ? 16 : 34,
+        duration: 0,
+        maxZoom: 15,
+      });
+    };
+    let userInteracted = false;
+    map.on('dragstart', () => {
+      userInteracted = true;
+    });
+    map.on('zoomstart', () => {
+      userInteracted = true;
+    });
 
     map.on('load', () => {
       map.addSource('route', {
@@ -234,11 +248,7 @@ const RouteTrackMap = ({
         // Direction arrows are decorative; the route remains usable without them.
       }
 
-      map.fitBounds(bounds, {
-        padding: compact ? 16 : 34,
-        duration: 0,
-        maxZoom: 15,
-      });
+      fitRoute();
     });
 
     let lastHoverAt = 0;
@@ -275,10 +285,17 @@ const RouteTrackMap = ({
       if (import.meta.env.DEV) console.warn('[MAP]', event.error?.message || event);
     });
 
-    const resizeObserver = new ResizeObserver(() => map.resize());
+    let disposed = false;
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+      if (!disposed && !userInteracted) {
+        window.setTimeout(fitRoute, 60);
+      }
+    });
     resizeObserver.observe(container);
 
     return () => {
+      disposed = true;
       resizeObserver.disconnect();
       startMarker.remove();
       endMarker.remove();

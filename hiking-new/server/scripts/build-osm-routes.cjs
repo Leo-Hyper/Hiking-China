@@ -32,15 +32,14 @@ const ROUTES = [
     region: "云南",
     difficulty: "中级",
     description: "中虎跳峡段落，沿崖壁与栈道下到金沙江边",
-    content: "<p>从中虎跳公路侧下到江边，途经栈道与观景台。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
+    content: "<p>中虎跳峡段落，沿崖壁与栈道下到金沙江边；当前 GPX 为 OSM 关系完整路径。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
     duration: "半天",
     rating: 4.7,
     image: "/img/虎跳峡.jpg",
     postId: 2,
     tags: "峡谷,短线,云南",
-    startPoint: "中虎跳公路",
-    endPoint: "中虎跳江边",
-    outAndBack: true,
+    startPoint: "中虎跳徒步入口",
+    endPoint: "中虎跳徒步入口",
   },
   {
     key: "yubeng-ice-lake",
@@ -48,8 +47,8 @@ const ROUTES = [
     name: "雨崩冰湖线",
     region: "云南",
     difficulty: "中级",
-    description: "从雨崩上村往返冰湖，穿越高山牧场与原始森林",
-    content: "<p>雨崩经典一日线，终点为梅里雪山冰川下方的冰湖。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
+    description: "从雨崩上村前往冰湖，穿越高山牧场与原始森林",
+    content: "<p>从雨崩上村前往冰湖的单程轨迹；当前 GPX 未包含返程。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
     duration: "1天",
     rating: 4.9,
     image: "/img/雨崩村.webp",
@@ -57,7 +56,6 @@ const ROUTES = [
     tags: "雪山,冰湖,云南",
     startPoint: "雨崩上村",
     endPoint: "冰湖",
-    outAndBack: true,
   },
   {
     key: "yubeng-sacred-falls",
@@ -65,8 +63,8 @@ const ROUTES = [
     name: "雨崩神瀑线",
     region: "云南",
     difficulty: "初级",
-    description: "雨崩下村往返神瀑，藏族朝圣路线",
-    content: "<p>从雨崩下村沿河谷前往神瀑，路线清晰，适合作为雨崩的第一条徒步线。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
+    description: "雨崩下村前往神瀑，藏族朝圣路线",
+    content: "<p>从雨崩下村沿河谷前往神瀑的单程轨迹；当前 GPX 未包含返程。轨迹来自 OpenStreetMap（ODbL），高程来自 SRTM 30m DEM。</p>",
     duration: "半天",
     rating: 4.8,
     image: "/img/雨崩村.webp",
@@ -74,7 +72,6 @@ const ROUTES = [
     tags: "神瀑,朝圣,云南",
     startPoint: "雨崩下村",
     endPoint: "神瀑",
-    outAndBack: true,
   },
   {
     key: "yubeng-ninong",
@@ -285,20 +282,12 @@ async function main() {
     console.log(`  points raw=${raw.length} simplified=${simplified.length} sampled=${sampled.length}`);
     const rawWithElevation = await fetchElevation(sampled, route.relationId);
     const oriented = route.reverse ? [...rawWithElevation].reverse() : rawWithElevation;
-    const rawFinal = route.outAndBack
-      ? oriented.concat(
-          [...oriented].reverse().slice(1).map(([lng, lat, elevation]) => [
-            Number((lng + 0.000012).toFixed(6)),
-            Number((lat + 0.000009).toFixed(6)),
-            elevation,
-          ])
-        )
-      : oriented;
-    const withElevation = smoothElevation(rawFinal);
+    const withElevation = smoothElevation(oriented);
 
     output.push({
       ...route,
       osmRelation: route.relationId,
+      dataVersion: 2,
       points: withElevation,
     });
   }

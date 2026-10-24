@@ -472,6 +472,7 @@ async function initDb() {
   }
   await removeDeprecatedSampleTracks();
   await applyOsmRoutes();
+  await applyRouteImageOverrides();
 }
 
 async function removeDeprecatedSampleTracks() {
@@ -509,10 +510,11 @@ async function applyOsmRoutes() {
 
   for (const item of routes) {
     const existing = await get(
-      "SELECT id, data_version FROM routes WHERE name = ? LIMIT 1",
+      "SELECT id, data_version, data_source FROM routes WHERE name = ? LIMIT 1",
       [item.name]
     );
-    if (existing && Number(existing.data_version || 0) >= 1) continue;
+    if (existing && existing.data_source === "gpx") continue;
+    if (existing && Number(existing.data_version || 0) >= 2) continue;
 
     const points = (item.points || []).map((point) => [
       Number(point[0]),
@@ -528,9 +530,9 @@ async function applyOsmRoutes() {
         `UPDATE routes SET
            geojson = ?, distance = ?, ascent_m = ?, descent_m = ?,
            min_elevation = ?, max_elevation = ?, point_count = ?,
-           content = ?, description = ?, start_point = ?, end_point = ?,
+           content = ?, description = ?, start_point = ?, end_point = ?, image = ?,
            is_sample = 0, sample_version = 2, data_source = 'osm+srtm',
-           data_version = 1, updated_at = CURRENT_TIMESTAMP
+           data_version = 2, updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`,
         [
           geojson,
@@ -544,6 +546,7 @@ async function applyOsmRoutes() {
           item.description,
           item.startPoint,
           item.endPoint,
+          item.image,
           existing.id,
         ]
       );
@@ -555,7 +558,7 @@ async function applyOsmRoutes() {
            rating, image, post_id, tags, geojson, ascent_m, descent_m,
            min_elevation, max_elevation, start_point, end_point, point_count,
            is_sample, sample_version, data_source, data_version, status
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 2, 'osm+srtm', 1, 1)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 2, 'osm+srtm', 2, 1)`,
         [
           item.name,
           item.region,
@@ -582,6 +585,22 @@ async function applyOsmRoutes() {
         `[DB] created OSM route ${Number(result.lastInsertRowid)} (${item.name})`
       );
     }
+  }
+}
+
+async function applyRouteImageOverrides() {
+  const overrides = [
+    { id: 3, from: "/img/稻城亚丁.jpg", to: "/img/routes/yading-butu.webp" },
+    { id: 5, from: "/img/雨崩村.webp", to: "/img/routes/yubeng-cun.webp" },
+    { id: 6, from: "/img/黄山.jpg", to: "/img/routes/huangshan.webp" },
+    { id: 8, from: "/img/稻城亚丁.jpg", to: "/img/routes/yading-changxian.webp" },
+  ];
+  for (const item of overrides) {
+    await run("UPDATE routes SET image = ? WHERE id = ? AND image = ?", [
+      item.to,
+      item.id,
+      item.from,
+    ]);
   }
 }
 

@@ -21,8 +21,7 @@ import { apiUrl } from '@client/src/utils/http';
 import { sanitizeRichText } from '@client/src/utils/sanitize-html';
 import { resolveImageUrl, withBasePath } from '@client/src/utils/base-path';
 import { Image } from '@client/src/components/ui/image';
-import RouteTrackMap from '@client/src/components/RouteTrackMap';
-import ElevationProfile from '@client/src/components/ElevationProfile';
+import RouteProfilePanel from '@client/src/components/RouteProfilePanel';
 import EmptyState from '@client/src/components/visual/EmptyState';
 import Seo from '@client/src/components/Seo';
 
@@ -34,7 +33,6 @@ const RouteDetailPage = () => {
   const [favorited, setFavorited] = useState<boolean>(false);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
-  const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
 
   const { data, loading, error, reload } = useAsyncData<RouteItem>(
     async () => mapRoute((await getRoute(routeId)).route),
@@ -154,6 +152,7 @@ const RouteDetailPage = () => {
                 src={withBasePath(route.image)}
                 alt={route.name}
                 className="h-[320px] w-full object-cover opacity-80 md:h-[380px] lg:h-full"
+                style={{ objectPosition: 'center 45%' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-pine-950/90 via-pine-950/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
@@ -219,63 +218,19 @@ const RouteDetailPage = () => {
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-6">
-              <section className="rounded-xl border border-border bg-card p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-ember-600">Track</p>
-                    <h2 className="mt-1 font-display text-lg text-ink">路线轨迹</h2>
-                    {route.isSample && (
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        用于演示地图与海拔交互，不代表真实 GPS 测量
-                      </p>
-                    )}
-                    {route.dataSource === 'osm+srtm' && (
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        路径来自{' '}
-                        <a
-                          href="https://www.openstreetmap.org/copyright"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline underline-offset-2 hover:text-pine-700"
-                        >
-                          OpenStreetMap
-                        </a>
-                        （ODbL），高程来自 SRTM 30m DEM
-                      </p>
-                    )}
-                    {route.dataSource === 'gpx' && (
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        由管理员或路线作者上传的 GPX 轨迹
-                      </p>
-                    )}
-                  </div>
-                  {route.geojson && (
-                    <a
-                      href={apiUrl(`/api/routes/${route.id}/export.gpx`)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-ink transition-colors hover:border-pine-300 hover:text-pine-700"
-                    >
-                      <Download size={13} />
-                      导出 GPX
-                    </a>
-                  )}
-                </div>
-                <RouteTrackMap
-                  coordinates={coordinates}
-                  className="h-[360px]"
-                  activePointIndex={activePointIndex}
-                  onHoverIndex={setActivePointIndex}
-                />
-              </section>
-
-              <section className="rounded-xl border border-border bg-card p-5">
-                <p className="text-xs uppercase tracking-wider text-ember-600">Elevation</p>
-                <h2 className="mb-4 mt-1 font-display text-lg text-ink">海拔剖面</h2>
-                <ElevationProfile
-                  points={coordinates}
-                  activePointIndex={activePointIndex}
-                  onHoverIndex={setActivePointIndex}
-                />
-              </section>
+              <RouteProfilePanel
+                route={route}
+                coordinates={coordinates}
+                actions={route.geojson ? (
+                  <a
+                    href={apiUrl(`/api/routes/${route.id}/export.gpx`)}
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-[11px] font-medium text-ink transition-colors hover:border-pine-300 hover:text-pine-700"
+                  >
+                    <Download size={12} />
+                    导出 GPX
+                  </a>
+                ) : null}
+              />
 
               <section className="rounded-xl border border-border bg-card p-6">
                 <h2 className="font-display text-lg text-ink">路线说明</h2>
