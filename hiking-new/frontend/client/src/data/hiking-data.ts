@@ -339,18 +339,18 @@ export const STATIC_COMMENTS: HikingComment[] = [
 ];
 
 export const HOME_ROUTES: RouteItem[] = [
-  { id: 1, name: '四姑娘山大峰', region: '四川', difficulty: '中级', description: '入门级雪山攀登，体验征服5025米的成就感', distance: 28, duration: '2天', rating: 4.8, image: '/img/四姑娘山.jpg', postId: 1 },
-  { id: 2, name: '虎跳峡高路徒步', region: '云南', difficulty: '中级', description: '世界十大经典徒步路线，金沙江峡谷震撼体验', distance: 25, duration: '2天', rating: 4.9, image: '/img/虎跳峡.jpg', postId: 2 },
-  { id: 3, name: '稻城亚丁徒步', region: '四川', difficulty: '中级', description: '最后的香格里拉，三神山神圣之旅', distance: 45, duration: '4天', rating: 4.9, image: '/img/稻城亚丁.jpg', postId: 5 },
+  { id: 1, name: '四姑娘山大峰', region: '四川', difficulty: '中级', description: '入门级雪山攀登，体验征服5025米的成就感', distance: 28.72, duration: '2天', rating: 4.8, image: '/img/四姑娘山.jpg', postId: 1 },
+  { id: 2, name: '虎跳峡高路徒步', region: '云南', difficulty: '中级', description: '世界十大经典徒步路线，金沙江峡谷震撼体验', distance: 20.71, duration: '2天', rating: 4.9, image: '/img/虎跳峡.jpg', postId: 2 },
+  { id: 3, name: '稻城亚丁徒步', region: '四川', difficulty: '中级', description: '最后的香格里拉，三神山神圣之旅', distance: 45, duration: '4天', rating: 4.9, image: '/img/routes/yading-butu.webp', postId: 5 },
   { id: 4, name: '喀纳斯环线', region: '新疆', difficulty: '中级', description: '北疆最美秋色，禾木-白哈巴-喀纳斯', distance: 60, duration: '5天', rating: 4.8, image: '/img/喀纳斯.jpg', postId: 7 },
-  { id: 5, name: '雨崩村徒步', region: '云南', difficulty: '初级', description: '梅里雪山脚下的世外桃源，藏族村落体验', distance: 20, duration: '3天', rating: 4.7, image: '/img/雨崩村.webp', postId: 6 },
-  { id: 6, name: '黄山徒步', region: '安徽', difficulty: '初级', description: '中国山水之美典范，奇松怪石云海温泉', distance: 15, duration: '2天', rating: 4.6, image: '/img/黄山.jpg', postId: 9 },
+  { id: 5, name: '雨崩村徒步', region: '云南', difficulty: '初级', description: '梅里雪山脚下的世外桃源，藏族村落体验', distance: 20, duration: '3天', rating: 4.7, image: '/img/routes/yubeng-cun.webp', postId: 6 },
+  { id: 6, name: '黄山徒步', region: '安徽', difficulty: '初级', description: '中国山水之美典范，奇松怪石云海温泉', distance: 23.81, duration: '2天', rating: 4.6, image: '/img/routes/huangshan.webp', postId: 9 },
 ];
 
 export const ROUTES_LIST: RouteItem[] = [
   ...HOME_ROUTES,
   { id: 7, name: '贡嘎大环线', region: '四川', difficulty: '高级', description: '蜀山之王挑战，全程约85公里重装线路', distance: 85, duration: '6天', rating: 5.0, image: '/img/贡嘎转山.png', postId: 4 },
-  { id: 8, name: '稻城亚丁长线', region: '四川', difficulty: '中级', description: '最后的香格里拉，三神山神圣之旅', distance: 45, duration: '4天', rating: 4.9, image: '/img/稻城亚丁.jpg', postId: 5 },
+  { id: 8, name: '稻城亚丁长线', region: '四川', difficulty: '中级', description: '最后的香格里拉，三神山神圣之旅', distance: 45, duration: '4天', rating: 4.9, image: '/img/routes/yading-changxian.webp', postId: 5 },
   { id: 9, name: '墨脱徒步', region: '西藏', difficulty: '高级', description: '中国最神秘的徒步路线，莲花秘境挑战', distance: 120, duration: '8天', rating: 5.0, image: '/img/墨脱.jpg', postId: 8 },
   { id: 10, name: '张家界徒步', region: '湖南', difficulty: '中级', description: '三千奇峰拔地起，玻璃栈道心跳体验', distance: 35, duration: '3天', rating: 4.7, image: '/img/张家界.png' },
 ];

@@ -12,7 +12,7 @@ import CountUpNumber from '@client/src/components/visual/CountUpNumber';
 import * as api from '@client/src/api';
 import { HOME_ROUTES } from '@client/src/data/hiking-data';
 import { listPosts } from '@client/src/data/hiking-store';
-import { mapPost } from '@client/src/data/mappers';
+import { mapPost, mapRoute } from '@client/src/data/mappers';
 import { useAsyncData, useAuth } from '@client/src/hooks/use-hiking';
 import type { Post, RouteItem } from '@client/src/data/hiking-types';
 import { withBasePath } from '@client/src/utils/base-path';
@@ -20,6 +20,7 @@ import { Image } from '@client/src/components/ui/image';
 import Seo from '@client/src/components/Seo';
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const HOME_ROUTE_IDS: number[] = [1, 2, 3, 4, 5, 6];
 
 const sectionReveal = {
   initial: { opacity: 0, y: 24 },
@@ -40,7 +41,14 @@ const Home = () => {
   );
   const posts: Post[] = loading ? [] : postsData ?? [];
   const feedPosts: Post[] = feedLoading ? [] : feedData ?? [];
-  const routes: RouteItem[] = HOME_ROUTES;
+  const { data: routesData } = useAsyncData<RouteItem[]>(
+    async () => (await api.listRoutes()).routes.map(mapRoute),
+    []
+  );
+  const curatedRoutes: RouteItem[] = (routesData ?? [])
+    .filter((route: RouteItem) => HOME_ROUTE_IDS.includes(route.id))
+    .sort((a: RouteItem, b: RouteItem) => HOME_ROUTE_IDS.indexOf(a.id) - HOME_ROUTE_IDS.indexOf(b.id));
+  const routes: RouteItem[] = curatedRoutes.length >= 3 ? curatedRoutes : HOME_ROUTES;
   const featured: RouteItem | undefined = routes[0];
   const restRoutes: RouteItem[] = routes.slice(1);
 
