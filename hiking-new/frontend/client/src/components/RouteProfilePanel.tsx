@@ -171,9 +171,6 @@ const RouteProfilePanel = ({ route, coordinates, className = '', actions }: Rout
                   <dd className="mt-1 font-data text-ink">{route.pointCount || coordinates.length}</dd>
                 </div>
               </dl>
-              <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
-                当前剖面严格使用这份 GPX 从起点绘制到终点，未生成返程。
-              </p>
             </div>
           </div>
         </div>
