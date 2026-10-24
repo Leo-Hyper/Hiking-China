@@ -14,6 +14,9 @@ const CARD_IMAGES = new Set([
   '云蒙山', '其他装备', '喀纳斯', '四姑娘山', '墨脱', '导航', '张家界',
   '徒步装备', '服装', '稻城亚丁', '背包', '虎跳峡', '贡嘎转山',
   '鞋履', '首页', '香山', '黄山', 'hero-poster',
+  'routes/zhonghutiao', 'routes/yubeng-cun', 'routes/yubeng-binghu',
+  'routes/yubeng-shenpu', 'routes/yubeng-ninong', 'routes/changchuanbi',
+  'routes/huangshan', 'routes/yading-changxian', 'routes/yading-butu',
 ]);
 
 export function optimizedImagePath(path: string): string {
